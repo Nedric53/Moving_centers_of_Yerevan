@@ -1,0 +1,6 @@
+city,historic_lon,historic_lat,business_lon,business_lat,dist_hist_to_bus_m,historic_method,business_method,utm_crs,core_radius_km,grid_cell_m,buffer_m,heritage_points,business_points
+"Paris, France",2.345976271165731,48.85712958620752,2.3433882482067667,48.86010555336272,381.42209126084305,weighted_centroid:heritage_density,fixed_point:logit_weights,EPSG:32631,15,600,600,5876,35659
+"Barcelona, Spain",2.1663347943658895,41.396287679681635,2.161778435249643,41.399581425378095,528.0286169822929,weighted_centroid:heritage_density,fixed_point:logit_weights,EPSG:32631,15,600,600,2036,12735
+"Vienna, Austria",16.39742107814748,48.197592160453624,16.37884467631161,48.205619939172045,1643.816231791767,weighted_centroid:heritage_density,fixed_point:logit_weights,EPSG:32633,15,600,600,8402,16880
+Singapore,103.82276808755829,1.328645355669265,103.83107143901863,1.337884825412051,1377.306959636723,weighted_centroid:heritage_density,fixed_point:logit_weights,EPSG:32648,15,600,600,1497,12703
+"New York City, NY, USA",-73.96745019153269,40.710834057513686,-73.95174290526856,40.70714253655992,1388.768785793231,weighted_centroid:heritage_density,fixed_point:logit_weights,EPSG:32618,15,600,600,3148,24939

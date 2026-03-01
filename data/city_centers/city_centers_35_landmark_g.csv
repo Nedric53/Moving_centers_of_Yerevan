@@ -1,0 +1,13 @@
+city,historic_lon,historic_lat,business_lon,business_lat,dist_hist_to_bus_m,historic_method,business_method,utm_crs,core_radius_km,grid_cell_m,buffer_m,heritage_points_for_mu,business_points
+"Paris, France",2.3500501,48.8529371,2.3430318249931896,48.85958435497925,900.6029084852725,"geocode_landmark:Notre-Dame Cathedral, Paris, France",fixed_point:logit_weights,EPSG:32631,15.0,200.0,200.0,5876,35659
+"Barcelona, Spain",2.1769912,41.3826497,2.16062254477829,41.39888354718766,2263.041262434088,"geocode_landmark:Plaça de Sant Jaume, Barcelona, Spain",fixed_point:logit_weights,EPSG:32631,15.0,200.0,200.0,2036,12735
+"Vienna, Austria",16.3715166,48.2080838,16.375326430549563,48.20613613261231,356.39665180593437,"geocode_landmark:Stephansplatz, Vienna, Austria",fixed_point:logit_weights,EPSG:32633,15.0,200.0,200.0,8402,16880
+Singapore,103.8526448,1.2930272,103.83031061479456,1.33596416216561,5357.990621039643,"geocode_landmark:City Hall, Singapore",fixed_point:logit_weights,EPSG:32648,15.0,200.0,200.0,1497,12703
+"New York City, NY, USA",-74.010253,40.7073223,-73.96344422755736,40.709955927109505,3965.124060942112,"geocode_landmark:Federal Hall, New York, NY, USA",fixed_point:logit_weights,EPSG:32618,12.0,650.0,650.0,2725,21415
+"London, UK",-0.0984506,51.5137872,-0.11265328703176929,51.51370660021912,986.0798573718079,"geocode_landmark:St Paul's Cathedral, London, UK",fixed_point:logit_weights,EPSG:32630,12.0,650.0,650.0,6339,42929
+"Berlin, Germany",13.3777034,52.5162699,13.389478725956222,52.50882290824518,1151.1476581820461,"geocode_landmark:Brandenburg Gate, Berlin, Germany",fixed_point:logit_weights,EPSG:32633,15.0,200.0,200.0,16862,36236
+"Rome, Italy",12.4768334,41.898616,12.491851327355947,41.891477483292874,1477.3269680614908,"geocode_landmark:Pantheon, Rome, Italy",fixed_point:logit_weights,EPSG:32633,15.0,200.0,200.0,3422,11801
+"Madrid, Spain",-3.7038762,40.416863,-3.6834268871491926,40.42758196015787,2103.6451444023437,"geocode_landmark:Puerta del Sol, Madrid, Spain",fixed_point:logit_weights,EPSG:32630,15.0,200.0,200.0,2544,18292
+"Lisbon, Portugal",-9.1365543,38.7077934,-9.15410102442448,38.73538703474525,3420.852713633892,"geocode_landmark:Praça do Comércio, Lisbon, Portugal",fixed_point:logit_weights,EPSG:32629,15.0,200.0,200.0,2007,7719
+"Amsterdam, Netherlands",4.8923511,52.3731162,4.891849324050022,52.370210007303776,325.1217773660629,"geocode_landmark:Dam Square, Amsterdam, Netherlands",fixed_point:logit_weights,EPSG:32631,15.0,200.0,200.0,1761,8969
+"Brussels, Belgium",4.3525151,50.8467139,4.362310145269232,50.863729215792844,2014.0435464431112,"geocode_landmark:Grand-Place, Brussels, Belgium",fixed_point:logit_weights,EPSG:32631,15.0,200.0,200.0,1121,4086

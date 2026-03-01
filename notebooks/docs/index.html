@@ -1,0 +1,1114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Yerevan scrolly</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      /* from your Style.svg palette */
+      --accent: #F0805B;
+      --text: #303030;
+      --bg: #ffffff;
+
+      --panel: #ffffff;
+      --muted: rgba(48,48,48,.70);
+      --line: rgba(48,48,48,.14);
+      --shadow: 0 14px 40px rgba(0,0,0,.08);
+      --radius2: 24px;
+      --max: 1160px;
+    }
+
+    html{ scroll-behavior: smooth; }
+    body{
+      margin:0;
+      font-family: Inter, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    a{ color: inherit; text-decoration: none; }
+    .container{ max-width: var(--max); margin: 0 auto; padding: 0 22px; }
+
+    .nav{
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(255,255,255,.86);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--line);
+    }
+    .navInner{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding: 14px 0;
+      gap: 16px;
+    }
+    .brand{ font-weight: 700; letter-spacing: -0.02em; }
+    .navLinks{ display:flex; gap: 14px; flex-wrap: wrap; justify-content: flex-end; }
+    .navLinks a{
+      font-size: 13px;
+      color: var(--muted);
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+    }
+    .navLinks a:hover{
+      color: var(--text);
+      border-color: var(--line);
+      background: rgba(255,255,255,.7);
+    }
+
+    /* HERO, overlap like your reference (pic 2) */
+    .hero{
+      position: relative;
+      padding: 84px 0 54px 0;
+      overflow: hidden;
+      border-bottom: 1px solid var(--line);
+      background: #fff;
+    }
+    .hero .container{
+      position: relative;
+    }
+
+    .heroGrid{
+      position: relative;
+      min-height: 460px;
+    }
+
+    .heroText{
+      position: relative;
+      z-index: 2;
+      max-width: 920px;   /* wider so title becomes 2 lines */
+      padding-right: 20px;
+    }
+
+    h1{
+      font-size: clamp(44px, 5.2vw, 76px);
+      line-height: 1.02;
+      letter-spacing: -0.04em;
+      margin: 0 0 18px 0;
+      font-weight: 900;
+      color: var(--accent);
+      max-width: 22ch;  /* helps keep it near 2 lines */
+    }
+
+    .sub{
+      font-size: 20px;
+      color: var(--text);
+      line-height: 1.55;
+      max-width: 60ch;
+      margin: 0 0 26px 0;
+      opacity: 0.92;
+    }
+
+    .ctaRow{ display:flex; gap: 12px; flex-wrap: wrap; align-items:center; }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      height: 44px;
+      padding: 0 18px;
+      border-radius: 999px;
+      border: 1px solid var(--accent);
+      background: transparent;
+      font-weight: 800;
+      font-size: 14px;
+      color: var(--accent);
+      box-sizing: border-box;
+    }
+
+    .btnPrimary{
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    /* Hero artwork behind text */
+    .heroArt{
+      position: absolute;
+      top: 50%;
+      right: -140px;              /* negative gives the overlap feel */
+      transform: translateY(-50%);
+      z-index: 1;
+      width: min(1120px, 78vw);
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      pointer-events: none;
+    }
+
+    .heroArt img{
+      width: 100%;
+      height: auto;
+      display:block;
+      opacity: 0.98;
+
+      /* fade on the left like your reference */
+      -webkit-mask-image: linear-gradient(to right,
+        transparent 0%,
+        rgba(0,0,0,.20) 16%,
+        rgba(0,0,0,1) 40%,
+        rgba(0,0,0,1) 100%);
+      mask-image: linear-gradient(to right,
+        transparent 0%,
+        rgba(0,0,0,.20) 16%,
+        rgba(0,0,0,1) 40%,
+        rgba(0,0,0,1) 100%);
+    }
+
+    /* Sections (keep your original look) */
+    .section{ padding: 46px 0; }
+    .sectionTitle{
+      display:flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .sectionTitle h2{ margin:0; font-size: 22px; letter-spacing: -0.02em; }
+    .sectionTitle p{ margin:0; color: var(--muted); font-size: 13px; max-width: 58ch; line-height: 1.5; }
+
+    .imgGrid{ display:grid; gap: 14px; }
+    .imgGrid.cols3{ grid-template-columns: repeat(3, 1fr); }
+    .imgGrid.cols2{ grid-template-columns: repeat(2, 1fr); }
+    .imgCard{
+      margin: 0;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius2);
+      overflow:hidden;
+      box-shadow: 0 1px 0 rgba(0,0,0,.04);
+    }
+    .imgCard img{ width: 100%; height: 280px; object-fit: cover; display:block; }
+    .imgCard figcaption{ padding: 12px 14px; font-size: 13px; color: var(--muted); line-height: 1.4; }
+
+    .modelWrap{
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      background: #fff;
+    }
+    .modelHeader{ padding: 46px 0 14px 0; }
+    .modelGrid{
+      display:grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 18px;
+      padding-bottom: 48px;
+    }
+    .stepsCol{ padding-right: 10px; }
+
+    .stickyViz{
+      position: sticky;
+      top: 74px;
+      height: calc(100vh - 96px);
+      border: 1px solid var(--line);
+      border-radius: var(--radius2);
+      overflow:hidden;
+      background: #f3f3f3;
+      box-shadow: var(--shadow);
+    }
+    .stickyViz iframe{ width: 100%; height: 100%; border: 0; display:block; background: #fff; }
+
+    .modelMiniBar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 14px;
+      padding: 10px 0 16px 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .progress{
+      height: 6px;
+      flex: 1;
+      background: rgba(0,0,0,.08);
+      border-radius: 999px;
+      overflow:hidden;
+    }
+    .progress > div{ height: 100%; width: 0%; background: #111; }
+
+    .step{ padding: var(--stepPad, 24vh) 0; }
+    .step:first-child:not(.stepIdle){ padding-top: 14vh; }
+    .step:last-child:not(.stepIdle){ padding-bottom: 14vh; }
+
+    .stepCard{
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius2);
+      padding: 16px 16px 14px 16px;
+      box-shadow: 0 1px 0 rgba(0,0,0,.04);
+      transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+    }
+    .step.is-active .stepCard{
+      border-color: rgba(0,0,0,.55);
+      box-shadow: 0 18px 46px rgba(0,0,0,.10);
+      transform: translateY(-1px);
+    }
+    .stepKicker{ font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+    .stepCard h3{ margin: 0 0 8px 0; font-size: 18px; letter-spacing: -0.02em; }
+    .stepBody{ margin: 0 0 10px 0; color: rgba(0,0,0,.72); font-size: 14px; line-height: 1.55; }
+    .stepHint{ margin: 0 0 10px 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+    .chipRow{ display:flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+    .chip{ display:inline-flex; padding: 6px 10px; border-radius: 999px; border: 1px solid var(--line); background: rgba(250,250,250,.9); font-size: 12px; color: rgba(0,0,0,.72); }
+
+    .stepIdle .stepCard{
+      opacity: 0;
+      pointer-events: none;
+      border-color: transparent;
+      box-shadow: none;
+      transform: none;
+    }
+    .stepIdle.is-active .stepCard{
+      border-color: transparent;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .explainGrid{ display:grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }
+    .textCard{
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius2);
+      padding: 18px 18px 16px 18px;
+      box-shadow: 0 1px 0 rgba(0,0,0,.04);
+    }
+    .textCard h3{ margin: 0 0 8px 0; font-size: 16px; }
+    .textCard p{ margin:0; color: rgba(0,0,0,.72); font-size: 14px; line-height: 1.6; }
+
+    footer{ border-top: 1px solid var(--line); padding: 26px 0 40px 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+
+    @media (max-width: 980px){
+      .hero{ padding: 62px 0 40px 0; }
+      .heroGrid{ min-height: 0; }
+      .heroText{ max-width: none; }
+      h1{ font-size: clamp(38px, 8vw, 58px); max-width: none; }
+
+      .heroArt{
+        position: relative;
+        top: auto;
+        right: auto;
+        transform: none;
+        width: auto;
+        margin-top: 18px;
+        justify-content: center;
+      }
+      .heroArt img{
+        width: min(920px, 96vw);
+        -webkit-mask-image: none;
+        mask-image: none;
+      }
+
+      .modelGrid{ grid-template-columns: 1fr; }
+      .stickyViz{ position: relative; top: 0; height: 70vh; }
+      .imgGrid.cols3{ grid-template-columns: 1fr; }
+      .imgGrid.cols2{ grid-template-columns: 1fr; }
+      .explainGrid{ grid-template-columns: 1fr; }
+      .step{ padding: var(--stepPad, 16vh) 0; }
+    }
+  
+
+/* ---- injected: make model section full width + compact steps + no minibar overlap ---- */
+
+:root{
+  --navH: 68px;     /* JS overwrites */
+  --miniBarH: 0px;  /* becomes >0 only while pinned */
+  --modelPad: 12px; /* side padding for model section */
+  --gapTop: 10px;
+  --stepsW: 360px;  /* compact annotation width */
+}
+
+/* Top menu always visible */
+.nav{
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 300 !important;
+}
+
+/* Page starts below fixed nav */
+body{
+  padding-top: var(--navH) !important;
+}
+
+/* Keep anchor jumps from hiding under nav */
+#gallery1, #model, #gallery2, #explain{
+  scroll-margin-top: calc(var(--navH) + 16px) !important;
+}
+
+/* Make only the model section nearly full width with small margins */
+#model .container{
+  max-width: none !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  padding-left: var(--modelPad, 12px) !important;
+  padding-right: var(--modelPad, 12px) !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+/* The header inside model should also align with new width */
+#model .modelHeader{
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* Force the model grid to: compact left, huge right */
+#model .modelGrid{
+  display: grid !important;
+  grid-template-columns: var(--stepsW) 1fr !important;
+  gap: 18px !important;
+  align-items: start !important;
+}
+
+/* Ensure the right column can expand fully */
+#model .stickyViz{
+  min-width: 0 !important;
+}
+
+/* Compact the steps column */
+#model .stepsCol{
+  width: var(--stepsW) !important;
+  max-width: var(--stepsW) !important;
+  padding-right: 0 !important;
+  opacity: 0.98 !important;
+}
+
+/* Make step cards compact */
+#model .stepCard{
+  max-width: var(--stepsW) !important;
+  padding: 12px 12px 10px 12px !important;
+  border-radius: 20px !important;
+}
+#model .stepKicker{
+  font-size: 10px !important;
+}
+#model .stepCard h3{
+  font-size: 16px !important;
+  margin-bottom: 6px !important;
+}
+#model .stepBody{
+  font-size: 13px !important;
+  line-height: 1.45 !important;
+}
+#model .chip{
+  font-size: 11px !important;
+  padding: 5px 9px !important;
+}
+
+/* Sticky map: always stick below nav, plus minibar when pinned */
+#model .stickyViz{
+  position: sticky !important;
+  top: calc(var(--navH) + var(--miniBarH) + var(--gapTop)) !important;
+  height: calc(100vh - var(--navH) - var(--miniBarH) - (2 * var(--gapTop))) !important;
+  transition: none !important;
+}
+
+/* Hide minibar by default */
+#model .modelMiniBar{
+  display: none !important;
+}
+
+/* Show minibar only while pinned, below nav */
+body.modelPinned{
+  --miniBarH: 56px;
+}
+
+body.modelPinned #model .modelMiniBar{
+  display: flex !important;
+  position: fixed !important;
+  top: var(--navH) !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 250 !important;
+  background: rgba(250,250,250,.94) !important;
+  backdrop-filter: blur(10px) !important;
+  border-bottom: 1px solid rgba(15,15,16,.12) !important;
+  padding: 8px 18px 12px 18px !important;
+}
+
+/* Extra safety: when pinned, keep stickyViz pushed down */
+body.modelPinned #model .stickyViz{
+  top: calc(var(--navH) + var(--miniBarH) + var(--gapTop)) !important;
+  height: calc(100vh - var(--navH) - var(--miniBarH) - (2 * var(--gapTop))) !important;
+}
+
+/* Smaller overall section paddings can help the map feel bigger */
+#model.modelWrap, .modelWrap{
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* Mobile */
+@media (max-width: 980px){
+  :root{
+    --stepsW: 100%;
+    --modelPad: 12px;
+  }
+
+  #model .modelGrid{
+    grid-template-columns: 1fr !important;
+  }
+
+  #model .stickyViz{
+    position: relative !important;
+    top: 0 !important;
+    height: 70vh !important;
+  }
+
+  body.modelPinned{
+    --miniBarH: 54px;
+  }
+}
+
+/* ---- end injected block ---- */
+
+
+
+/* ---- injected: compare section full width + iframe embed ---- */
+#compare{
+  scroll-margin-top: calc(var(--navH) + 16px) !important;
+}
+
+#compare .container{
+  max-width: none !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  padding-left: var(--modelPad, 12px) !important;
+  padding-right: var(--modelPad, 12px) !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+/* Borderless embed wrapper */
+#compare .embedCard{
+  background: transparent !important;   /* or #fff if you prefer */
+  border: 0 !important;
+  box-shadow: none !important;
+  border-radius: var(--radius2) !important;
+  overflow: hidden !important;
+}
+
+#compare .embedCard iframe{
+  width: 100%;
+  height: 700px;        /* initial, JS will override */
+  border: 0;
+  display: block;
+  overflow: hidden;
+}
+/* ---- end injected block ---- */
+
+</style>
+</head>
+
+<body id="top class="modelLayoutFocus">
+  <div class="nav">
+    <div class="container">
+      <div class="navInner">
+        <div class="brand">Yerevan scrolly</div>
+        <div class="navLinks">
+          <a href="#gallery1">Gallery</a>
+          <a href="#model">Model</a>
+          <a href="#gallery2">More</a>
+          <a href="#explain">Explanation</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <header class="hero">
+    <div class="container">
+      <div class="heroGrid">
+        <div class="heroText">
+          <h1>Moving centers<br>of Yerevan</h1>
+          <p class="sub">How and why the business centers of cities are moving away from historical centers</p>
+          <div class="ctaRow">
+            <a class="btn btnPrimary" href="#model">Read story</a>
+            <a class="btn" href="#explain">Learn model</a>
+          </div>
+        </div>
+
+        <div class="heroArt" aria-hidden="true">
+          <img src="c:\Users\user\Downloads\Armenia_project\Clean Pipeline\notebooks\assets\Mask group.png" alt="" loading="eager">
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section class="section" id="gallery1">
+    <div class="container">
+      <div class="sectionTitle">
+        <h2>Context</h2>
+        <p>Supporting visuals before the model.</p>
+      </div>
+      <div class="imgGrid cols3">
+            <figure class="imgCard">
+              <img src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%221600%22%20height%3D%221000%22%20viewBox%3D%220%200%201600%201000%22%3E%0A%20%20%3Cdefs%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23f2f2f2%22/%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23dcdcdc%22/%3E%0A%20%20%20%20%3C/linearGradient%3E%0A%20%20%3C/defs%3E%0A%20%20%3Crect%20width%3D%221600%22%20height%3D%221000%22%20rx%3D%2248%22%20fill%3D%22url%28%23g%29%22/%3E%0A%20%20%3Crect%20x%3D%2248%22%20y%3D%2248%22%20width%3D%221504%22%20height%3D%22904%22%20rx%3D%2236%22%20fill%3D%22none%22%20stroke%3D%22%23bdbdbd%22%20stroke-width%3D%224%22/%3E%0A%20%20%3Ctext%20x%3D%2250%25%22%20y%3D%2252%25%22%20text-anchor%3D%22middle%22%20font-family%3D%22Inter%2C%20Arial%2C%20sans-serif%22%20font-size%3D%2254%22%20fill%3D%22%23333%22%3EContext%20image%201%3C/text%3E%0A%20%20%3Ctext%20x%3D%2250%25%22%20y%3D%2259%25%22%20text-anchor%3D%22middle%22%20font-family%3D%22Inter%2C%20Arial%2C%20sans-serif%22%20font-size%3D%2224%22%20fill%3D%22%23666%22%3E%0A%20%20%20%20Replace%20with%20assets/%20image%0A%20%20%3C/text%3E%0A%3C/svg%3E" alt="Replace with assets/ images" loading="lazy"/>
+              <figcaption>Replace with assets/ images</figcaption>
+            </figure>
+            
+            <figure class="imgCard">
+              <img src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%221600%22%20height%3D%221000%22%20viewBox%3D%220%200%201600%201000%22%3E%0A%20%20%3Cdefs%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23f2f2f2%22/%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23dcdcdc%22/%3E%0A%20%20%20%20%3C/linearGradient%3E%0A%20%20%3C/defs%3E%0A%20%20%3Crect%20width%3D%221600%22%20height%3D%221000%22%20rx%3D%2248%22%20fill%3D%22url%28%23g%29%22/%3E%0A%20%20%3Crect%20x%3D%2248%22%20y%3D%2248%22%20width%3D%221504%22%20height%3D%22904%22%20rx%3D%2236%22%20fill%3D%22none%22%20stroke%3D%22%23bdbdbd%22%20stroke-width%3D%224%22/%3E%0A%20%20%3Ctext%20x%3D%2250%25%22%20y%3D%2252%25%22%20text-anchor%3D%22middle%22%20font-family%3D%22Inter%2C%20Arial%2C%20sans-serif%22%20font-size%3D%2254%22%20fill%3D%22%23333%22%3EContext%20image%202%3C/text%3E%0A%20%20%3Ctext%20x%3D%2250%25%22%20y%3D%2259%25%22%20text-anchor%3D%22middle%22%20font-family%3D%22Inter%2C%20Arial%2C%20sans-serif%22%20font-size%3D%2224%22%20fill%3D%22%23666%22%3E%0A%20%20%20%20Replace%20with%20assets/%20image%0A%20%20%3C/text%3E%0A%3C/svg%3E" alt="Replace with assets/ images" loading="lazy"/>
+              <figcaption>Replace with assets/ images</figcaption>
+            </figure>
+            
+            <figure class="imgCard">
+              <img src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%221600%22%20height%3D%221000%22%20viewBox%3D%220%200%201600%201000%22%3E%0A%20%20%3Cdefs%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23f2f2f2%22/%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23dcdcdc%22/%3E%0A%20%20%20%20%3C/linearGradient%3E%0A%20%20%3C/defs%3E%0A%20%20%3Crect%20width%3D%221600%22%20height%3D%221000%22%20rx%3D%2248%22%20fill%3D%22url%28%23g%29%22/%3E%0A%20%20%3Crect%20x%3D%2248%22%20y%3D%2248%22%20width%3D%221504%22%20height%3D%22904%22%20rx%3D%2236%22%20fill%3D%22none%22%20stroke%3D%22%23bdbdbd%22%20stroke-width%3D%224%22/%3E%0A%20%20%3Ctext%20x%3D%2250%25%22%20y%3D%2252%25%22%20text-anchor%3D%22middle%22%20font-family%3D%22Inter%2C%20Arial%2C%20sans-serif%22%20font-size%3D%2254%22%20fill%3D%22%23333%22%3EContext%20image%203%3C/text%3E%0A%20%20%3Ctext%20x%3D%2250%25%22%20y%3D%2259%25%22%20text-anchor%3D%22middle%22%20font-family%3D%22Inter%2C%20Arial%2C%20sans-serif%22%20font-size%3D%2224%22%20fill%3D%22%23666%22%3E%0A%20%20%20%20Replace%20with%20assets/%20image%0A%20%20%3C/text%3E%0A%3C/svg%3E" alt="Replace with assets/ images" loading="lazy"/>
+              <figcaption>Replace with assets/ images</figcaption>
+            </figure>
+            </div>
+    </div>
+  </section>
+
+  <section class="modelWrap" id="model">
+    <div class="container">
+      <div class="modelHeader">
+        <div class="sectionTitle">
+          <h2>Interactive model</h2>
+          <p>Scroll-driven scenarios with a sticky frame.</p>
+        </div>
+
+        <div class="modelMiniBar">
+          <div id="stepName">Baseline</div>
+          <div class="progress"><div id="progBar"></div></div>
+        </div>
+      </div>
+
+      <div class="modelGrid">
+        <div class="stepsCol">
+          
+            <section class="step stepIdle" style="--stepPad:22.0vh;"
+              data-title="Baseline"
+              data-t="1.00"
+              data-a="1.00"
+              data-view-lat=""
+              data-view-lon=""
+              data-view-zoom="" data-prog="0.00">
+              <div class="stepCard stepCardIdle" aria-hidden="true"></div>
+            </section>
+            
+
+            <section class="step stepIdle" style="--stepPad:22.0vh;"
+              data-title="Baseline"
+              data-t="1.00"
+              data-a="1.00"
+              data-view-lat=""
+              data-view-lon=""
+              data-view-zoom="" data-prog="0.00">
+              <div class="stepCard stepCardIdle" aria-hidden="true"></div>
+            </section>
+            
+
+            <section class="step stepIdle" style="--stepPad:22.0vh;"
+              data-title="Baseline"
+              data-t="1.00"
+              data-a="1.00"
+              data-view-lat=""
+              data-view-lon=""
+              data-view-zoom="" data-prog="0.00">
+              <div class="stepCard stepCardIdle" aria-hidden="true"></div>
+            </section>
+            
+
+            <section class="step"
+              data-title="Baseline"
+              data-t="1.00"
+              data-a="1.00"
+              data-view-lat=""
+              data-view-lon=""
+              data-view-zoom="" data-prog="0.00">
+              
+              <div class="stepCard">
+                <div class="stepKicker">Scenario</div>
+                <h3>Baseline assumptions</h3>
+                <p class="stepBody">Reference case for transport and amenity strength.</p>
+                <p class='stepHint'>Scroll to switch scenarios. The model updates immediately.</p>
+                <div class="chipRow">
+                  <span class="chip">Transport: 1.00</span>
+                  <span class="chip">Amenity: 1.00</span>
+                </div>
+              </div>
+            
+            </section>
+            
+
+            <section class="step"
+              data-title="Faster transport"
+              data-t="1.50"
+              data-a="1.00"
+              data-view-lat=""
+              data-view-lon=""
+              data-view-zoom="" data-prog="25.00">
+              
+              <div class="stepCard">
+                <div class="stepKicker">Scenario</div>
+                <h3>Faster transport</h3>
+                <p class="stepBody">Higher transport speed multiplier lowers time costs.</p>
+                
+                <div class="chipRow">
+                  <span class="chip">Transport: 1.50</span>
+                  <span class="chip">Amenity: 1.00</span>
+                </div>
+              </div>
+            
+            </section>
+            
+
+            <section class="step"
+              data-title="Slower transport"
+              data-t="0.50"
+              data-a="1.00"
+              data-view-lat=""
+              data-view-lon=""
+              data-view-zoom="" data-prog="50.00">
+              
+              <div class="stepCard">
+                <div class="stepKicker">Scenario</div>
+                <h3>Slower transport</h3>
+                <p class="stepBody">Lower transport speed multiplier raises time costs.</p>
+                
+                <div class="chipRow">
+                  <span class="chip">Transport: 0.50</span>
+                  <span class="chip">Amenity: 1.00</span>
+                </div>
+              </div>
+            
+            </section>
+            
+
+            <section class="step"
+              data-title="Historic pull"
+              data-t="1.00"
+              data-a="1.50"
+              data-view-lat=""
+              data-view-lon=""
+              data-view-zoom="" data-prog="75.00">
+              
+              <div class="stepCard">
+                <div class="stepKicker">Scenario</div>
+                <h3>Historic amenities matter more</h3>
+                <p class="stepBody">Higher amenity multiplier strengthens amenity-related effects.</p>
+                
+                <div class="chipRow">
+                  <span class="chip">Transport: 1.00</span>
+                  <span class="chip">Amenity: 1.50</span>
+                </div>
+              </div>
+            
+            </section>
+            
+
+            <section class="step"
+              data-title="Weaker amenities"
+              data-t="1.00"
+              data-a="0.50"
+              data-view-lat=""
+              data-view-lon=""
+              data-view-zoom="" data-prog="100.00">
+              
+              <div class="stepCard">
+                <div class="stepKicker">Scenario</div>
+                <h3>Historic amenities matter less</h3>
+                <p class="stepBody">Lower amenity multiplier weakens amenity-related effects.</p>
+                
+                <div class="chipRow">
+                  <span class="chip">Transport: 1.00</span>
+                  <span class="chip">Amenity: 0.50</span>
+                </div>
+              </div>
+            
+            </section>
+            
+
+            <section class="step stepIdle" style="--stepPad:22.0vh;"
+              data-title="Weaker amenities"
+              data-t="1.00"
+              data-a="0.50"
+              data-view-lat=""
+              data-view-lon=""
+              data-view-zoom="" data-prog="100.00">
+              <div class="stepCard stepCardIdle" aria-hidden="true"></div>
+            </section>
+            
+
+            <section class="step stepIdle" style="--stepPad:22.0vh;"
+              data-title="Weaker amenities"
+              data-t="1.00"
+              data-a="0.50"
+              data-view-lat=""
+              data-view-lon=""
+              data-view-zoom="" data-prog="100.00">
+              <div class="stepCard stepCardIdle" aria-hidden="true"></div>
+            </section>
+            
+        </div>
+
+        <div class="stickyViz">
+          <iframe id="viz" src="yerevan_sliders_single_business_polygon.html" title="Interactive model" loading="lazy"></iframe>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="gallery2">
+    <div class="container">
+      <div class="sectionTitle">
+        <h2>More visuals</h2>
+        <p>More figures or screenshots after the model.</p>
+      </div>
+      <div class="imgGrid cols2">
+            <figure class="imgCard">
+              <img src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%221600%22%20height%3D%221000%22%20viewBox%3D%220%200%201600%201000%22%3E%0A%20%20%3Cdefs%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23f2f2f2%22/%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23dcdcdc%22/%3E%0A%20%20%20%20%3C/linearGradient%3E%0A%20%20%3C/defs%3E%0A%20%20%3Crect%20width%3D%221600%22%20height%3D%221000%22%20rx%3D%2248%22%20fill%3D%22url%28%23g%29%22/%3E%0A%20%20%3Crect%20x%3D%2248%22%20y%3D%2248%22%20width%3D%221504%22%20height%3D%22904%22%20rx%3D%2236%22%20fill%3D%22none%22%20stroke%3D%22%23bdbdbd%22%20stroke-width%3D%224%22/%3E%0A%20%20%3Ctext%20x%3D%2250%25%22%20y%3D%2252%25%22%20text-anchor%3D%22middle%22%20font-family%3D%22Inter%2C%20Arial%2C%20sans-serif%22%20font-size%3D%2254%22%20fill%3D%22%23333%22%3EMore%20image%201%3C/text%3E%0A%20%20%3Ctext%20x%3D%2250%25%22%20y%3D%2259%25%22%20text-anchor%3D%22middle%22%20font-family%3D%22Inter%2C%20Arial%2C%20sans-serif%22%20font-size%3D%2224%22%20fill%3D%22%23666%22%3E%0A%20%20%20%20Replace%20with%20assets/%20image%0A%20%20%3C/text%3E%0A%3C/svg%3E" alt="Replace with assets/ images" loading="lazy"/>
+              <figcaption>Replace with assets/ images</figcaption>
+            </figure>
+            
+            <figure class="imgCard">
+              <img src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%221600%22%20height%3D%221000%22%20viewBox%3D%220%200%201600%201000%22%3E%0A%20%20%3Cdefs%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23f2f2f2%22/%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23dcdcdc%22/%3E%0A%20%20%20%20%3C/linearGradient%3E%0A%20%20%3C/defs%3E%0A%20%20%3Crect%20width%3D%221600%22%20height%3D%221000%22%20rx%3D%2248%22%20fill%3D%22url%28%23g%29%22/%3E%0A%20%20%3Crect%20x%3D%2248%22%20y%3D%2248%22%20width%3D%221504%22%20height%3D%22904%22%20rx%3D%2236%22%20fill%3D%22none%22%20stroke%3D%22%23bdbdbd%22%20stroke-width%3D%224%22/%3E%0A%20%20%3Ctext%20x%3D%2250%25%22%20y%3D%2252%25%22%20text-anchor%3D%22middle%22%20font-family%3D%22Inter%2C%20Arial%2C%20sans-serif%22%20font-size%3D%2254%22%20fill%3D%22%23333%22%3EMore%20image%202%3C/text%3E%0A%20%20%3Ctext%20x%3D%2250%25%22%20y%3D%2259%25%22%20text-anchor%3D%22middle%22%20font-family%3D%22Inter%2C%20Arial%2C%20sans-serif%22%20font-size%3D%2224%22%20fill%3D%22%23666%22%3E%0A%20%20%20%20Replace%20with%20assets/%20image%0A%20%20%3C/text%3E%0A%3C/svg%3E" alt="Replace with assets/ images" loading="lazy"/>
+              <figcaption>Replace with assets/ images</figcaption>
+            </figure>
+            </div>
+    </div>
+  </section>
+
+  
+  <section class="section" id="compare">
+    <div class="container">
+      <div class="sectionTitle">
+        <h2>Заголовок блока</h2>
+        <p>Сравнение бизнес-ареалов городов. Фигуры приведены к одной шкале и центрированы по историческому центру (0,0).</p>
+      </div>
+
+      <div class="embedCard">
+        <iframe id="compareFrame" src="compare_business_areas.html" title="Заголовок блока" loading="eager" scrolling="no"></iframe>
+      </div>
+    </div>
+  </section>
+
+<section class="section" id="explain">
+    <div class="container">
+      <div class="sectionTitle">
+        <h2>Explanation</h2>
+        <p>Short blocks explaining what is happening.</p>
+      </div>
+      <div class="explainGrid">
+        
+            <div class="textCard">
+              <h3>Idle scroll</h3>
+              <p>Extra invisible spacer steps before the first and after the last scenario keep the model pinned long enough for the minibar and progress to be visible.</p>
+            </div>
+            
+
+            <div class="textCard">
+              <h3>Width</h3>
+              <p>The model section uses near-full viewport width with small margins.</p>
+            </div>
+            
+
+            <div class="textCard">
+              <h3>Cards</h3>
+              <p>Scenario cards are fixed-width and compact so the map is large.</p>
+            </div>
+            
+
+            <div class="textCard">
+              <h3>Menu + bar</h3>
+              <p>The top menu is fixed; the progress bar appears only when the map is pinned and sits below the menu.</p>
+            </div>
+            
+      </div>
+      
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      
+          <div style="display:flex; flex-direction:column; gap:12px;">
+            <div>Static bundle. Serve the folder as a website to share it.</div>
+            
+        <div style="display:flex; flex-direction:column; gap:12px; margin-top: 12px;">
+          <a class="btn btnPrimary" href="dashboard.html">Open theoretical dashboard</a>
+        </div>
+        
+          </div>
+        
+    </div>
+  </footer>
+
+  <script src="https://unpkg.com/scrollama"></script>
+  <script>
+    const iframe = document.getElementById("viz");
+    const steps = Array.from(document.querySelectorAll(".step"));
+    const stepName = document.getElementById("stepName");
+    const progBar = document.getElementById("progBar");
+    const stickyVizEl = document.querySelector("#model .stickyViz");
+    const navEl = document.querySelector(".nav");
+
+    const pending = { sliders: null, view: null, invalidate: false };
+
+    function _postToViz(msg) {
+      if (!iframe || !iframe.contentWindow) return;
+      iframe.contentWindow.postMessage(msg, "*");
+    }
+
+    function _remember(msg) {
+      if (!msg || typeof msg !== "object") return;
+      if (msg.type === "setSliders") pending.sliders = msg;
+      if (msg.type === "setView") pending.view = msg;
+      if (msg.type === "invalidateSize") pending.invalidate = true;
+    }
+
+    function replayPending() {
+      if (!iframe || !iframe.contentWindow) return;
+      _postToViz({ type: "ping" });
+      if (pending.sliders) _postToViz(pending.sliders);
+      if (pending.view) _postToViz(pending.view);
+      if (pending.invalidate) _postToViz({ type: "invalidateSize" });
+    }
+
+    function sendToViz(msg) {
+      _remember(msg);
+      if (!iframe || !iframe.contentWindow) return;
+      _postToViz(msg);
+    }
+
+    if (iframe) {
+      iframe.addEventListener("load", () => {
+        replayPending();
+        sendToViz({ type: "invalidateSize" });
+      });
+    }
+
+    function syncNavHeightVar() {
+      if (!navEl) return;
+      const h = navEl.getBoundingClientRect().height || 68;
+      document.documentElement.style.setProperty("--navH", Math.round(h) + "px");
+    }
+
+    window.addEventListener("resize", () => {
+      syncNavHeightVar();
+      schedulePinnedCheck();
+    });
+
+    setTimeout(syncNavHeightVar, 0);
+
+    let lastIdx = -1;
+    function activateStep(el, idx) {
+      if (!el) return;
+      if (idx === lastIdx) return;
+      lastIdx = idx;
+
+      steps.forEach(s => s.classList.remove("is-active"));
+      el.classList.add("is-active");
+
+      const title = el.dataset.title || ("Step " + String(idx + 1));
+      if (stepName) stepName.textContent = title;
+
+      if (el.classList.contains("stepIdle")) {
+        const pctIdle = parseFloat(el.dataset.prog);
+        if (progBar && isFinite(pctIdle)) {
+          progBar.style.width = String(pctIdle.toFixed(1)) + "%";
+        }
+        return;
+      }
+
+      const t = parseFloat(el.dataset.t);
+      const a = parseFloat(el.dataset.a);
+
+      const lat = parseFloat(el.dataset.viewLat);
+      const lon = parseFloat(el.dataset.viewLon);
+      const zoom = parseFloat(el.dataset.viewZoom);
+
+      if (isFinite(t) && isFinite(a)) sendToViz({ type: "setSliders", t: t, a: a });
+      if (isFinite(lat) && isFinite(lon) && isFinite(zoom)) sendToViz({ type: "setView", lat: lat, lon: lon, zoom: zoom });
+
+      const pct = parseFloat(el.dataset.prog);
+      if (progBar) {
+        if (isFinite(pct)) {
+          progBar.style.width = String(pct.toFixed(1)) + "%";
+        } else {
+          const fallback = steps.length <= 1 ? 100 : (idx / (steps.length - 1)) * 100;
+          progBar.style.width = String(fallback.toFixed(1)) + "%";
+        }
+      }
+    }
+
+    let pinnedOn = false;
+
+    function setPinned(on) {
+      const next = !!on;
+      if (pinnedOn === next) return;
+      pinnedOn = next;
+      document.body.classList.toggle("modelPinned", pinnedOn);
+
+      setTimeout(() => {
+        sendToViz({ type: "invalidateSize" });
+        replayPending();
+      }, 140);
+    }
+
+    function computePinned() {
+      if (!stickyVizEl) { setPinned(false); return; }
+
+      const cs = getComputedStyle(stickyVizEl);
+      const pos = cs.position;
+      if (pos !== "sticky" && pos !== "-webkit-sticky") { setPinned(false); return; }
+
+      const r = stickyVizEl.getBoundingClientRect();
+      const topPx = parseFloat(cs.top) || 0;
+      const vh = window.innerHeight || 800;
+
+      const delta = Math.abs(r.top - topPx);
+      const pinned = pinnedOn ? (delta <= 26) : (delta <= 2);
+      const visible = r.bottom > (topPx + 140) && r.top < (vh - 140);
+
+      setPinned(pinned && visible);
+    }
+
+    let pinRAF = 0;
+    function schedulePinnedCheck() {
+      cancelAnimationFrame(pinRAF);
+      pinRAF = requestAnimationFrame(computePinned);
+    }
+
+    window.addEventListener("scroll", schedulePinnedCheck, { passive: true });
+
+    if (stickyVizEl && "ResizeObserver" in window) {
+      const ro = new ResizeObserver(() => {
+        setTimeout(() => sendToViz({ type: "invalidateSize" }), 140);
+      });
+      ro.observe(stickyVizEl);
+    }
+
+    const scroller = scrollama();
+    scroller
+      .setup({ step: ".step", offset: 0.62 })
+      .onStepEnter((resp) => {
+        schedulePinnedCheck();
+        activateStep(resp.element, resp.index);
+      })
+      .onStepExit((resp) => {
+        if (resp.direction === "up" && resp.index > 0) {
+          const prev = resp.index - 1;
+          activateStep(steps[prev], prev);
+        }
+        schedulePinnedCheck();
+      });
+
+    window.addEventListener("message", (event) => {
+      if (event.data && event.data.type === "vizReady") {
+        replayPending();
+        sendToViz({ type: "invalidateSize" });
+      }
+    });
+
+    syncNavHeightVar();
+    schedulePinnedCheck();
+    setTimeout(() => {
+      if (steps.length) activateStep(steps[0], 0);
+      replayPending();
+      sendToViz({ type: "invalidateSize" });
+      schedulePinnedCheck();
+    }, 700);
+  
+
+    // ---- injected: compare iframe autosize (stable, no growth loop) ----
+    (function compareIframeAutosize() {
+      const compareFrame = document.getElementById("compareFrame");
+      if (!compareFrame) return;
+
+      const _COMPARE_PAD = 24; // small safety pad, avoid runaway growth
+      let _lastSet = 0;
+
+      function setCompareHeight(px) {
+        if (!compareFrame) return;
+        if (typeof px !== "number" || !isFinite(px) || px <= 0) return;
+
+        const next = Math.ceil(px + _COMPARE_PAD);
+
+        // Prevent tiny oscillations
+        if (_lastSet && Math.abs(next - _lastSet) <= 2) return;
+
+        _lastSet = next;
+        compareFrame.style.height = next + "px";
+      }
+
+      // Receive height from compare page
+      window.addEventListener("message", (event) => {
+        const d = event && event.data;
+        if (!d || typeof d !== "object") return;
+        if (d.type === "compareHeight" && typeof d.height === "number") {
+          setCompareHeight(d.height);
+        }
+      });
+
+      function requestCompareHeight() {
+        try {
+          if (compareFrame && compareFrame.contentWindow) {
+            compareFrame.contentWindow.postMessage({ type: "requestHeight" }, "*");
+          }
+        } catch (e) {}
+      }
+
+      // Same-origin fallback: measure .wrap (content), not documentElement.scrollHeight
+      function _compareDoc() {
+        try {
+          return compareFrame.contentDocument || (compareFrame.contentWindow && compareFrame.contentWindow.document) || null;
+        } catch (e) {
+          return null;
+        }
+      }
+
+      function _computeContentHeightSameOrigin(doc) {
+        try {
+          const wrap = doc && doc.querySelector && doc.querySelector(".wrap");
+          if (wrap) {
+            const h = Math.max(wrap.scrollHeight || 0, wrap.offsetHeight || 0);
+            return (h && isFinite(h)) ? Math.ceil(h) : 0;
+          }
+        } catch (e) {}
+        return 0;
+      }
+
+      function resizeCompareFrameSameOrigin() {
+        const doc = _compareDoc();
+        if (!doc) return;
+        const h = _computeContentHeightSameOrigin(doc);
+        if (h) setCompareHeight(h);
+      }
+
+      compareFrame.setAttribute("scrolling", "no");
+      compareFrame.style.overflow = "hidden";
+
+      compareFrame.addEventListener("load", () => {
+        requestCompareHeight();
+        setTimeout(requestCompareHeight, 120);
+        setTimeout(requestCompareHeight, 350);
+        setTimeout(requestCompareHeight, 900);
+
+        resizeCompareFrameSameOrigin();
+        setTimeout(resizeCompareFrameSameOrigin, 120);
+        setTimeout(resizeCompareFrameSameOrigin, 900);
+      });
+
+      window.addEventListener("resize", () => {
+        requestCompareHeight();
+        resizeCompareFrameSameOrigin();
+        setTimeout(() => {
+          requestCompareHeight();
+          resizeCompareFrameSameOrigin();
+        }, 250);
+      });
+    })();
+    // ---- end injected block ----
+
+</script>
+
+</body>
+</html>

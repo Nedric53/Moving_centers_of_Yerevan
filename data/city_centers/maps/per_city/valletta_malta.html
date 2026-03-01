@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    
+        <script>
+            L_NO_TOUCH = false;
+            L_DISABLE_3D = false;
+        </script>
+    
+    <style>html, body {width: 100%;height: 100%;margin: 0;padding: 0;}</style>
+    <style>#map {position:absolute;top:0;bottom:0;right:0;left:0;}</style>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    
+            <meta name="viewport" content="width=device-width,
+                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <style>
+                #map_c8fe81599b53a9b02ae3c6bce15f521d {
+                    position: relative;
+                    width: 100.0%;
+                    height: 100.0%;
+                    left: 0.0%;
+                    top: 0.0%;
+                }
+                .leaflet-container { font-size: 1rem; }
+            </style>
+        
+    
+                    <style>
+                        .foliumtooltip {
+                            
+                        }
+                       .foliumtooltip table{
+                            margin: auto;
+                        }
+                        .foliumtooltip tr{
+                            text-align: left;
+                        }
+                        .foliumtooltip th{
+                            padding: 2px; padding-right: 8px;
+                        }
+                    </style>
+            
+    
+                    <style>
+                        .foliumtooltip {
+                            
+                        }
+                       .foliumtooltip table{
+                            margin: auto;
+                        }
+                        .foliumtooltip tr{
+                            text-align: left;
+                        }
+                        .foliumtooltip th{
+                            padding: 2px; padding-right: 8px;
+                        }
+                    </style>
+            
+</head>
+<body>
+    
+    
+            <div class="folium-map" id="map_c8fe81599b53a9b02ae3c6bce15f521d" ></div>
+        
+</body>
+<script>
+    
+    
+            var map_c8fe81599b53a9b02ae3c6bce15f521d = L.map(
+                "map_c8fe81599b53a9b02ae3c6bce15f521d",
+                {
+                    center: [35.898006681818316, 14.512923728950357],
+                    crs: L.CRS.EPSG3857,
+                    ...{
+  "zoom": 12,
+  "zoomControl": true,
+  "preferCanvas": false,
+}
+
+                }
+            );
+
+            
+
+        
+    
+            var tile_layer_f0090093803105cef7fa0f27dc447472 = L.tileLayer(
+                "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+                {
+  "minZoom": 0,
+  "maxZoom": 20,
+  "maxNativeZoom": 20,
+  "noWrap": false,
+  "attribution": "\u0026copy; \u003ca href=\"https://www.openstreetmap.org/copyright\"\u003eOpenStreetMap\u003c/a\u003e contributors \u0026copy; \u003ca href=\"https://carto.com/attributions\"\u003eCARTO\u003c/a\u003e",
+  "subdomains": "abcd",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_f0090093803105cef7fa0f27dc447472.addTo(map_c8fe81599b53a9b02ae3c6bce15f521d);
+        
+    
+            var feature_group_242439eac906887f31f2d11226ab844f = L.featureGroup(
+                {
+}
+            );
+        
+    
+        function geo_json_01b22eba122ec36cfbc383d52702c4d9_styler(feature) {
+            switch(feature.id) {
+                default:
+                    return {"color": "#1f77b4", "fillColor": "#1f77b4", "fillOpacity": 0.05, "opacity": 0.9, "weight": 2};
+            }
+        }
+
+        function geo_json_01b22eba122ec36cfbc383d52702c4d9_onEachFeature(feature, layer) {
+            layer.on({
+            });
+        };
+        var geo_json_01b22eba122ec36cfbc383d52702c4d9 = L.geoJson(null, {
+                onEachFeature: geo_json_01b22eba122ec36cfbc383d52702c4d9_onEachFeature,
+            
+                style: geo_json_01b22eba122ec36cfbc383d52702c4d9_styler,
+            ...{
+}
+        });
+
+        function geo_json_01b22eba122ec36cfbc383d52702c4d9_add (data) {
+            geo_json_01b22eba122ec36cfbc383d52702c4d9
+                .addData(data);
+        }
+            geo_json_01b22eba122ec36cfbc383d52702c4d9_add({"features": [{"geometry": {"coordinates": [[[14.5055327, 35.8982698], [14.5060511, 35.8967207], [14.5062107, 35.8962801], [14.5064969, 35.896162], [14.5076297, 35.8956375], [14.5077733, 35.8955077], [14.5078311, 35.8954537], [14.5079244, 35.8953656], [14.5080524, 35.8952418], [14.5080984, 35.8952483], [14.5082093, 35.8952421], [14.5083253, 35.8951328], [14.5083056, 35.8945721], [14.5083855, 35.8938938], [14.5084785, 35.8937875], [14.508735, 35.8937015], [14.5088321, 35.8936817], [14.5090362, 35.8937278], [14.5095541, 35.8938489], [14.5101675, 35.8939374], [14.5104664, 35.8940046], [14.5106491, 35.8940717], [14.5107699, 35.894166], [14.5108332, 35.8941266], [14.5112116, 35.8938915], [14.511052, 35.8938381], [14.5106375, 35.8935513], [14.5110597, 35.8931489], [14.5113539, 35.8933095], [14.5116307, 35.8933558], [14.5123432, 35.8937131], [14.5124325, 35.8936376], [14.5124888, 35.8935949], [14.5127733, 35.8938426], [14.5128105, 35.8938125], [14.5128484, 35.8938422], [14.5128893, 35.8938451], [14.512884, 35.8938589], [14.5129873, 35.8939517], [14.5130658, 35.8940053], [14.513118, 35.8939887], [14.5131148, 35.8939708], [14.5131198, 35.8939646], [14.5131305, 35.8939612], [14.5131419, 35.8939642], [14.5131498, 35.8939713], [14.5132322, 35.8941182], [14.5132965, 35.8941948], [14.5135175, 35.8944599], [14.5135035, 35.8944665], [14.5135601, 35.8945643], [14.5137115, 35.8945947], [14.5138961, 35.8949569], [14.513903, 35.8952203], [14.5143781, 35.8959474], [14.5146455, 35.8961267], [14.5148635, 35.8962327], [14.5148737, 35.8962288], [14.5151979, 35.8963498], [14.5152209, 35.8963556], [14.5158945, 35.8965648], [14.5158935, 35.8965977], [14.5159166, 35.8965988], [14.5159569, 35.8966064], [14.5159643, 35.8965854], [14.5171471, 35.896837], [14.5171077, 35.8968682], [14.5171101, 35.8969381], [14.517624, 35.896943], [14.5177633, 35.896994], [14.5178002, 35.8970489], [14.5179148, 35.8970718], [14.5181477, 35.8970558], [14.5184404, 35.897124], [14.5184512, 35.8972046], [14.5183848, 35.8972902], [14.5184614, 35.8972803], [14.5184656, 35.8973112], [14.5185614, 35.8973776], [14.5185332, 35.8976031], [14.518436, 35.8976613], [14.5184516, 35.8978787], [14.5185007, 35.898017], [14.5186927, 35.8985185], [14.5186223, 35.8985681], [14.5185126, 35.8986453], [14.5186294, 35.899156], [14.518713, 35.8993624], [14.5187601, 35.8993568], [14.5188699, 35.899505], [14.5188435, 35.8996123], [14.5188652, 35.8996351], [14.51895, 35.8995686], [14.5190569, 35.8996535], [14.5192132, 35.900057], [14.5193098, 35.9000649], [14.5193203, 35.9000976], [14.5193928, 35.9003225], [14.5193957, 35.9003315], [14.5193905, 35.9003506], [14.5193757, 35.9003681], [14.5193524, 35.9003813], [14.5193182, 35.9003852], [14.5192784, 35.9004353], [14.5191761, 35.9005421], [14.5193082, 35.900542], [14.5193698, 35.9005749], [14.519466, 35.9007305], [14.5191731, 35.9009407], [14.519187, 35.901001], [14.5193474, 35.9009802], [14.5193753, 35.9010254], [14.5193533, 35.9011822], [14.5193753, 35.901271], [14.5195199, 35.9014037], [14.5194679, 35.9014888], [14.5198266, 35.9017862], [14.5199219, 35.9018132], [14.5199329, 35.902029], [14.5200236, 35.9020417], [14.5200445, 35.9020873], [14.5198702, 35.9021137], [14.5197559, 35.9021958], [14.5198195, 35.9022654], [14.5201316, 35.9022267], [14.5202437, 35.9022452], [14.5205009, 35.902482], [14.5205316, 35.9025317], [14.5205246, 35.9025669], [14.5205266, 35.9026021], [14.5205622, 35.9026293], [14.5206146, 35.9026518], [14.5206037, 35.9027262], [14.5206512, 35.902731], [14.5206265, 35.902932], [14.5205731, 35.902932], [14.5205672, 35.9029945], [14.5205078, 35.9030497], [14.5205039, 35.9030746], [14.5202109, 35.9032827], [14.5199256, 35.903362], [14.5193971, 35.9035094], [14.5188024, 35.9035423], [14.5181557, 35.903575], [14.5175138, 35.9034997], [14.5171482, 35.9033551], [14.5170892, 35.9033096], [14.5169929, 35.9032353], [14.516899, 35.9031369], [14.5168179, 35.9029858], [14.5168795, 35.9029289], [14.5166415, 35.9023208], [14.5165259, 35.9021603], [14.5165296, 35.9021403], [14.5164901, 35.9020884], [14.5165037, 35.9020595], [14.5164849, 35.9020472], [14.5164248, 35.9020072], [14.5163669, 35.9019696], [14.5163817, 35.9019606], [14.516374, 35.9019555], [14.5160502, 35.901742], [14.5159442, 35.9017292], [14.5156472, 35.9015803], [14.5155678, 35.9016164], [14.5153783, 35.9015665], [14.5153416, 35.9015414], [14.5152406, 35.9015604], [14.5151816, 35.901621], [14.5147144, 35.9018017], [14.514649, 35.9019007], [14.5144969, 35.9019594], [14.514216, 35.9024594], [14.5141016, 35.9026025], [14.5137666, 35.9026019], [14.5130575, 35.9024961], [14.5127678, 35.9024129], [14.5123566, 35.9022358], [14.5121783, 35.9020434], [14.5118455, 35.901749], [14.5117312, 35.901628], [14.5116839, 35.9016541], [14.5115542, 35.9015315], [14.5114809, 35.9014519], [14.5113313, 35.9012972], [14.5111858, 35.9011682], [14.510974, 35.9010075], [14.510947, 35.9010452], [14.5107109, 35.9011071], [14.5106557, 35.9011554], [14.5101515, 35.9007776], [14.5100306, 35.9005525], [14.5100044, 35.9005223], [14.510287, 35.9004784], [14.5102853, 35.9004503], [14.5102787, 35.9004204], [14.5099787, 35.9004635], [14.5099798, 35.9004386], [14.5099495, 35.9002529], [14.5099734, 35.9002394], [14.509961, 35.9002175], [14.5098486, 35.9001782], [14.5097228, 35.9001591], [14.5096124, 35.9001638], [14.5095345, 35.9001798], [14.5094683, 35.900209], [14.5093832, 35.9002637], [14.509283, 35.9003046], [14.5091598, 35.9003505], [14.5089461, 35.9004518], [14.5085645, 35.9005698], [14.508462, 35.9005413], [14.5083202, 35.9004811], [14.5082098, 35.9003822], [14.5081122, 35.9002382], [14.5078798, 35.9000339], [14.5073357, 35.8996141], [14.5066201, 35.8993392], [14.5061238, 35.8992425], [14.5060977, 35.8992374], [14.5059897, 35.8992159], [14.506093, 35.8990908], [14.5056448, 35.8987238], [14.5055327, 35.8982698]]], "type": "Polygon"}, "id": "0", "properties": {"city": "Valletta, Malta"}, "type": "Feature"}], "type": "FeatureCollection"});
+
+        
+    
+    geo_json_01b22eba122ec36cfbc383d52702c4d9.bindTooltip(
+    function(layer){
+    let div = L.DomUtil.create('div');
+    
+    let handleObject = feature=>typeof(feature)=='object' ? JSON.stringify(feature) : feature;
+    let fields = ["city"];
+    let aliases = ["city"];
+    let table = '<table>' +
+        String(
+        fields.map(
+        (v,i)=>
+        `<tr>
+            <th>${aliases[i]}</th>
+            
+            <td>${handleObject(layer.feature.properties[v])}</td>
+        </tr>`).join(''))
+    +'</table>';
+    div.innerHTML=table;
+    
+    return div
+    }
+    ,{
+  "sticky": true,
+  "className": "foliumtooltip",
+});
+                     
+    
+            geo_json_01b22eba122ec36cfbc383d52702c4d9.addTo(feature_group_242439eac906887f31f2d11226ab844f);
+        
+    
+            feature_group_242439eac906887f31f2d11226ab844f.addTo(map_c8fe81599b53a9b02ae3c6bce15f521d);
+        
+    
+            var feature_group_ba6c21bd644cd6e439684a8321894c5a = L.featureGroup(
+                {
+}
+            );
+        
+    
+        function geo_json_e2b4d920805130c1e491278b8a0657b5_styler(feature) {
+            switch(feature.id) {
+                default:
+                    return {"color": "#d62728", "fillColor": "#d62728", "fillOpacity": 0.3, "opacity": 0.95, "weight": 2};
+            }
+        }
+
+        function geo_json_e2b4d920805130c1e491278b8a0657b5_onEachFeature(feature, layer) {
+            layer.on({
+            });
+        };
+        var geo_json_e2b4d920805130c1e491278b8a0657b5 = L.geoJson(null, {
+                onEachFeature: geo_json_e2b4d920805130c1e491278b8a0657b5_onEachFeature,
+            
+                style: geo_json_e2b4d920805130c1e491278b8a0657b5_styler,
+            ...{
+}
+        });
+
+        function geo_json_e2b4d920805130c1e491278b8a0657b5_add (data) {
+            geo_json_e2b4d920805130c1e491278b8a0657b5
+                .addData(data);
+        }
+            geo_json_e2b4d920805130c1e491278b8a0657b5_add({"features": [{"geometry": {"coordinates": [[[14.510296840872076, 35.893084931672185], [14.508080775863677, 35.893075875430156], [14.50671682843902, 35.894883681431544], [14.506966723253164, 35.89889436421214], [14.508713822779141, 35.90142535763077], [14.515039099833405, 35.90251763829282], [14.52015285828375, 35.90125986463621], [14.52073533975652, 35.89995557194964], [14.519811801832777, 35.89821074477313], [14.517489599458465, 35.896405364063966], [14.514941816046866, 35.89589418737941], [14.514900686909547, 35.89347798330674], [14.510296840872076, 35.893084931672185]]], "type": "Polygon"}, "id": "25", "properties": {"area_km2": 0.936778620606056, "business_points_cluster": 177, "business_points_total": 177, "city": "Valletta, Malta", "cluster_method": "dbscan_eps450.0_min25_label0", "dbscan_eps_m": 450.0, "dbscan_min_samples": 25, "poly_point_buffer_m": 180.0, "poly_simplify_m": 60.0}, "type": "Feature"}], "type": "FeatureCollection"});
+
+        
+    
+    geo_json_e2b4d920805130c1e491278b8a0657b5.bindTooltip(
+    function(layer){
+    let div = L.DomUtil.create('div');
+    
+    let handleObject = feature=>typeof(feature)=='object' ? JSON.stringify(feature) : feature;
+    let fields = ["city", "area_km2", "business_points_total", "business_points_cluster", "cluster_method"];
+    let aliases = ["city", "area_km2", "business_points_total", "business_points_cluster", "cluster_method"];
+    let table = '<table>' +
+        String(
+        fields.map(
+        (v,i)=>
+        `<tr>
+            <th>${aliases[i]}</th>
+            
+            <td>${handleObject(layer.feature.properties[v])}</td>
+        </tr>`).join(''))
+    +'</table>';
+    div.innerHTML=table;
+    
+    return div
+    }
+    ,{
+  "sticky": true,
+  "className": "foliumtooltip",
+});
+                     
+    
+            geo_json_e2b4d920805130c1e491278b8a0657b5.addTo(feature_group_ba6c21bd644cd6e439684a8321894c5a);
+        
+    
+            feature_group_ba6c21bd644cd6e439684a8321894c5a.addTo(map_c8fe81599b53a9b02ae3c6bce15f521d);
+        
+    
+            var layer_control_713c9090f9c35710c214f4a256640074_layers = {
+                base_layers : {
+                    "cartodbpositron" : tile_layer_f0090093803105cef7fa0f27dc447472,
+                },
+                overlays :  {
+                    "City border" : feature_group_242439eac906887f31f2d11226ab844f,
+                    "Business area" : feature_group_ba6c21bd644cd6e439684a8321894c5a,
+                },
+            };
+            let layer_control_713c9090f9c35710c214f4a256640074 = L.control.layers(
+                layer_control_713c9090f9c35710c214f4a256640074_layers.base_layers,
+                layer_control_713c9090f9c35710c214f4a256640074_layers.overlays,
+                {
+  "position": "topright",
+  "collapsed": true,
+  "autoZIndex": true,
+}
+            ).addTo(map_c8fe81599b53a9b02ae3c6bce15f521d);
+
+        
+    
+            map_c8fe81599b53a9b02ae3c6bce15f521d.fitBounds(
+                [[35.8931489, 14.5055327], [35.903575, 14.5206512]],
+                {}
+            );
+        
+</script>
+</html>
