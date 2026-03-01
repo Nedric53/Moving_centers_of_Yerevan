@@ -496,47 +496,60 @@ def write_yerevan_single_polygon_html(
         input[type="range"] {{ width: 460px; }}
 
         .legend {{
-          background: rgba(255,255,255,0.92);
+          background: rgba(255,255,255,0.94);
           padding: 10px 12px;
-          border-radius: 10px;
-          box-shadow: 0 1px 10px rgba(0,0,0,0.12);
-          line-height: 1.2;
+          border-radius: 12px;
+          box-shadow: 0 10px 26px rgba(0,0,0,0.10);
           color: #111;
-          font-size: 13px;
-          min-width: 240px;
+          font-size: 12px;
+          font-family: Inter, Arial, sans-serif;
+          max-width: 560px;
         }}
-        .legend .title {{ font-weight: 700; margin-bottom: 8px; }}
-        .legend .item {{
-          display:flex;
-          align-items:center;
-          gap:8px;
-          margin: 6px 0;
+        .legendGrid {{
+          display: grid;
+          grid-template-columns: auto auto auto;
+          grid-template-rows: auto auto;
+          column-gap: 18px;
+          row-gap: 10px;
+          align-items: center;
         }}
-        .legend .swatch {{
-          width: 14px;
-          height: 14px;
-          border-radius: 0px;
+        .lItem {{
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          line-height: 1.2;
+          white-space: nowrap;
+        }}
+        .swatchHot {{
+          width: 12px;
+          height: 12px;
+          border-radius: 0;
           border: 1px solid rgba(0,0,0,0.35);
+          background: rgba(240,128,90,0.55);
           flex: 0 0 auto;
-          margin: 0;
         }}
-        .legend .muted {{ color:#444; }}
-        .legend .dot {{
+        .swatchGrid {{
+          width: 12px;
+          height: 12px;
+          border-radius: 0;
+          border: 1px solid rgba(0,0,0,0.35);
+          background: rgba(255,255,255,0.90);
+          flex: 0 0 auto;
+        }}
+        .dotMu {{
           width: 12px;
           height: 12px;
           border-radius: 50%;
           border: 2px solid #111;
           background: #f0805a;
           flex: 0 0 auto;
-          margin: 0;
         }}
-        .legend img.icon {{
+        .lIcon {{
           width: 22px;
           height: 22px;
           object-fit: contain;
+          display: block;
           flex: 0 0 auto;
-          margin: 0;
-          display:block;
         }}
       </style>
     </head>
@@ -612,7 +625,6 @@ def write_yerevan_single_polygon_html(
         }}
 
         // Opacity LUTs for hot cells
-        // Requested: "less opacite (less transparent)" => increase alpha
         const FILL_OPACITY_LUT = new Array(256);
         const STROKE_OPACITY_LUT = new Array(256);
         for (let b = 0; b < 256; b++) {{
@@ -623,9 +635,8 @@ def write_yerevan_single_polygon_html(
             const s = b / 255.0;
             const t = Math.min(1.0, Math.max(0.0, (s - THRESH_SHARE) / (1.0 - THRESH_SHARE)));
 
-            // Higher opacity than before
-            const fillOp = 0.10 + 0.34 * Math.pow(t, 0.85);     // max about 0.44
-            const strokeOp = 0.18 + 0.40 * Math.pow(t, 0.60);   // max about 0.58
+            const fillOp = 0.10 + 0.34 * Math.pow(t, 0.85);
+            const strokeOp = 0.18 + 0.40 * Math.pow(t, 0.60);
 
             FILL_OPACITY_LUT[b] = Math.min(0.48, Math.max(0.0, fillOp));
             STROKE_OPACITY_LUT[b] = Math.min(0.62, Math.max(0.0, strokeOp));
@@ -644,7 +655,6 @@ def write_yerevan_single_polygon_html(
 
         setTimeout(() => map.invalidateSize(), 0);
 
-        // Historical center icon (22x22) with correct anchoring (no drift on zoom)
         const histIconUrl = (data.assets && data.assets.historical_icon)
           ? data.assets.historical_icon
           : "assets/icon_historical.png";
@@ -663,7 +673,7 @@ def write_yerevan_single_polygon_html(
           .addTo(map)
           .bindPopup("Historical center");
 
-        // Business center (μ) as filled circle
+        // Business center (μ)
         let muMarker = L.circleMarker([g.lat, g.lon], {{
           radius: 7,
           weight: 2,
@@ -672,7 +682,6 @@ def write_yerevan_single_polygon_html(
           fillOpacity: 1.0
         }}).addTo(map).bindPopup("Business center (μ)");
 
-        // Base style: hide everything for non-hot cells
         const baseStyle = () => {{
           return {{
             fillColor: COLOR_HOT,
@@ -696,7 +705,7 @@ def write_yerevan_single_polygon_html(
           if (Number.isFinite(gid) && gid >= 0 && gid < nCells) layersByGid[gid] = layer;
         }});
 
-        // City boundary overlay (thin)
+        // City boundary overlay
         if (data.city_boundary && data.city_boundary.geometry) {{
           L.geoJSON(data.city_boundary, {{
             interactive: false,
@@ -709,55 +718,69 @@ def write_yerevan_single_polygon_html(
           }}).addTo(map);
         }}
 
-        // Legend
-        const legend = L.control({{ position: "topright" }});
+        // Horizontal 2 x 3 legend
+        const legend = L.control({{ position: "topleft" }});
         legend.onAdd = function() {{
           const div = L.DomUtil.create("div", "legend");
 
           const cellSize = data.cell_size_m;
           const cellTxt = (cellSize && isFinite(cellSize))
             ? `Grid cell: about ${{Math.round(cellSize)}} m on a side.`
-            : "Grid cell size in meters is unavailable.";
+            : "Grid cell: one model cell.";
+
+          const histIconUrl2 = (data.assets && data.assets.historical_icon)
+            ? data.assets.historical_icon
+            : "assets/icon_historical.png";
 
           const bizAreaIconUrl = (data.assets && data.assets.business_area_icon)
             ? data.assets.business_area_icon
             : "assets/icon_business.png";
 
+          const adminIconUrl = (data.assets && data.assets.administrative_icon)
+            ? data.assets.administrative_icon
+            : "assets/icon_administrative.png";
+
           div.innerHTML = `
-            <div class="title">Legend</div>
+            <div class="legendGrid">
+              <div class="lItem" style="grid-column:1;grid-row:1;">
+                <span class="swatchHot"></span>
+                <span>Hot cells (share &gt; 0.1)</span>
+              </div>
 
-            <div class="item">
-              <div class="swatch" style="background:${{COLOR_HOT}};"></div>
-              <div>Hot cells (share &gt; 0.1)</div>
-            </div>
+              <div class="lItem" style="grid-column:1;grid-row:2;">
+                <span class="swatchGrid"></span>
+                <span>${{cellTxt}}</span>
+              </div>
 
-            <div class="item">
-              <div class="swatch" style="background:transparent; border:1px solid rgba(0,0,0,0.45);"></div>
-              <div class="muted">${{cellTxt}}</div>
-            </div>
+              <div class="lItem" style="grid-column:2;grid-row:1;">
+                <img class="lIcon" src="${{histIconUrl2}}" alt="">
+                <span>Historical center</span>
+              </div>
 
-            <div class="item" style="margin-top:8px;">
-              <img class="icon" src="${{histIconUrl}}" alt="Historical center"/>
-              <div class="muted">Historical center</div>
-            </div>
+              <div class="lItem" style="grid-column:2;grid-row:2;">
+                <span class="dotMu"></span>
+                <span>Business center (μ)</span>
+              </div>
 
-            <div class="item">
-              <div class="dot"></div>
-              <div class="muted">Business center (μ)</div>
-            </div>
+              <div class="lItem" style="grid-column:3;grid-row:1;">
+                <img class="lIcon" src="${{bizAreaIconUrl}}" alt="">
+                <span>Business area (polygon)</span>
+              </div>
 
-            <div class="item">
-              <img class="icon" src="${{bizAreaIconUrl}}" alt="Business area"/>
-              <div class="muted">Business area (polygon)</div>
+              <div class="lItem" style="grid-column:3;grid-row:2;">
+                <img class="lIcon" src="${{adminIconUrl}}" alt="">
+                <span>Administrative borders</span>
+              </div>
             </div>
           `;
+
           L.DomEvent.disableClickPropagation(div);
           L.DomEvent.disableScrollPropagation(div);
           return div;
         }};
         legend.addTo(map);
 
-        // Business polygon layer
+        // Business polygon
         const bizLayer = L.geoJSON(null, {{
           interactive: false,
           style: () => ({{
@@ -773,7 +796,6 @@ def write_yerevan_single_polygon_html(
           return `${{tVal.toFixed(2)}}|${{aVal.toFixed(2)}}`;
         }}
 
-        // Chunked repaint
         let _paintToken = 0;
         function repaintGrid(u8) {{
           const token = ++_paintToken;
@@ -835,7 +857,7 @@ def write_yerevan_single_polygon_html(
           const muInfoEl = document.getElementById("muInfo");
           if (muInfoEl) {{
             muInfoEl.textContent =
-              `μ: (${{(mu && mu.lon)? mu.lon.toFixed(5): "?"}}, ${{(mu && mu.lat)? mu.lat.toFixed(5): "?"}}) | |μ-g|: ${{sep.toFixed(0)}} m | business area: ${{areaKm2.toFixed(2)}} km²`;
+              `μ: (${{(mu && mu.lon) ? mu.lon.toFixed(5) : "?"}}, ${{(mu && mu.lat) ? mu.lat.toFixed(5) : "?"}}) | |μ-g|: ${{sep.toFixed(0)}} m | business area: ${{areaKm2.toFixed(2)}} km²`;
           }}
         }}
 

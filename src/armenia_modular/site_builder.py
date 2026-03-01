@@ -680,12 +680,14 @@ def patch_interactive_for_scrolly(interactive_html: str) -> str:
 def patch_interactive_ui_left_right_vertical_sliders(html_str: str) -> str:
     import re
 
+    # -------------------------
+    # 1) Replace the body layout
+    # -------------------------
     old_body_pattern = re.compile(
         r'<div id="map"></div>\s*<div id="controls">.*?</div>\s*',
         re.DOTALL
     )
 
-    # Body: keep only the top labels in panels
     new_body = r"""
   <div id="app">
     <div id="topRow">
@@ -725,11 +727,10 @@ def patch_interactive_ui_left_right_vertical_sliders(html_str: str) -> str:
     </div>
 
     <div id="bottomBar">
-      <div class="barLeft">
-        <div class="barLabel">Distance</div>
+      <div class="barMapArea">
         <button id="centerBtn" class="barBtn" type="button">Center map</button>
+        <div class="barValue" id="muInfo"></div>
       </div>
-      <div class="barValue" id="muInfo"></div>
     </div>
   </div>
 """
@@ -737,9 +738,11 @@ def patch_interactive_ui_left_right_vertical_sliders(html_str: str) -> str:
         raise ValueError("Could not find the expected map+controls block to replace.")
     html_str = old_body_pattern.sub(new_body, html_str, count=1)
 
+    # -------------------------
+    # 2) Replace <style> block
+    # -------------------------
     style_pattern = re.compile(r"<style>.*?</style>", re.DOTALL)
 
-    # Style: make side panels much thinner + slim slider UI
     new_style = r"""
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
@@ -749,7 +752,6 @@ def patch_interactive_ui_left_right_vertical_sliders(html_str: str) -> str:
 
     #app { height: 100%; display: flex; flex-direction: column; }
 
-    /* Thinner side panels */
     #topRow {
       flex: 1;
       min-height: 0;
@@ -803,7 +805,6 @@ def patch_interactive_ui_left_right_vertical_sliders(html_str: str) -> str:
       box-sizing: border-box;
     }
 
-    /* Slim ticks column */
     .vTicks{
       position: relative;
       width: 14px;
@@ -828,7 +829,6 @@ def patch_interactive_ui_left_right_vertical_sliders(html_str: str) -> str:
       box-shadow: 0 0 0 3px rgba(124,58,237,0.14);
     }
 
-    /* Slim slider */
     .vSlider{
       writing-mode: bt-lr;
       width: 22px;
@@ -856,7 +856,7 @@ def patch_interactive_ui_left_right_vertical_sliders(html_str: str) -> str:
       width: 20px;
       height: 20px;
       border-radius: 999px;
-      background: rgba(124,58,237,0.95);
+      background: rgba(0,124,204,0.98);
       border: 2px solid #fff;
       box-shadow: 0 6px 14px rgba(0,0,0,0.16);
       margin-top: -4px;
@@ -873,21 +873,21 @@ def patch_interactive_ui_left_right_vertical_sliders(html_str: str) -> str:
       width: 20px;
       height: 20px;
       border-radius: 999px;
-      background: rgba(124,58,237,0.95);
+      background: rgba(0,124,204,0.98);
       border: 2px solid #fff;
       box-shadow: 0 6px 14px rgba(0,0,0,0.16);
     }
 
-    /* Smaller floating word label */
+    /* This matches your old look: a word pill that follows slider value */
     .thumbLabel{
       z-index: 5000;
       position: absolute;
       left: calc(100% + 8px);
       top: 50%;
       transform: translateY(-50%);
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 900;
-      padding: 5px 9px;
+      padding: 6px 10px;
       border-radius: 999px;
       border: 1px solid rgba(0,0,0,0.12);
       background: rgba(250,250,250,0.96);
@@ -917,59 +917,94 @@ def patch_interactive_ui_left_right_vertical_sliders(html_str: str) -> str:
     .leaflet-control-attribution { display: none !important; }
     .leaflet-top, .leaflet-bottom { z-index: 1000; }
 
-    .legend {
-      background: rgba(255,255,255,0.92);
-      padding: 8px 10px;
-      border-radius: 10px;
+    /* Legend: horizontal 3 columns x 2 rows */
+    .legend{
+      background: rgba(255,255,255,0.94);
+      padding: 10px 12px;
+      border-radius: 12px;
       box-shadow: 0 1px 10px rgba(0,0,0,0.12);
-      line-height: 1.2;
       color: #111;
       font-size: 12px;
       font-family: Inter, Arial, sans-serif;
+
+      width: 520px;
+      max-width: 520px;
     }
-    .legend .title { font-weight: 700; margin-bottom: 7px; }
 
-    /* align icons + text on one line */
-    .legend .item { display:flex; align-items:center; gap:7px; margin: 5px 0; }
+    .legend .title{
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
 
-    /* squares in legend should not be rounded */
-    .legend .swatch {
+    .legendGrid{
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      grid-auto-rows: min-content;
+      column-gap: 16px;
+      row-gap: 10px;
+      align-items: start;
+    }
+
+    .legendItem{
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .legendText{
+      white-space: normal;
+      line-height: 1.15;
+    }
+
+    .legend .swatch{
       width: 12px;
       height: 12px;
       border-radius: 0px;
       border: 1px solid rgba(0,0,0,0.25);
       flex: 0 0 auto;
-      margin: 0;
     }
 
-    .legend .note { margin-top: 7px; color: #333; }
-    .legend .muted { color:#444; }
+    .legend img.icon{
+      width: 22px;
+      height: 22px;
+      object-fit: contain;
+      flex: 0 0 auto;
+      display: block;
+    }
 
-    /* filled business center circle in legend */
-    .legend .dot {
+    .legend .dot{
       width: 10px;
       height: 10px;
       border-radius: 50%;
       border: 2px solid #111;
       background: #f0805a;
       flex: 0 0 auto;
-      margin: 0;
     }
 
-    /* critical: constrain legend icons */
-    .legend img.icon {
-      width: 22px;
-      height: 22px;
-      object-fit: contain;
-      display: block;
-      flex: 0 0 auto;
+    /* Bottom bar: only map area column, with left button and right text */
+    #bottomBar{
+      border-top: 1px solid rgba(0,0,0,0.12);
+      padding: 10px 12px;
+      background: #fff;
+      box-sizing: border-box;
+
+      display: grid;
+      grid-template-columns: clamp(110px, 7.5vw, 150px) 1fr clamp(110px, 7.5vw, 150px);
+      gap: 10px;
+      align-items: center;
     }
 
+    .barMapArea{
+      grid-column: 2;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-width: 0;
+    }
 
-    .barLeft { display: flex; align-items: center; gap: 10px; }
-    .barLabel { font-size: 11px; letter-spacing: 0.10em; text-transform: uppercase; opacity: 0.7; white-space: nowrap; }
-
-    .barBtn {
+    .barBtn{
       height: 30px;
       padding: 0 10px;
       border-radius: 999px;
@@ -979,14 +1014,29 @@ def patch_interactive_ui_left_right_vertical_sliders(html_str: str) -> str:
       font-weight: 800;
       cursor: pointer;
       font-family: Inter, Arial, sans-serif;
+      flex: 0 0 auto;
     }
 
-    .barValue {
+    .barValue{
       font-size: 13px;
       font-weight: 800;
       white-space: nowrap;
       font-family: Inter, Arial, sans-serif;
       opacity: 0.92;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+      text-align: right;
+    }
+
+    @media (max-width: 700px) {
+      .legend{
+        width: auto;
+        max-width: 92vw;
+      }
+      .legendGrid{
+        grid-template-columns: 1fr;
+      }
     }
 
     @media (max-width: 560px) {
@@ -995,12 +1045,13 @@ def patch_interactive_ui_left_right_vertical_sliders(html_str: str) -> str:
         grid-template-rows: auto minmax(240px, 1fr) auto;
       }
       .mapPanel { min-height: 45vh; }
-
       .vSlider { height: 160px; }
       .vTicks { height: 160px; }
-
       #rightPanel .thumbLabel{ right: calc(100% + 8px); }
       .thumbLabel{ left: calc(100% + 8px); }
+
+      #bottomBar{ grid-template-columns: 1fr; }
+      .barMapArea{ grid-column: 1; }
     }
   </style>
 """
@@ -1008,201 +1059,249 @@ def patch_interactive_ui_left_right_vertical_sliders(html_str: str) -> str:
         raise ValueError("Could not find a <style> block to replace.")
     html_str = style_pattern.sub(new_style, html_str, count=1)
 
-    # Patch tau meaning if present
-    tau_pattern = re.compile(
-        r"const\s+tau\s*=\s*tFactor\s*\*\s*\(\s*d\s*/\s*speed_m_per_min\s*\)\s*;",
-        re.DOTALL
-    )
-    if tau_pattern.search(html_str):
-        html_str = tau_pattern.sub(
-            "const tau = (d / speed_m_per_min) / Math.max(tFactor, 1e-9);",
+    # -------------------------
+    # 3) Force zoom control to top-right
+    # -------------------------
+    if "zoomControl: false" not in html_str:
+        html_str = re.sub(
+            r'L\.map\(\s*"map"\s*,\s*\{\s*preferCanvas\s*:\s*true\s*\}\s*\)',
+            'L.map("map", { preferCanvas: true, zoomControl: false })',
             html_str,
             count=1
         )
 
-    # After tile add, invalidate size (optional)
-    tile_add_pattern = re.compile(r"\}\)\.addTo\(map\);\s*", re.DOTALL)
-    if tile_add_pattern.search(html_str):
-        html_str = tile_add_pattern.sub(
-            "}).addTo(map);\n\n    setTimeout(() => map.invalidateSize(), 0);\n\n    ",
+    if "L.control.zoom({ position: \"topright\" })" not in html_str:
+        html_str = re.sub(
+            r'(const\s+map\s*=\s*L\.map\("map"[^;]*;\s*)',
+            r'\1\n\n    L.control.zoom({ position: "topright" }).addTo(map);\n',
             html_str,
             count=1
         )
 
-    # Update muInfo text to a compact summary (uses sep + areaKm2 in your JS)
-    muinfo_el_pattern = re.compile(
-        r"muInfoEl\.textContent\s*=\s*`.*?`;\s*",
+    # -------------------------
+    # 4) Legend: replace any existing legend control with new one
+    # -------------------------
+    legend_repl = r"""
+    // Legend (top-left)
+    const legend = L.control({ position: "topleft" });
+    legend.onAdd = function() {
+      const div = L.DomUtil.create("div", "legend");
+
+      const cellSize = data.cell_size_m;
+      const cellTxt = (cellSize && isFinite(cellSize))
+        ? `Grid cell: about ${Math.round(cellSize)} m on a side.`
+        : "Grid cell: one grid cell.";
+
+      div.innerHTML = `
+
+        <div class="legendGrid">
+          <div class="legendItem">
+            <div class="swatch" style="background:#f0805a;"></div>
+            <div class="legendText">Hot cells (share &gt; 0.1)</div>
+          </div>
+
+          <div class="legendItem">
+            <img class="icon" src="assets/icon_historical.png" alt="Historical center">
+            <div class="legendText">Historical center</div>
+          </div>
+
+          <div class="legendItem">
+            <img class="icon" src="assets/icon_business.png" alt="Business area">
+            <div class="legendText">Business area (polygon)</div>
+          </div>
+
+          <div class="legendItem">
+            <div class="swatch" style="background:#ffffff;"></div>
+            <div class="legendText">${cellTxt}</div>
+          </div>
+
+          <div class="legendItem">
+            <div class="dot"></div>
+            <div class="legendText">Business center (μ)</div>
+          </div>
+
+          <div class="legendItem">
+            <img class="icon" src="assets/icon_administrative.png" alt="Administrative border">
+            <div class="legendText">Administrative border</div>
+          </div>
+        </div>
+      `;
+
+      L.DomEvent.disableClickPropagation(div);
+      L.DomEvent.disableScrollPropagation(div);
+      return div;
+    };
+    legend.addTo(map);
+"""
+    legend_block_pattern = re.compile(
+        r"const\s+legend\s*=\s*L\.control\([\s\S]*?\)\s*;\s*"
+        r"legend\.onAdd\s*=\s*function\(\)\s*\{[\s\S]*?\}\s*;\s*"
+        r"legend\.addTo\(map\)\s*;\s*",
         re.DOTALL
     )
-    if muinfo_el_pattern.search(html_str):
-        html_str = muinfo_el_pattern.sub(
-            "muInfoEl.textContent = `Distance from Historic to Business Center: ${sep.toFixed(0)}m; Business area: ${areaKm2.toFixed(0)} km²`;\n",
-            html_str,
-            count=1
-        )
+    if legend_block_pattern.search(html_str):
+        html_str = legend_block_pattern.sub(legend_repl, html_str, count=1)
     else:
-        muinfo_doc_pattern = re.compile(
-            r"document\.getElementById\('muInfo'\)\.textContent\s*=\s*`.*?`;\s*",
-            re.DOTALL
+        html_str = re.sub(
+            r'(const\s+map\s*=\s*L\.map\("map"[^;]*;\s*)',
+            r'\1' + "\n" + legend_repl + "\n",
+            html_str,
+            count=1
         )
-        if muinfo_doc_pattern.search(html_str):
-            html_str = muinfo_doc_pattern.sub(
-                "document.getElementById('muInfo').textContent = `Distance from Historic to Business Center: ${sep.toFixed(0)}m; Business area: ${areaKm2.toFixed(0)} km²`;\n",
-                html_str,
-                count=1
-            )
 
-    # Center button wiring (if expected map init exists)
-    map_init_hook = re.compile(
-        r"const\s+map\s*=\s*L\.map\(\s*(['\"])map\1(?:\s*,[^)]*)?\)\s*"
-        r"\.setView\(\s*\[\s*g\.lat\s*,\s*g\.lon\s*\]\s*,\s*11\s*\)\s*;\s*",
-        re.DOTALL
+    # -------------------------
+    # 5) Ensure bottom text format (override any existing μ text format)
+    # -------------------------
+    # Replace the muInfo line inside applyState/applyResult if present
+    # (matches both muInfoEl.textContent = `...`; and muInfoEl.textContent = '...';)
+    html_str = re.sub(
+        r"muInfoEl\.textContent\s*=\s*`[^`]*`;\s*",
+        "muInfoEl.textContent = `Distance from Historic to Business Center: ${sep.toFixed(0)}m; Business area: ${areaKm2.toFixed(0)} km²`;\n",
+        html_str,
+        count=1,
+        flags=re.DOTALL
     )
 
-    def _inject_center(m: re.Match) -> str:
-        original = m.group(0)
-        add = (
-            "\n    const centerBtn = document.getElementById('centerBtn');\n"
-            "    if (centerBtn) {\n"
-            "      centerBtn.addEventListener('click', () => {\n"
-            "        map.setView([g.lat, g.lon], 11, { animate: true });\n"
-            "      });\n"
-            "    }\n"
-        )
-        return original + add
+    # If that didn’t match (different block), try a broader replacement for any template using μ:
+    html_str = re.sub(
+        r"muInfoEl\.textContent\s*=\s*`[^`]*μ[^`]*`;\s*",
+        "muInfoEl.textContent = `Distance from Historic to Business Center: ${sep.toFixed(0)}m; Business area: ${areaKm2.toFixed(0)} km²`;\n",
+        html_str,
+        count=1,
+        flags=re.DOTALL
+    )
 
-    if map_init_hook.search(html_str):
-        html_str = map_init_hook.sub(_inject_center, html_str, count=1)
+    # -------------------------
+    # 6) Restore the old “word label” slider behavior (Baseline, Faster, ...)
+    #    and prevent numeric 1.00 labels
+    # -------------------------
+    # Remove any existing "tEl.textContent = tVal.toFixed(2)" / "aEl..." assignments
+    html_str = re.sub(
+        r"if\s*\(\s*tEl\s*\)\s*tEl\.textContent\s*=\s*tVal\.toFixed\(\s*2\s*\)\s*;\s*",
+        "",
+        html_str
+    )
+    html_str = re.sub(
+        r"if\s*\(\s*aEl\s*\)\s*aEl\.textContent\s*=\s*aVal\.toFixed\(\s*2\s*\)\s*;\s*",
+        "",
+        html_str
+    )
 
-    # Inject slider snapping + words (unchanged)
-    injected_block = r"""
-    // ---- injected: symmetric word sliders (0..2, baseline=1) ----
-    const T_MIN = 0.0, T_MAX = 2.0;
-    const A_MIN = 0.0, A_MAX = 2.0;
-
+    injected_words = r"""
+    // ---- injected: restore word labels on vertical sliders ----
     const TRANSPORT_STOPS = [0.50, 0.75, 1.00, 1.25, 1.50];
     const TRANSPORT_WORDS = ["Very slow", "Slower", "Baseline", "Faster", "Very fast"];
 
     const AMENITY_STOPS = [0.50, 0.75, 1.00, 1.25, 1.50];
     const AMENITY_WORDS = ["Very weak", "Weaker", "Baseline", "Stronger", "Very strong"];
 
-    function clamp(x, lo, hi){ return Math.max(lo, Math.min(hi, x)); }
-
-    function valueToTopPct(v, vmin, vmax) {
-      const p = (clamp(v, vmin, vmax) - vmin) / (vmax - vmin);
-      return (100 * (1 - p));
-    }
-
-    function nearestStop(v, stops) {
-      let bestI = 0;
-      let bestD = Infinity;
-      for (let i = 0; i < stops.length; i++) {
+    function _nearestStop(v, stops){
+      let bestI = 0, bestD = Infinity;
+      for (let i = 0; i < stops.length; i++){
         const d = Math.abs(v - stops[i]);
-        if (d < bestD) { bestD = d; bestI = i; }
+        if (d < bestD){ bestD = d; bestI = i; }
       }
       return { val: stops[bestI], idx: bestI };
     }
 
-    function buildTicks(elId, stops, vmin, vmax) {
+    function _clamp(x, lo, hi){ return Math.max(lo, Math.min(hi, x)); }
+
+    function _valueToTopPct(v, vmin, vmax){
+      const p = (_clamp(v, vmin, vmax) - vmin) / (vmax - vmin);
+      return (100 * (1 - p));
+    }
+
+    function _positionLabel(labelEl, v, vmin, vmax){
+      if (!labelEl) return;
+      labelEl.style.top = _valueToTopPct(v, vmin, vmax).toFixed(2) + "%";
+    }
+
+    function _setActiveDot(dots, idx){
+      for (let i = 0; i < dots.length; i++){
+        dots[i].classList.toggle("isActive", i === idx);
+      }
+    }
+
+    function _buildTicks(elId, stops, vmin, vmax){
       const el = document.getElementById(elId);
       if (!el) return [];
       el.innerHTML = "";
       const dots = [];
-      for (let i = 0; i < stops.length; i++) {
+      for (let i = 0; i < stops.length; i++){
         const d = document.createElement("div");
         d.className = "tickDot";
-        d.style.top = valueToTopPct(stops[i], vmin, vmax).toFixed(2) + "%";
+        d.style.top = _valueToTopPct(stops[i], vmin, vmax).toFixed(2) + "%";
         el.appendChild(d);
         dots.push(d);
       }
       return dots;
     }
 
-    const _tDots = buildTicks("tTicks", TRANSPORT_STOPS, T_MIN, T_MAX);
-    const _aDots = buildTicks("aTicks", AMENITY_STOPS, A_MIN, A_MAX);
+    const _tDots = _buildTicks("tTicks", TRANSPORT_STOPS, 0.0, 2.0);
+    const _aDots = _buildTicks("aTicks", AMENITY_STOPS, 0.0, 2.0);
 
-    function setActiveDot(dots, idx){
-      for (let i = 0; i < dots.length; i++) dots[i].classList.toggle("isActive", i === idx);
-    }
-
-    function positionLabel(labelEl, v, vmin, vmax) {
-      if (!labelEl) return;
-      labelEl.style.top = valueToTopPct(v, vmin, vmax).toFixed(2) + "%";
-    }
-
-    function snapSlider(sliderEl, stops) {
-      if (!sliderEl) return { idx: 0, val: NaN };
-      const v = parseFloat(sliderEl.value);
-      const ns = nearestStop(v, stops);
-      sliderEl.value = String(ns.val.toFixed(2));
-      return ns;
-    }
-
-    function updateWordsAndTicks() {
+    function _updateWordLabels(){
       const tSlider = document.getElementById("tSlider");
       const aSlider = document.getElementById("aSlider");
-      const tLabel = document.getElementById("tVal");
-      const aLabel = document.getElementById("aVal");
-
+      const tLabel  = document.getElementById("tVal");
+      const aLabel  = document.getElementById("aVal");
       if (!tSlider || !aSlider) return;
 
       const tV = parseFloat(tSlider.value);
       const aV = parseFloat(aSlider.value);
 
-      const tN = nearestStop(tV, TRANSPORT_STOPS);
-      const aN = nearestStop(aV, AMENITY_STOPS);
+      const tN = _nearestStop(tV, TRANSPORT_STOPS);
+      const aN = _nearestStop(aV, AMENITY_STOPS);
 
       if (tLabel) tLabel.textContent = TRANSPORT_WORDS[tN.idx];
       if (aLabel) aLabel.textContent = AMENITY_WORDS[aN.idx];
 
-      positionLabel(tLabel, tV, T_MIN, T_MAX);
-      positionLabel(aLabel, aV, A_MIN, A_MAX);
+      _positionLabel(tLabel, tV, 0.0, 2.0);
+      _positionLabel(aLabel, aV, 0.0, 2.0);
 
-      setActiveDot(_tDots, tN.idx);
-      setActiveDot(_aDots, aN.idx);
+      _setActiveDot(_tDots, tN.idx);
+      _setActiveDot(_aDots, aN.idx);
     }
 
-    if (typeof update === "function") {
+    // Wrap update() so labels stay correct after redraws
+    if (typeof update === "function" && !update.__wordLabelWrapped){
       const _origUpdate = update;
-      update = function() {
-        const tSlider = document.getElementById("tSlider");
-        const aSlider = document.getElementById("aSlider");
-        snapSlider(tSlider, TRANSPORT_STOPS);
-        snapSlider(aSlider, AMENITY_STOPS);
-        _origUpdate();
-        updateWordsAndTicks();
+      update = function(){
+        const r = _origUpdate.apply(this, arguments);
+        _updateWordLabels();
+        return r;
       };
+      update.__wordLabelWrapped = true;
     }
 
-    const _t = document.getElementById("tSlider");
-    const _a = document.getElementById("aSlider");
-    if (_t) _t.addEventListener("input", () => { snapSlider(_t, TRANSPORT_STOPS); updateWordsAndTicks(); });
-    if (_a) _a.addEventListener("input", () => { snapSlider(_a, AMENITY_STOPS); updateWordsAndTicks(); });
-
-    setTimeout(updateWordsAndTicks, 0);
+    const _ts = document.getElementById("tSlider");
+    const _as = document.getElementById("aSlider");
+    if (_ts) _ts.addEventListener("input", _updateWordLabels);
+    if (_as) _as.addEventListener("input", _updateWordLabels);
+    setTimeout(_updateWordLabels, 0);
     // ---- end injected block ----
 """
 
-    insert_points = [
-        "document.getElementById('aSlider').addEventListener('input', scheduleUpdate);",
-        "document.getElementById('tSlider').addEventListener('input', scheduleUpdate);",
-        "// Initial draw",
-    ]
-
+    # Inject after listeners or near the end of the main script
     inserted = False
-    for needle in insert_points:
+    for needle in [
+        'document.getElementById("aSlider").addEventListener("input", scheduleUpdate);',
+        'document.getElementById("tSlider").addEventListener("input", scheduleUpdate);',
+        "update();"
+    ]:
         if needle in html_str:
-            html_str = html_str.replace(needle, needle + "\n" + injected_block, 1)
+            html_str = html_str.replace(needle, needle + "\n" + injected_words, 1)
             inserted = True
             break
 
     if not inserted:
         idx = html_str.rfind("</script>")
         if idx == -1:
-            raise ValueError("Could not find </script> to inject slider logic.")
-        html_str = html_str[:idx] + "\n" + injected_block + "\n" + html_str[idx:]
+            raise ValueError("Could not find </script> to inject word-label logic.")
+        html_str = html_str[:idx] + "\n" + injected_words + "\n" + html_str[idx:]
 
     return html_str
+
 
 
 
@@ -2114,9 +2213,8 @@ def write_full_scrolly_site(
             Path(os.path.join(out_dir, fname)).write_text(html_text, encoding="utf-8")
 
     # 3) Hero image: always from assets/Mask group.png if present
-    assets_dir = os.path.join(out_dir, "assets")
+    assets_dir = os.path.join("assets")
     os.makedirs(assets_dir, exist_ok=True)
-
     desired_rel = (hero_image_dst_name).replace(os.sep, "/")
     desired_abs = os.path.abspath(os.path.join("assets", hero_image_dst_name))
     print(desired_abs)
