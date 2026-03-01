@@ -1,6 +1,5 @@
-# Armenia modular package
+# Armenia moving centers package package
 
-This package is a modular refactor of `Armenia.ipynb`.
 
 ## Main files
 
