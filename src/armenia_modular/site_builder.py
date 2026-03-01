@@ -397,7 +397,49 @@ def patch_compare_add_height_postmessage(compare_html: str) -> str:
     if idx == -1:
         raise ValueError("Could not find </body> or </html> to inject height reporter.")
     return compare_html[:idx] + injected + "\n" + compare_html[idx:]
+def patch_landing_remove_borders(landing_html: str) -> str:
+    css = r"""
 
+/* ---- injected: borderless unified look ---- */
+
+/* Main page chrome */
+.nav,
+.hero,
+.modelWrap,
+footer{
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Cards / framed blocks */
+.imgCard,
+.stepCard,
+.textCard,
+#model .stickyViz,
+#compare .embedCard{
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Keep clean white surfaces, just without frames */
+.imgCard,
+.stepCard,
+.textCard,
+#model .stickyViz{
+  background: #fff !important;
+}
+
+/* Optional: soften section separation */
+.section{
+  border: 0 !important;
+}
+
+/* ---- end injected block ---- */
+"""
+    style_close = landing_html.rfind("</style>")
+    if style_close == -1:
+        raise ValueError("Could not find </style> to inject borderless CSS.")
+    return landing_html[:style_close] + css + "\n" + landing_html[style_close:]
 
 # =========================
 # Patch: landing CSS layout tweaks for model section
@@ -680,9 +722,9 @@ def patch_interactive_for_scrolly(interactive_html: str) -> str:
 def patch_interactive_ui_left_right_vertical_sliders(html_str: str) -> str:
     import re
 
-    # -------------------------
-    # 1) Replace the body layout
-    # -------------------------
+    # -------------------------------------------------
+    # A) Replace body (controls layout) with our UI shell
+    # -------------------------------------------------
     old_body_pattern = re.compile(
         r'<div id="map"></div>\s*<div id="controls">.*?</div>\s*',
         re.DOTALL
@@ -694,7 +736,6 @@ def patch_interactive_ui_left_right_vertical_sliders(html_str: str) -> str:
 
       <div class="panel" id="leftPanel">
         <div class="panelKicker">Transport</div>
-
         <div class="panelSliderWrap">
           <div class="sliderStack" id="tStack">
             <div class="vTicks" id="tTicks" aria-hidden="true"></div>
@@ -712,7 +753,6 @@ def patch_interactive_ui_left_right_vertical_sliders(html_str: str) -> str:
 
       <div class="panel" id="rightPanel">
         <div class="panelKicker">Amenities</div>
-
         <div class="panelSliderWrap">
           <div class="sliderStack" id="aStack">
             <div class="vTicks" id="aTicks" aria-hidden="true"></div>
@@ -727,10 +767,10 @@ def patch_interactive_ui_left_right_vertical_sliders(html_str: str) -> str:
     </div>
 
     <div id="bottomBar">
-      <div class="barMapArea">
+      <div class="barLeft">
         <button id="centerBtn" class="barBtn" type="button">Center map</button>
-        <div class="barValue" id="muInfo"></div>
       </div>
+      <div class="barValue" id="muInfo"></div>
     </div>
   </div>
 """
@@ -739,13 +779,19 @@ def patch_interactive_ui_left_right_vertical_sliders(html_str: str) -> str:
     html_str = old_body_pattern.sub(new_body, html_str, count=1)
 
     # -------------------------
-    # 2) Replace <style> block
+    # B) Replace <style>...</style>
     # -------------------------
     style_pattern = re.compile(r"<style>.*?</style>", re.DOTALL)
 
     new_style = r"""
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
+
+    :root{
+      --sliderBg: #E6E6E6;
+      --sliderFill: #9EDDE5;
+      --sliderThumb: #57D4E5;
+    }
 
     html, body { height: 100%; }
     body { margin: 0; font-family: Inter, Arial, sans-serif; overflow: hidden; background: #fff; }
@@ -756,42 +802,49 @@ def patch_interactive_ui_left_right_vertical_sliders(html_str: str) -> str:
       flex: 1;
       min-height: 0;
       display: grid;
-      grid-template-columns: clamp(110px, 7.5vw, 150px) 1fr clamp(110px, 7.5vw, 150px);
-      gap: 10px;
-      padding: 10px;
+      grid-template-columns: clamp(86px, 7vw, 120px) 1fr clamp(86px, 7vw, 120px);
+      gap: 12px;
+      padding: 10px 10px 8px 10px;
       box-sizing: border-box;
+      align-items: stretch;
     }
 
+    /* Slider columns: no container, no border, no shadow */
     .panel {
       position: relative;
       z-index: 5;
       height: 100%;
-      border: 1px solid rgba(0,0,0,0.12);
-      border-radius: 16px;
-      background: #fff;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.09);
-      padding: 10px;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+      padding: 0;
       box-sizing: border-box;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 6px;
       min-width: 0;
+      align-items: center;
     }
 
     .panelKicker {
-      font-size: 10px;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      opacity: 0.70;
-      font-weight: 800;
+      font-size: 12px;
+      letter-spacing: 0.01em;
+      opacity: 0.90;
+      font-weight: 700;
+      text-align: center;
+      margin-top: 2px;
     }
 
     .panelSliderWrap{
       flex: 1;
       min-height: 0;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: center;
+      width: 100%;
+      padding-top: 6px;
+      box-sizing: border-box;
     }
 
     .sliderStack{
@@ -801,7 +854,7 @@ def patch_interactive_ui_left_right_vertical_sliders(html_str: str) -> str:
       display: flex;
       align-items: stretch;
       gap: 8px;
-      padding: 4px 0;
+      padding: 0;
       box-sizing: border-box;
     }
 
@@ -818,24 +871,26 @@ def patch_interactive_ui_left_right_vertical_sliders(html_str: str) -> str:
       width: 6px;
       height: 6px;
       border-radius: 999px;
-      background: rgba(0,0,0,0.16);
+      background: rgba(0,0,0,0.14);
       transform: translate(-50%, -50%);
       transition: transform 120ms ease, background 120ms ease, box-shadow 120ms ease;
     }
 
     .tickDot.isActive{
-      background: rgba(124,58,237,0.95);
+      background: var(--sliderThumb);
       transform: translate(-50%, -50%) scale(1.18);
-      box-shadow: 0 0 0 3px rgba(124,58,237,0.14);
+      box-shadow: 0 0 0 3px rgba(87,212,229,0.18);
     }
 
+    /* Vertical slider */
     .vSlider{
       writing-mode: bt-lr;
-      width: 22px;
+      width: 26px;
       height: 100%;
       padding: 0;
       margin: 0;
       background: transparent;
+      --fillPct: 50%;
     }
 
     .vSlider.pretty{
@@ -843,57 +898,70 @@ def patch_interactive_ui_left_right_vertical_sliders(html_str: str) -> str:
       appearance: slider-vertical;
     }
 
+    /* WebKit track with filled portion */
     .vSlider.pretty::-webkit-slider-runnable-track{
-      width: 12px;
-      background: rgba(0,0,0,0.10);
+      width: 14px;
       border-radius: 999px;
-      border: 1px solid rgba(0,0,0,0.10);
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.55);
+      border: 0;
+      background: linear-gradient(
+        to top,
+        var(--sliderFill) 0%,
+        var(--sliderFill) var(--fillPct),
+        var(--sliderBg) var(--fillPct),
+        var(--sliderBg) 100%
+      );
     }
 
     .vSlider.pretty::-webkit-slider-thumb{
       -webkit-appearance: none;
-      width: 20px;
-      height: 20px;
+      width: 18px;
+      height: 18px;
       border-radius: 999px;
-      background: rgba(0,124,204,0.98);
+      background: var(--sliderThumb);
       border: 2px solid #fff;
-      box-shadow: 0 6px 14px rgba(0,0,0,0.16);
-      margin-top: -4px;
+      box-shadow: none;
+      margin-top: -2px;
     }
 
+    /* Firefox */
     .vSlider.pretty::-moz-range-track{
-      width: 12px;
-      background: rgba(0,0,0,0.10);
+      width: 14px;
       border-radius: 999px;
-      border: 1px solid rgba(0,0,0,0.10);
+      border: 0;
+      background: var(--sliderBg);
+    }
+
+    .vSlider.pretty::-moz-range-progress{
+      background: var(--sliderFill);
+      border-radius: 999px;
+      height: 14px;
     }
 
     .vSlider.pretty::-moz-range-thumb{
-      width: 20px;
-      height: 20px;
+      width: 18px;
+      height: 18px;
       border-radius: 999px;
-      background: rgba(0,124,204,0.98);
+      background: var(--sliderThumb);
       border: 2px solid #fff;
-      box-shadow: 0 6px 14px rgba(0,0,0,0.16);
+      box-shadow: none;
     }
 
-    /* This matches your old look: a word pill that follows slider value */
+    /* Floating word label */
     .thumbLabel{
       z-index: 5000;
       position: absolute;
       left: calc(100% + 8px);
       top: 50%;
       transform: translateY(-50%);
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 900;
-      padding: 6px 10px;
+      padding: 5px 9px;
       border-radius: 999px;
-      border: 1px solid rgba(0,0,0,0.12);
-      background: rgba(250,250,250,0.96);
+      border: 1px solid rgba(0,0,0,0.10);
+      background: rgba(255,255,255,0.92);
       white-space: nowrap;
       pointer-events: none;
-      box-shadow: 0 6px 14px rgba(0,0,0,0.10);
+      box-shadow: none;
     }
 
     #rightPanel .thumbLabel{
@@ -901,13 +969,14 @@ def patch_interactive_ui_left_right_vertical_sliders(html_str: str) -> str:
       right: calc(100% + 8px);
     }
 
+    /* Map: remove shadow */
     .mapPanel {
       position: relative;
       z-index: 1;
       border: 1px solid rgba(0,0,0,0.12);
       border-radius: 18px;
       overflow: hidden;
-      box-shadow: 0 10px 26px rgba(0,0,0,0.10);
+      box-shadow: none;
       background: #f3f3f3;
       min-height: 0;
     }
@@ -917,94 +986,76 @@ def patch_interactive_ui_left_right_vertical_sliders(html_str: str) -> str:
     .leaflet-control-attribution { display: none !important; }
     .leaflet-top, .leaflet-bottom { z-index: 1000; }
 
-    /* Legend: horizontal 3 columns x 2 rows */
-    .legend{
+    /* Legend card (top-left) */
+    .legend {
       background: rgba(255,255,255,0.94);
       padding: 10px 12px;
       border-radius: 12px;
-      box-shadow: 0 1px 10px rgba(0,0,0,0.12);
+      box-shadow: 0 10px 26px rgba(0,0,0,0.10);
       color: #111;
       font-size: 12px;
       font-family: Inter, Arial, sans-serif;
-
-      width: 520px;
-      max-width: 520px;
+      max-width: 560px;
     }
-
-    .legend .title{
-      font-weight: 800;
-      margin-bottom: 8px;
-    }
-
     .legendGrid{
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      grid-auto-rows: min-content;
-      column-gap: 16px;
+      grid-template-columns: auto auto auto;
+      grid-template-rows: auto auto;
+      column-gap: 18px;
       row-gap: 10px;
-      align-items: start;
+      align-items: center;
     }
-
-    .legendItem{
+    .lItem{
       display: flex;
       align-items: center;
       gap: 8px;
-      min-width: 0;
+      line-height: 1.2;
+      white-space: nowrap;
     }
-
-    .legendText{
-      white-space: normal;
-      line-height: 1.15;
-    }
-
-    .legend .swatch{
-      width: 12px;
-      height: 12px;
-      border-radius: 0px;
-      border: 1px solid rgba(0,0,0,0.25);
+    .swatchHot{
+      width: 12px; height: 12px;
+      border-radius: 0;
+      border: 1px solid rgba(0,0,0,0.35);
+      background: rgba(240,128,90,0.55);
       flex: 0 0 auto;
     }
-
-    .legend img.icon{
-      width: 22px;
-      height: 22px;
-      object-fit: contain;
+    .swatchGrid{
+      width: 12px; height: 12px;
+      border-radius: 0;
+      border: 1px solid rgba(0,0,0,0.35);
+      background: rgba(255,255,255,0.90);
       flex: 0 0 auto;
-      display: block;
     }
-
-    .legend .dot{
-      width: 10px;
-      height: 10px;
+    .dotMu{
+      width: 12px; height: 12px;
       border-radius: 50%;
       border: 2px solid #111;
       background: #f0805a;
       flex: 0 0 auto;
     }
+    .lIcon{
+      width: 22px;
+      height: 22px;
+      object-fit: contain;
+      display: block;
+      flex: 0 0 auto;
+    }
 
-    /* Bottom bar: only map area column, with left button and right text */
-    #bottomBar{
+    /* Bottom bar: keep minimal */
+    #bottomBar {
       border-top: 1px solid rgba(0,0,0,0.12);
       padding: 10px 12px;
-      background: #fff;
-      box-sizing: border-box;
-
-      display: grid;
-      grid-template-columns: clamp(110px, 7.5vw, 150px) 1fr clamp(110px, 7.5vw, 150px);
-      gap: 10px;
-      align-items: center;
-    }
-
-    .barMapArea{
-      grid-column: 2;
       display: flex;
-      align-items: center;
       justify-content: space-between;
+      align-items: center;
       gap: 12px;
-      min-width: 0;
+      background: transparent;
+      box-sizing: border-box;
     }
 
-    .barBtn{
+    .barLeft { display: flex; align-items: center; gap: 10px; }
+
+    .barBtn {
       height: 30px;
       padding: 0 10px;
       border-radius: 999px;
@@ -1014,29 +1065,16 @@ def patch_interactive_ui_left_right_vertical_sliders(html_str: str) -> str:
       font-weight: 800;
       cursor: pointer;
       font-family: Inter, Arial, sans-serif;
-      flex: 0 0 auto;
     }
 
-    .barValue{
+    .barValue {
       font-size: 13px;
       font-weight: 800;
       white-space: nowrap;
       font-family: Inter, Arial, sans-serif;
       opacity: 0.92;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 100%;
       text-align: right;
-    }
-
-    @media (max-width: 700px) {
-      .legend{
-        width: auto;
-        max-width: 92vw;
-      }
-      .legendGrid{
-        grid-template-columns: 1fr;
-      }
+      flex: 1;
     }
 
     @media (max-width: 560px) {
@@ -1045,13 +1083,9 @@ def patch_interactive_ui_left_right_vertical_sliders(html_str: str) -> str:
         grid-template-rows: auto minmax(240px, 1fr) auto;
       }
       .mapPanel { min-height: 45vh; }
+
       .vSlider { height: 160px; }
       .vTicks { height: 160px; }
-      #rightPanel .thumbLabel{ right: calc(100% + 8px); }
-      .thumbLabel{ left: calc(100% + 8px); }
-
-      #bottomBar{ grid-template-columns: 1fr; }
-      .barMapArea{ grid-column: 1; }
     }
   </style>
 """
@@ -1060,29 +1094,77 @@ def patch_interactive_ui_left_right_vertical_sliders(html_str: str) -> str:
     html_str = style_pattern.sub(new_style, html_str, count=1)
 
     # -------------------------
-    # 3) Force zoom control to top-right
+    # C) Ensure tau meaning is correct (if that line exists)
     # -------------------------
-    if "zoomControl: false" not in html_str:
-        html_str = re.sub(
-            r'L\.map\(\s*"map"\s*,\s*\{\s*preferCanvas\s*:\s*true\s*\}\s*\)',
-            'L.map("map", { preferCanvas: true, zoomControl: false })',
-            html_str,
-            count=1
-        )
-
-    if "L.control.zoom({ position: \"topright\" })" not in html_str:
-        html_str = re.sub(
-            r'(const\s+map\s*=\s*L\.map\("map"[^;]*;\s*)',
-            r'\1\n\n    L.control.zoom({ position: "topright" }).addTo(map);\n',
+    tau_pattern = re.compile(
+        r"const\s+tau\s*=\s*tFactor\s*\*\s*\(\s*d\s*/\s*speed_m_per_min\s*\)\s*;",
+        re.DOTALL
+    )
+    if tau_pattern.search(html_str):
+        html_str = tau_pattern.sub(
+            "const tau = (d / speed_m_per_min) / Math.max(tFactor, 1e-9);",
             html_str,
             count=1
         )
 
     # -------------------------
-    # 4) Legend: replace any existing legend control with new one
+    # D) Force bottom text to your requested string
     # -------------------------
-    legend_repl = r"""
-    // Legend (top-left)
+    html_str = re.sub(
+        r"muInfoEl\.textContent\s*=\s*`[^`]*`;\s*",
+        "muInfoEl.textContent = `Distance from Historic to Business Center: ${sep.toFixed(0)}m; Business area: ${areaKm2.toFixed(0)} km²`;\n",
+        html_str,
+        count=1
+    )
+
+    # -------------------------
+    # E) Move zoom control to the right (insert after map init)
+    # -------------------------
+    map_init_re = re.compile(
+        r"(const\s+map\s*=\s*L\.map\(\s*\"map\"[^;]*;\s*)",
+        re.DOTALL
+    )
+    if map_init_re.search(html_str) and "map.zoomControl.setPosition" not in html_str:
+        html_str = map_init_re.sub(
+            r"\1\n    try { map.zoomControl.setPosition('topright'); } catch(e) {}\n",
+            html_str,
+            count=1
+        )
+
+    # -------------------------
+    # F) Replace historical center circleMarker with a 22x22 icon marker
+    # -------------------------
+    gmarker_re = re.compile(
+        r"const\s+gMarker\s*=\s*L\.circleMarker\(\s*\[\s*g\.lat\s*,\s*g\.lon\s*\]\s*,\s*\{.*?\}\s*\)\s*\.addTo\(map\)(?:\.bindPopup\([^;]*\))?\s*;",
+        re.DOTALL
+    )
+    if gmarker_re.search(html_str):
+        repl = r"""
+    const histIcon = L.icon({
+      iconUrl: "assets/icon_historical.png",
+      iconSize: [22, 22],
+      iconAnchor: [11, 11],
+      popupAnchor: [0, -11]
+    });
+
+    const gMarker = L.marker([g.lat, g.lon], {
+      icon: histIcon,
+      interactive: false
+    }).addTo(map).bindPopup("Historical center");
+"""
+        html_str = gmarker_re.sub(repl, html_str, count=1)
+
+    # -------------------------
+    # G) Legend: top-left, 2 rows x 3 cols
+    # -------------------------
+    legend_block_re = re.compile(
+        r"const\s+legend\s*=\s*L\.control\(\s*\{\s*position:\s*\"[^\"]+\"\s*\}\s*\);\s*"
+        r"legend\.onAdd\s*=\s*function\(\)\s*\{.*?\};\s*"
+        r"legend\.addTo\(map\);\s*",
+        re.DOTALL
+    )
+
+    legend_block = r"""
     const legend = L.control({ position: "topleft" });
     legend.onAdd = function() {
       const div = L.DomUtil.create("div", "legend");
@@ -1090,39 +1172,38 @@ def patch_interactive_ui_left_right_vertical_sliders(html_str: str) -> str:
       const cellSize = data.cell_size_m;
       const cellTxt = (cellSize && isFinite(cellSize))
         ? `Grid cell: about ${Math.round(cellSize)} m on a side.`
-        : "Grid cell: one grid cell.";
+        : "Grid cell: one model cell.";
 
       div.innerHTML = `
-
         <div class="legendGrid">
-          <div class="legendItem">
-            <div class="swatch" style="background:#f0805a;"></div>
-            <div class="legendText">Hot cells (share &gt; 0.1)</div>
+          <div class="lItem" style="grid-column:1;grid-row:1;">
+            <span class="swatchHot"></span>
+            <span>Hot cells (share &gt; 0.1)</span>
           </div>
 
-          <div class="legendItem">
-            <img class="icon" src="assets/icon_historical.png" alt="Historical center">
-            <div class="legendText">Historical center</div>
+          <div class="lItem" style="grid-column:1;grid-row:2;">
+            <span class="swatchGrid"></span>
+            <span>${cellTxt}</span>
           </div>
 
-          <div class="legendItem">
-            <img class="icon" src="assets/icon_business.png" alt="Business area">
-            <div class="legendText">Business area (polygon)</div>
+          <div class="lItem" style="grid-column:2;grid-row:1;">
+            <img class="lIcon" src="assets/icon_historical.png" alt="">
+            <span>Historical center</span>
           </div>
 
-          <div class="legendItem">
-            <div class="swatch" style="background:#ffffff;"></div>
-            <div class="legendText">${cellTxt}</div>
+          <div class="lItem" style="grid-column:2;grid-row:2;">
+            <span class="dotMu"></span>
+            <span>Business center (μ)</span>
           </div>
 
-          <div class="legendItem">
-            <div class="dot"></div>
-            <div class="legendText">Business center (μ)</div>
+          <div class="lItem" style="grid-column:3;grid-row:1;">
+            <img class="lIcon" src="assets/icon_business.png" alt="">
+            <span>Business area (polygon)</span>
           </div>
 
-          <div class="legendItem">
-            <img class="icon" src="assets/icon_administrative.png" alt="Administrative border">
-            <div class="legendText">Administrative border</div>
+          <div class="lItem" style="grid-column:3;grid-row:2;">
+            <img class="lIcon" src="assets/icon_administrative.png" alt="">
+            <span>Administrative borders</span>
           </div>
         </div>
       `;
@@ -1133,177 +1214,175 @@ def patch_interactive_ui_left_right_vertical_sliders(html_str: str) -> str:
     };
     legend.addTo(map);
 """
-    legend_block_pattern = re.compile(
-        r"const\s+legend\s*=\s*L\.control\([\s\S]*?\)\s*;\s*"
-        r"legend\.onAdd\s*=\s*function\(\)\s*\{[\s\S]*?\}\s*;\s*"
-        r"legend\.addTo\(map\)\s*;\s*",
-        re.DOTALL
-    )
-    if legend_block_pattern.search(html_str):
-        html_str = legend_block_pattern.sub(legend_repl, html_str, count=1)
+    if legend_block_re.search(html_str):
+        html_str = legend_block_re.sub(legend_block, html_str, count=1)
     else:
         html_str = re.sub(
-            r'(const\s+map\s*=\s*L\.map\("map"[^;]*;\s*)',
-            r'\1' + "\n" + legend_repl + "\n",
+            r'const\s+legend\s*=\s*L\.control\(\s*\{\s*position:\s*\"topright\"\s*\}\s*\)\s*;',
+            'const legend = L.control({ position: "topleft" });',
             html_str,
             count=1
         )
 
     # -------------------------
-    # 5) Ensure bottom text format (override any existing μ text format)
+    # H) Center map button binding
     # -------------------------
-    # Replace the muInfo line inside applyState/applyResult if present
-    # (matches both muInfoEl.textContent = `...`; and muInfoEl.textContent = '...';)
-    html_str = re.sub(
-        r"muInfoEl\.textContent\s*=\s*`[^`]*`;\s*",
-        "muInfoEl.textContent = `Distance from Historic to Business Center: ${sep.toFixed(0)}m; Business area: ${areaKm2.toFixed(0)} km²`;\n",
-        html_str,
-        count=1,
-        flags=re.DOTALL
-    )
-
-    # If that didn’t match (different block), try a broader replacement for any template using μ:
-    html_str = re.sub(
-        r"muInfoEl\.textContent\s*=\s*`[^`]*μ[^`]*`;\s*",
-        "muInfoEl.textContent = `Distance from Historic to Business Center: ${sep.toFixed(0)}m; Business area: ${areaKm2.toFixed(0)} km²`;\n",
-        html_str,
-        count=1,
-        flags=re.DOTALL
-    )
+    if "centerBtn.addEventListener" not in html_str:
+        inject_center = r"""
+    // ---- injected: Center map binding ----
+    (function(){
+      const btn = document.getElementById("centerBtn");
+      if (!btn) return;
+      btn.addEventListener("click", () => {
+        try {
+          const z = (map && map.getZoom) ? map.getZoom() : 12;
+          map.setView([g.lat, g.lon], z, { animate: true });
+        } catch(e) {}
+      });
+    })();
+    // ---- end injected block ----
+"""
+        idx = html_str.rfind("</script>")
+        if idx == -1:
+            raise ValueError("Could not find </script> to inject Center map binding.")
+        html_str = html_str[:idx] + inject_center + "\n" + html_str[idx:]
 
     # -------------------------
-    # 6) Restore the old “word label” slider behavior (Baseline, Faster, ...)
-    #    and prevent numeric 1.00 labels
+    # I) Word labels + snapping + tick activation
+    #    PLUS slider filled-track percent
     # -------------------------
-    # Remove any existing "tEl.textContent = tVal.toFixed(2)" / "aEl..." assignments
-    html_str = re.sub(
-        r"if\s*\(\s*tEl\s*\)\s*tEl\.textContent\s*=\s*tVal\.toFixed\(\s*2\s*\)\s*;\s*",
-        "",
-        html_str
-    )
-    html_str = re.sub(
-        r"if\s*\(\s*aEl\s*\)\s*aEl\.textContent\s*=\s*aVal\.toFixed\(\s*2\s*\)\s*;\s*",
-        "",
-        html_str
-    )
+    if "injected: symmetric word sliders" not in html_str:
+        injected_block = r"""
+    // ---- injected: symmetric word sliders (0..2, baseline=1) ----
+    const T_MIN = 0.0, T_MAX = 2.0;
+    const A_MIN = 0.0, A_MAX = 2.0;
 
-    injected_words = r"""
-    // ---- injected: restore word labels on vertical sliders ----
     const TRANSPORT_STOPS = [0.50, 0.75, 1.00, 1.25, 1.50];
     const TRANSPORT_WORDS = ["Very slow", "Slower", "Baseline", "Faster", "Very fast"];
 
     const AMENITY_STOPS = [0.50, 0.75, 1.00, 1.25, 1.50];
     const AMENITY_WORDS = ["Very weak", "Weaker", "Baseline", "Stronger", "Very strong"];
 
-    function _nearestStop(v, stops){
-      let bestI = 0, bestD = Infinity;
-      for (let i = 0; i < stops.length; i++){
+    function clamp(x, lo, hi){ return Math.max(lo, Math.min(hi, x)); }
+
+    function valueToTopPct(v, vmin, vmax) {
+      const p = (clamp(v, vmin, vmax) - vmin) / (vmax - vmin);
+      return (100 * (1 - p));
+    }
+
+    function valueToFillPct(v, vmin, vmax) {
+      const p = (clamp(v, vmin, vmax) - vmin) / (vmax - vmin);
+      return (100 * p);
+    }
+
+    function setSliderFill(sliderEl, vmin, vmax) {
+      if (!sliderEl) return;
+      const v = parseFloat(sliderEl.value);
+      if (!isFinite(v)) return;
+      const pct = valueToFillPct(v, vmin, vmax);
+      sliderEl.style.setProperty("--fillPct", pct.toFixed(2) + "%");
+    }
+
+    function nearestStop(v, stops) {
+      let bestI = 0;
+      let bestD = Infinity;
+      for (let i = 0; i < stops.length; i++) {
         const d = Math.abs(v - stops[i]);
-        if (d < bestD){ bestD = d; bestI = i; }
+        if (d < bestD) { bestD = d; bestI = i; }
       }
       return { val: stops[bestI], idx: bestI };
     }
 
-    function _clamp(x, lo, hi){ return Math.max(lo, Math.min(hi, x)); }
-
-    function _valueToTopPct(v, vmin, vmax){
-      const p = (_clamp(v, vmin, vmax) - vmin) / (vmax - vmin);
-      return (100 * (1 - p));
-    }
-
-    function _positionLabel(labelEl, v, vmin, vmax){
-      if (!labelEl) return;
-      labelEl.style.top = _valueToTopPct(v, vmin, vmax).toFixed(2) + "%";
-    }
-
-    function _setActiveDot(dots, idx){
-      for (let i = 0; i < dots.length; i++){
-        dots[i].classList.toggle("isActive", i === idx);
-      }
-    }
-
-    function _buildTicks(elId, stops, vmin, vmax){
+    function buildTicks(elId, stops, vmin, vmax) {
       const el = document.getElementById(elId);
       if (!el) return [];
       el.innerHTML = "";
       const dots = [];
-      for (let i = 0; i < stops.length; i++){
+      for (let i = 0; i < stops.length; i++) {
         const d = document.createElement("div");
         d.className = "tickDot";
-        d.style.top = _valueToTopPct(stops[i], vmin, vmax).toFixed(2) + "%";
+        d.style.top = valueToTopPct(stops[i], vmin, vmax).toFixed(2) + "%";
         el.appendChild(d);
         dots.push(d);
       }
       return dots;
     }
 
-    const _tDots = _buildTicks("tTicks", TRANSPORT_STOPS, 0.0, 2.0);
-    const _aDots = _buildTicks("aTicks", AMENITY_STOPS, 0.0, 2.0);
+    const _tDots = buildTicks("tTicks", TRANSPORT_STOPS, T_MIN, T_MAX);
+    const _aDots = buildTicks("aTicks", AMENITY_STOPS, A_MIN, A_MAX);
 
-    function _updateWordLabels(){
+    function setActiveDot(dots, idx){
+      for (let i = 0; i < dots.length; i++) dots[i].classList.toggle("isActive", i === idx);
+    }
+
+    function positionLabel(labelEl, v, vmin, vmax) {
+      if (!labelEl) return;
+      labelEl.style.top = valueToTopPct(v, vmin, vmax).toFixed(2) + "%";
+    }
+
+    function snapSlider(sliderEl, stops) {
+      if (!sliderEl) return { idx: 0, val: NaN };
+      const v = parseFloat(sliderEl.value);
+      const ns = nearestStop(v, stops);
+      sliderEl.value = String(ns.val.toFixed(2));
+      return ns;
+    }
+
+    function updateWordsAndTicks() {
       const tSlider = document.getElementById("tSlider");
       const aSlider = document.getElementById("aSlider");
-      const tLabel  = document.getElementById("tVal");
-      const aLabel  = document.getElementById("aVal");
+      const tLabel = document.getElementById("tVal");
+      const aLabel = document.getElementById("aVal");
+
       if (!tSlider || !aSlider) return;
 
       const tV = parseFloat(tSlider.value);
       const aV = parseFloat(aSlider.value);
 
-      const tN = _nearestStop(tV, TRANSPORT_STOPS);
-      const aN = _nearestStop(aV, AMENITY_STOPS);
+      const tN = nearestStop(tV, TRANSPORT_STOPS);
+      const aN = nearestStop(aV, AMENITY_STOPS);
 
       if (tLabel) tLabel.textContent = TRANSPORT_WORDS[tN.idx];
       if (aLabel) aLabel.textContent = AMENITY_WORDS[aN.idx];
 
-      _positionLabel(tLabel, tV, 0.0, 2.0);
-      _positionLabel(aLabel, aV, 0.0, 2.0);
+      positionLabel(tLabel, tV, T_MIN, T_MAX);
+      positionLabel(aLabel, aV, A_MIN, A_MAX);
 
-      _setActiveDot(_tDots, tN.idx);
-      _setActiveDot(_aDots, aN.idx);
+      setActiveDot(_tDots, tN.idx);
+      setActiveDot(_aDots, aN.idx);
+
+      setSliderFill(tSlider, T_MIN, T_MAX);
+      setSliderFill(aSlider, A_MIN, A_MAX);
     }
 
-    // Wrap update() so labels stay correct after redraws
-    if (typeof update === "function" && !update.__wordLabelWrapped){
+    if (typeof update === "function" && !update.__wordsWrapped) {
       const _origUpdate = update;
-      update = function(){
-        const r = _origUpdate.apply(this, arguments);
-        _updateWordLabels();
+      update = function() {
+        const tSlider = document.getElementById("tSlider");
+        const aSlider = document.getElementById("aSlider");
+        snapSlider(tSlider, TRANSPORT_STOPS);
+        snapSlider(aSlider, AMENITY_STOPS);
+        const r = _origUpdate();
+        updateWordsAndTicks();
         return r;
       };
-      update.__wordLabelWrapped = true;
+      update.__wordsWrapped = true;
     }
 
-    const _ts = document.getElementById("tSlider");
-    const _as = document.getElementById("aSlider");
-    if (_ts) _ts.addEventListener("input", _updateWordLabels);
-    if (_as) _as.addEventListener("input", _updateWordLabels);
-    setTimeout(_updateWordLabels, 0);
+    const _t = document.getElementById("tSlider");
+    const _a = document.getElementById("aSlider");
+    if (_t) _t.addEventListener("input", () => { updateWordsAndTicks(); });
+    if (_a) _a.addEventListener("input", () => { updateWordsAndTicks(); });
+
+    setTimeout(updateWordsAndTicks, 0);
     // ---- end injected block ----
 """
-
-    # Inject after listeners or near the end of the main script
-    inserted = False
-    for needle in [
-        'document.getElementById("aSlider").addEventListener("input", scheduleUpdate);',
-        'document.getElementById("tSlider").addEventListener("input", scheduleUpdate);',
-        "update();"
-    ]:
-        if needle in html_str:
-            html_str = html_str.replace(needle, needle + "\n" + injected_words, 1)
-            inserted = True
-            break
-
-    if not inserted:
         idx = html_str.rfind("</script>")
         if idx == -1:
-            raise ValueError("Could not find </script> to inject word-label logic.")
-        html_str = html_str[:idx] + "\n" + injected_words + "\n" + html_str[idx:]
+            raise ValueError("Could not find </script> to inject word slider logic.")
+        html_str = html_str[:idx] + injected_block + "\n" + html_str[idx:]
 
     return html_str
-
-
-
 
 # =========================
 # Landing (index.html) generator helpers
@@ -2390,7 +2469,7 @@ def write_full_scrolly_site(
             sub="Сравнение бизнес-ареалов городов. Фигуры приведены к одной шкале и центрированы по историческому центру (0,0).",
         )
         landing_html = patch_landing_add_compare_autosize_js(landing_html)
-
+    landing_html = patch_landing_remove_borders(landing_html)
     landing_path = os.path.join(out_dir, landing_filename)
     with open(landing_path, "w", encoding="utf-8") as f:
         f.write(landing_html)

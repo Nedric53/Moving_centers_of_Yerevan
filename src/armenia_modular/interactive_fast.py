@@ -682,15 +682,41 @@ def write_yerevan_single_polygon_html(
           fillOpacity: 1.0
         }}).addTo(map).bindPopup("Business center (μ)");
 
-        const baseStyle = () => {{
-          return {{
+        function bindCenterButton() {{
+          const btn = document.getElementById("centerBtn");
+          if (!btn) return;
+          if (btn.dataset.bound === "1") return;
+
+          btn.dataset.bound = "1";
+
+          btn.addEventListener("click", function(e) {{
+            e.preventDefault();
+            e.stopPropagation();
+
+            try {{
+              const z = (map && typeof map.getZoom === "function") ? map.getZoom() : 12;
+              map.setView([g.lat, g.lon], z, {{ animate: true }});
+            }} catch (err) {{
+              console.error("Center map failed:", err);
+            }}
+          }});
+        }}
+
+    bindCenterButton();
+    window.addEventListener("load", bindCenterButton);
+
+        bindCenterButton();
+        window.addEventListener("load", bindCenterButton);
+
+        const baseStyle = () => {
+          return {
             fillColor: COLOR_HOT,
             fillOpacity: 0.0,
             color: COLOR_LINE,
             opacity: 0.0,
             weight: 0.0
-          }};
-        }};
+          };
+        };
 
         const gridLayer = L.geoJSON(data.geojson, {{
           style: baseStyle,
