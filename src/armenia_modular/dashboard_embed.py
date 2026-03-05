@@ -1,13 +1,13 @@
 from pathlib import Path
 from IPython.display import IFrame, HTML, display
 
-def write_interactive_html(out_path="thesis_dashboard_fit_one_screen.html"):
+def write_interactive_html(out_path="yerevan_business_dashboard.html"):
     html = r"""<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Interactive thesis figures (3-up + compact controls)</title>
+  <title>Moving Centers Dashboard (business-friendly)</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,7 +22,7 @@ def write_interactive_html(out_path="thesis_dashboard_fit_one_screen.html"):
       --line: rgba(0,0,0,0.12);
       --muted: rgba(0,0,0,0.62);
 
-      /* Golden mean: cap plot heights so they do not stretch */
+      /* Keep plots from stretching too tall */
       --plotH: clamp(220px, 34vh, 320px);
       --plotHSmall: clamp(200px, 30vh, 280px);
     }
@@ -56,23 +56,22 @@ def write_interactive_html(out_path="thesis_dashboard_fit_one_screen.html"):
     .small { color: var(--muted); font-size: 11px; line-height: 1.25; margin: 0 0 6px 0; }
     .pill { display:inline-block; padding: 1px 7px; border: 1px solid var(--line); border-radius: 999px; font-size: 11px; margin-left: 6px; }
 
-    /* Key change: explicit heights, not flex-fill */
     .plot { height: var(--plotH); }
     .plotSmall { height: var(--plotHSmall); }
 
     .controls {
       display: grid;
-      grid-template-columns: 1fr 260px;
+      grid-template-columns: 1fr 300px;
       gap: 12px;
       align-items: start;
     }
 
     .sliderRow {
       display: grid;
-      grid-template-columns: 24px 1fr 72px;
+      grid-template-columns: 160px 1fr 140px;
       gap: 10px;
       align-items: center;
-      margin: 6px 0;
+      margin: 8px 0;
     }
     .sliderRow .lbl { font-size: 12px; font-weight: 650; }
     .sliderRow .val { font-size: 12px; text-align: right; color: #222; }
@@ -89,35 +88,36 @@ def write_interactive_html(out_path="thesis_dashboard_fit_one_screen.html"):
         --plotH: clamp(240px, 38vh, 360px);
         --plotHSmall: clamp(220px, 34vh, 320px);
       }
+      .sliderRow { grid-template-columns: 1fr; gap: 6px; }
+      .sliderRow .val { text-align: left; }
     }
   </style>
 </head>
 
 <body>
-  <h2>Interactive figures: 3 plots in a row, compact sliders below</h2>
+  <h2>Moving centers:</h2>
 
   <div class="grid3">
     <div class="card">
-      <div class="plotTitle">City layout <span class="pill">instant response</span></div>
       <div class="small">
-        Thick segment is the business area. The x marker is the historic center (g). The circle is the economic center (μ).
+        Thick segment is the <b>commercial area</b>. The X marks the <b>historical center</b>. The dot is the <b>commercial center</b>.
       </div>
       <div id="plot_layout" class="plot plotSmall"></div>
     </div>
 
     <div class="card">
-      <div class="plotTitle">Figure 1 style: sweep historic center location</div>
+      <div class="plotTitle">How the commercial area shifts when the historical center moves</div>
       <div class="small">
-        We sweep g from 0 to 1.0 (x axis). Dashed line is the current g from the slider.
-        Green X markers show current q and p at that g.
+        We scan the historical center from west to east. Dashed line shows the current setting.
+        Green X markers show the current area edges for that setting.
       </div>
       <div id="plot_fig1" class="plot"></div>
     </div>
 
     <div class="card">
-      <div class="plotTitle">Figure 2-3 style: sweep transport cost</div>
+      <div class="plotTitle">How the commercial area shifts with transport conditions</div>
       <div class="small">
-        We sweep t from 0.0 to 1.5 (y axis). Dashed vertical line marks g. Dots show the current t.
+        We scan the transport factor from lower to higher. Dashed vertical line marks the historical center. Dots show the current setting.
       </div>
       <div id="plot_fig2" class="plot"></div>
     </div>
@@ -126,51 +126,51 @@ def write_interactive_html(out_path="thesis_dashboard_fit_one_screen.html"):
   <div class="card">
     <div class="controls">
       <div>
-        <div class="plotTitle">Common parameters</div>
-        <div class="small">These sliders update all three plots.</div>
+        <div class="plotTitle">Commercial drivers</div>
+        <div class="small">Factors controls.</div>
 
         <div class="sliderRow">
-          <div class="lbl">N</div>
-          <input id="N" type="range" min="0.20" max="1.90" step="0.05" value="1.40"/>
-          <div class="val" id="N_val"></div>
+          <div class="lbl">Market size</div>
+          <input id="market" type="range" min="0.20" max="1.90" step="0.05" value="1.40"/>
+          <div class="val" id="market_val"></div>
         </div>
 
         <div class="sliderRow">
-          <div class="lbl">e</div>
-          <input id="e" type="range" min="0.01" max="1.00" step="0.01" value="0.10"/>
-          <div class="val" id="e_val"></div>
+          <div class="lbl">Importance of amenities</div>
+          <input id="amenities" type="range" min="0.01" max="1.00" step="0.01" value="0.10"/>
+          <div class="val" id="amenities_val"></div>
         </div>
 
         <div class="sliderRow">
-          <div class="lbl">g</div>
-          <input id="g" type="range" min="0.00" max="1.00" step="0.01" value="0.25"/>
-          <div class="val" id="g_val"></div>
+          <div class="lbl">Historical center location</div>
+          <input id="history" type="range" min="0.00" max="1.00" step="0.01" value="0.25"/>
+          <div class="val" id="history_val"></div>
         </div>
 
         <div class="sliderRow">
-          <div class="lbl">t</div>
-          <input id="t" type="range" min="0.00" max="1.50" step="0.01" value="0.25"/>
-          <div class="val" id="t_val"></div>
+          <div class="lbl">Transport factor</div>
+          <input id="transport" type="range" min="0.00" max="1.50" step="0.01" value="0.25"/>
+          <div class="val" id="transport_val"></div>
         </div>
 
         <div class="small" style="margin-top:6px;">
-          Tip: Increasing t makes distance more painful, so the business area often shifts to reduce travel.
+          Tip: When transport improves (faster and more comfortable), distance matters less and the commercial area can spread differently.
         </div>
       </div>
 
       <div>
-        <div class="plotTitle">Current interpretation</div>
+        <div class="plotTitle">What this means right now</div>
         <div class="kvs">
-          <div style="margin-top:4px;"><b>Business area</b></div>
-          <div>Left edge: <span id="q_out"></span></div>
-          <div>Right edge: <span id="p_out"></span></div>
+          <div style="margin-top:4px;"><b>Commercial area</b></div>
+          <div>Starts: <span id="q_out"></span></div>
+          <div>Ends: <span id="p_out"></span></div>
 
-          <div style="margin-top:6px;"><b>Historic center</b>: <span id="g_out"></span></div>
-          <div><b>Economic center</b>: <span id="mu_out"></span></div>
+          <div style="margin-top:6px;"><b>Historical center</b>: <span id="history_out"></span></div>
+          <div><b>Commercial center</b>: <span id="mu_out"></span></div>
 
           <hr/>
 
-          <div><b>Situation label</b></div>
+          <div><b>Situation</b></div>
           <div id="case_out" class="small" style="margin:0;"></div>
         </div>
       </div>
@@ -180,13 +180,34 @@ def write_interactive_html(out_path="thesis_dashboard_fit_one_screen.html"):
 <script>
   const EPS = 1e-9;
 
-  function clip(x, lo, hi) { return Math.max(lo, Math.min(hi, x)); }
-  function fmt(x) {
-    if (!isFinite(x)) return "nan";
-    const ax = Math.abs(x);
-    if (ax >= 10) return x.toFixed(3);
-    return x.toFixed(4);
+  function posLabel(x){
+    if (!isFinite(x)) return "unknown";
+    if (x <= -0.75) return "far west";
+    if (x <= -0.35) return "west";
+    if (x <= -0.12) return "slightly west of center";
+    if (x <  0.12)  return "center";
+    if (x <  0.35)  return "slightly east of center";
+    if (x <  0.75)  return "east";
+    return "far east";
   }
+
+  function historyLabel(h){
+    if (!isFinite(h)) return "unknown";
+    if (h <= 0.10) return "far west";
+    if (h <= 0.30) return "west";
+    if (h <= 0.55) return "near center";
+    if (h <= 0.80) return "east";
+    return "far east";
+  }
+
+  function strengthLabel(x, lo, hi, words){
+    if (!isFinite(x)) return "unknown";
+    const t = (x - lo) / (hi - lo);
+    const k = Math.max(0, Math.min(words.length - 1, Math.round(t * (words.length - 1))));
+    return words[k];
+  }
+
+  function clip(x, lo, hi) { return Math.max(lo, Math.min(hi, x)); }
 
   function elH(id, fallback){
     const el = document.getElementById(id);
@@ -194,13 +215,14 @@ def write_interactive_html(out_path="thesis_dashboard_fit_one_screen.html"):
     return (h && h > 50) ? h : fallback;
   }
 
-  function solveBounds(N, t, e, g) {
-    if (!(N > 0 && N < 2)) return { ok:false, reason:"N must be between 0 and 2." };
-    if (!(e > 0)) return { ok:false, reason:"e must be positive." };
-    if (!(t >= 0)) return { ok:false, reason:"t must be zero or positive." };
+  // market = N, amenities = e, history = g, transport = t
+  function solveArea(market, transport, amenities, history) {
+    if (!(market > 0 && market < 2)) return { ok:false, reason:"Market size must be within the supported range." };
+    if (!(amenities > 0)) return { ok:false, reason:"Importance of amenities must be positive." };
+    if (!(transport >= 0)) return { ok:false, reason:"Transport factor must be zero or positive." };
 
-    const M = 2 - N;
-    const theta = t / e;
+    const M = 2 - market;
+    const theta = transport / amenities;
 
     function inCity(q, p) {
       return (q < p) && (q >= -1 - 1e-6) && (p <= 1 + 1e-6);
@@ -208,22 +230,22 @@ def write_interactive_html(out_path="thesis_dashboard_fit_one_screen.html"):
 
     let muB = NaN, pB = NaN, qB = NaN;
     if (theta > EPS) {
-      muB = -M * N / (4 * theta);
+      muB = -M * market / (4 * theta);
       pB = muB + M / 2;
       qB = muB - M / 2;
     }
 
     let muC = NaN, pC = NaN, qC = NaN;
     if (theta > EPS) {
-      muC =  M * N / (4 * theta);
+      muC =  M * market / (4 * theta);
       pC = muC + M / 2;
       qC = muC - M / 2;
     }
 
     let muA = NaN, pA = NaN, qA = NaN;
-    const denom = (N - 2 * theta);
+    const denom = (market - 2 * theta);
     if (Math.abs(denom) > EPS) {
-      muA = N * g / denom;
+      muA = market * history / denom;
       pA = muA + M / 2;
       qA = muA - M / 2;
     }
@@ -236,31 +258,31 @@ def write_interactive_html(out_path="thesis_dashboard_fit_one_screen.html"):
         score += 10.0 * (Math.max(0.0, (-1 - q)) + Math.max(0.0, (p - 1)));
       }
       if (kind === "A") {
-        score += Math.max(0.0, q - g) + Math.max(0.0, g - p);
+        score += Math.max(0.0, q - history) + Math.max(0.0, history - p);
       } else if (kind === "B") {
-        score += Math.max(0.0, p - g);
+        score += Math.max(0.0, p - history);
       } else if (kind === "C") {
-        score += Math.max(0.0, g - q);
+        score += Math.max(0.0, history - q);
       }
       return score;
     }
 
     const candidates = [];
     const sA = scoreCase("A", qA, pA, muA);
-    if (sA !== null) candidates.push([sA, "Historic center sits inside the business area.", qA, pA, muA]);
+    if (sA !== null) candidates.push([sA, "Historical center sits inside the commercial area.", qA, pA, muA]);
     const sB = scoreCase("B", qB, pB, muB);
-    if (sB !== null) candidates.push([sB, "Historic center is to the right of the business area.", qB, pB, muB]);
+    if (sB !== null) candidates.push([sB, "Historical center is to the east of the commercial area.", qB, pB, muB]);
     const sC = scoreCase("C", qC, pC, muC);
-    if (sC !== null) candidates.push([sC, "Historic center is to the left of the business area.", qC, pC, muC]);
+    if (sC !== null) candidates.push([sC, "Historical center is to the west of the commercial area.", qC, pC, muC]);
 
-    if (candidates.length === 0) return { ok:false, reason:"No valid configuration found for these values." };
+    if (candidates.length === 0) return { ok:false, reason:"No valid configuration found for these settings." };
 
     candidates.sort((a,b) => a[0] - b[0]);
     const best = candidates[0];
 
     return {
       ok: true,
-      N, M, t, e, g, theta,
+      market, M, transport, amenities, history, theta,
       caseText: best[1],
       q: best[2],
       p: best[3],
@@ -268,58 +290,107 @@ def write_interactive_html(out_path="thesis_dashboard_fit_one_screen.html"):
     };
   }
 
-  const state = { N: 1.40, e: 0.10, g: 0.25, t: 0.25 };
+  const state = { market: 1.40, amenities: 0.10, history: 0.25, transport: 0.25 };
 
   function readSlider(id) {
     return parseFloat(document.getElementById(id).value);
   }
 
+  // Shorter labels so nothing gets clipped on the y axis
+  const sliderWords = {
+    market: ["very small", "small", "mid-size", "large", "very large"],
+    amenities: ["low", "some", "moderate", "high", "very high"],
+    history: ["far west", "west", "near center", "east", "far east"],
+    transport: ["slow", "basic", "comfortable", "fast", "very fast"]
+  };
+
   function syncLabelsFromState() {
-    document.getElementById("N_val").textContent = fmt(state.N);
-    document.getElementById("e_val").textContent = fmt(state.e);
-    document.getElementById("g_val").textContent = fmt(state.g);
-    document.getElementById("t_val").textContent = fmt(state.t);
+    const mv = strengthLabel(state.market, 0.20, 1.90, sliderWords.market);
+    const av = strengthLabel(state.amenities, 0.01, 1.00, sliderWords.amenities);
+    const hv = historyLabel(state.history);
+    const tv = strengthLabel(state.transport, 0.00, 1.50, sliderWords.transport);
+
+    const set = (id, text, raw) => {
+      const el = document.getElementById(id);
+      el.textContent = text;
+      el.title = "raw: " + raw.toFixed(4);
+    };
+
+    set("market_val", mv, state.market);
+    set("amenities_val", av, state.amenities);
+    set("history_val", hv, state.history);
+    set("transport_val", tv, state.transport);
   }
 
   function updateText(sol) {
     if (!sol.ok) {
-      document.getElementById("q_out").textContent = "nan";
-      document.getElementById("p_out").textContent = "nan";
-      document.getElementById("g_out").textContent = "nan";
-      document.getElementById("mu_out").textContent = "nan";
+      document.getElementById("q_out").textContent = "unknown";
+      document.getElementById("p_out").textContent = "unknown";
+      document.getElementById("history_out").textContent = "unknown";
+      document.getElementById("mu_out").textContent = "unknown";
       document.getElementById("case_out").textContent = sol.reason;
       return;
     }
-    document.getElementById("q_out").textContent = fmt(sol.q);
-    document.getElementById("p_out").textContent = fmt(sol.p);
-    document.getElementById("g_out").textContent = fmt(sol.g);
-    document.getElementById("mu_out").textContent = fmt(sol.mu);
+
+    document.getElementById("q_out").textContent = posLabel(sol.q);
+    document.getElementById("p_out").textContent = posLabel(sol.p);
+    document.getElementById("history_out").textContent = historyLabel(sol.history);
+    document.getElementById("mu_out").textContent = posLabel(sol.mu);
     document.getElementById("case_out").textContent = sol.caseText;
+
+    document.getElementById("q_out").title = "raw: " + sol.q.toFixed(4);
+    document.getElementById("p_out").title = "raw: " + sol.p.toFixed(4);
+    document.getElementById("history_out").title = "raw: " + sol.history.toFixed(4);
+    document.getElementById("mu_out").title = "raw: " + sol.mu.toFixed(4);
+  }
+
+  function cityAxisTicks(){
+    return {
+      tickmode: "array",
+      tickvals: [-1, -0.5, 0, 0.5, 1],
+      ticktext: ["far west", "west", "center", "east", "far east"]
+    };
+  }
+
+  function historyAxisTicks01(){
+    return {
+      tickmode: "array",
+      tickvals: [0, 0.25, 0.5, 0.75, 1.0],
+      ticktext: ["far west", "west", "near center", "east", "far east"]
+    };
+  }
+
+  function transportAxisTicks(){
+    return {
+      tickmode: "array",
+      tickvals: [0.0, 0.375, 0.75, 1.125, 1.5],
+      ticktext: ["slow", "basic", "comfortable", "fast", "very fast"]
+    };
   }
 
   function drawLayout(sol) {
-    let q = NaN, p = NaN, mu = NaN, g = NaN;
-    if (sol.ok) { q = sol.q; p = sol.p; mu = sol.mu; g = sol.g; }
+    let q = NaN, p = NaN, mu = NaN, history = NaN;
+    if (sol.ok) { q = sol.q; p = sol.p; mu = sol.mu; history = sol.history; }
 
     const qd = clip(q, -1, 1);
     const pd = clip(p, -1, 1);
 
     const data = [
-      { x: [-1, 1], y: [0, 0], mode: "lines", line: { width: 6 }, name: "city" },
+      { x: [-1, 1], y: [0, 0], mode: "lines", line: { width: 6 }, name: "city line" },
       { x: sol.ok ? [qd, pd] : [], y: sol.ok ? [0, 0] : [], mode: "lines",
-        line: { width: 18 }, opacity: 0.25, name: "business area" },
-      { x: sol.ok ? [g] : [], y: sol.ok ? [0] : [], mode: "markers+text",
-        marker: { size: 12, symbol: "x" }, text: ["g"], textposition: "top center", name: "historic center" },
+        line: { width: 18 }, opacity: 0.25, name: "commercial area" },
+      { x: sol.ok ? [history] : [], y: sol.ok ? [0] : [], mode: "markers+text",
+        marker: { size: 12, symbol: "x" }, text: ["historical center"], textposition: "top center", name: "historical center" },
       { x: sol.ok ? [mu] : [], y: sol.ok ? [0] : [], mode: "markers+text",
-        marker: { size: 10, symbol: "circle" }, text: ["μ"], textposition: "top center", name: "economic center" },
+        marker: { size: 10, symbol: "circle" }, text: ["commercial center"], textposition: "top center", name: "commercial center" },
       { x: sol.ok ? [q, p] : [], y: sol.ok ? [0, 0] : [], mode: "markers+text",
-        marker: { size: 14, symbol: "line-ns-open" }, text: ["q", "p"], textposition: "bottom center", name: "edges" }
+        marker: { size: 14, symbol: "line-ns-open" }, text: ["start", "end"], textposition: "bottom center", name: "area edges" }
     ];
 
     const layout = {
       font: { size: 11 },
-      margin: { l: 34, r: 10, t: 4, b: 26 },
-      xaxis: { range: [-1.05, 1.05], title: "location on the city line" },
+      margin: { l: 26, r: 10, t: 4, b: 26 },
+      xaxis: { range: [-1.05, 1.05], title: "city direction (west to east)", ...cityAxisTicks() },
       yaxis: { range: [-0.8, 0.8], visible: false },
       showlegend: false,
       height: elH("plot_layout", 260)
@@ -329,51 +400,51 @@ def write_interactive_html(out_path="thesis_dashboard_fit_one_screen.html"):
   }
 
   function drawFig1() {
-    const N = state.N, e = state.e, t = state.t;
-    const gmax = 1.0;
+    const market = state.market, amenities = state.amenities, transport = state.transport;
+    const historyMax = 1.0;
     const n = 320;
 
-    const gs = [];
+    const histories = [];
     const qs = [];
     const ps = [];
 
     for (let i=0; i<n; i++) {
-      const g = gmax * (i/(n-1));
-      const sol = solveBounds(N, t, e, g);
-      gs.push(g);
+      const history = historyMax * (i/(n-1));
+      const sol = solveArea(market, transport, amenities, history);
+      histories.push(history);
       qs.push(sol.ok ? sol.q : NaN);
       ps.push(sol.ok ? sol.p : NaN);
     }
 
-    const gCur = state.g;
-    const solCur = solveBounds(N, t, e, gCur);
+    const historyCur = state.history;
+    const solCur = solveArea(market, transport, amenities, historyCur);
     const qCur = solCur.ok ? solCur.q : NaN;
     const pCur = solCur.ok ? solCur.p : NaN;
 
     const yLo = -1.05, yHi = 1.05;
 
     const data = [
-      { x: gs, y: gs, mode: "lines", name: "g (reference)" },
-      { x: gs, y: ps, mode: "lines", name: "right edge p(g)" },
-      { x: gs, y: qs, mode: "lines", name: "left edge q(g)" },
+      { x: histories, y: histories, mode: "lines", name: "reference" },
+      { x: histories, y: ps, mode: "lines", name: "east edge" },
+      { x: histories, y: qs, mode: "lines", name: "west edge" },
 
-      { x: gs, y: qs, mode: "lines", line: { width: 0 }, showlegend: false },
-      { x: gs, y: ps, mode: "lines", fill: "tonexty", opacity: 0.2, name: "business area" },
+      { x: histories, y: qs, mode: "lines", line: { width: 0 }, showlegend: false },
+      { x: histories, y: ps, mode: "lines", fill: "tonexty", opacity: 0.2, name: "commercial area" },
 
-      { x: [gCur, gCur], y: [yLo, yHi], mode: "lines",
-        line: { dash: "dash", width: 2 }, name: "current g" },
+      { x: [historyCur, historyCur], y: [yLo, yHi], mode: "lines",
+        line: { dash: "dash", width: 2 }, name: "current historical center" },
 
-      { x: solCur.ok ? [gCur, gCur] : [], y: solCur.ok ? [qCur, pCur] : [],
+      { x: solCur.ok ? [historyCur, historyCur] : [], y: solCur.ok ? [qCur, pCur] : [],
         mode: "markers",
         marker: { symbol: "x", size: 11, color: "green", line: { width: 2, color: "green" } },
-        name: "current q,p" }
+        name: "current area edges" }
     ];
 
     const layout = {
       font: { size: 11 },
-      margin: { l: 52, r: 10, t: 26, b: 38 },
-      xaxis: { range: [0, gmax], title: "g (historic center location)" },
-      yaxis: { range: [yLo, yHi], title: "location on the city line" },
+      margin: { l: 44, r: 10, t: 26, b: 38 },
+      xaxis: { range: [0, historyMax], title: "historical center (west to east)", ...historyAxisTicks01() },
+      yaxis: { range: [yLo, yHi], title: "commercial area position", ...cityAxisTicks() },
       legend: {
         orientation: "h",
         yanchor: "bottom",
@@ -389,44 +460,56 @@ def write_interactive_html(out_path="thesis_dashboard_fit_one_screen.html"):
   }
 
   function drawFig2() {
-    const N = state.N, e = state.e, g = state.g;
-    const tmin = 0.0;
-    const tmax = 1.5;
+    const market = state.market, amenities = state.amenities, history = state.history;
+    const transportMin = 0.0;
+    const transportMax = 1.5;
 
     const n = 280;
-    const ts = [];
+    const transports = [];
     const qs = [];
     const ps = [];
 
     for (let i=0; i<n; i++) {
-      const t = tmin + (tmax - tmin) * (i/(n-1));
-      const sol = solveBounds(N, t, e, g);
-      ts.push(t);
+      const transport = transportMin + (transportMax - transportMin) * (i/(n-1));
+      const sol = solveArea(market, transport, amenities, history);
+      transports.push(transport);
       qs.push(sol.ok ? sol.q : NaN);
       ps.push(sol.ok ? sol.p : NaN);
     }
 
-    const solNow = solveBounds(N, state.t, e, g);
+    const solNow = solveArea(market, state.transport, amenities, history);
     const qNow = solNow.ok ? solNow.q : NaN;
     const pNow = solNow.ok ? solNow.p : NaN;
 
     const data = [
-      { x: qs, y: ts, mode: "lines", name: "left edge q(t)" },
-      { x: ps, y: ts, mode: "lines", name: "right edge p(t)" },
+      { x: qs, y: transports, mode: "lines", name: "west edge" },
+      { x: ps, y: transports, mode: "lines", name: "east edge" },
 
-      { x: qs, y: ts, mode: "lines", line: { width: 0 }, showlegend: false },
-      { x: ps, y: ts, mode: "lines", fill: "tonextx", opacity: 0.2, name: "business area" },
+      { x: qs, y: transports, mode: "lines", line: { width: 0 }, showlegend: false },
+      { x: ps, y: transports, mode: "lines", fill: "tonextx", opacity: 0.2, name: "commercial area" },
 
-      { x: [g, g], y: [tmin, tmax], mode: "lines", line: { dash: "dash" }, name: "g (fixed)" },
+      { x: [history, history], y: [transportMin, transportMax], mode: "lines",
+        line: { dash: "dash" }, name: "historical center (fixed)" },
 
-      { x: [qNow, pNow], y: [state.t, state.t], mode: "markers", marker: { size: 8 }, name: "current t points" }
+      { x: [qNow, pNow], y: [state.transport, state.transport], mode: "markers", marker: { size: 8 }, name: "current setting" }
     ];
 
+    // Key fixes:
+    // 1) Larger left margin so tick labels are not clipped
+    // 2) automargin true for extra safety
+    // 3) Short tick labels
+    // 4) Title with standoff for readability
     const layout = {
       font: { size: 11 },
-      margin: { l: 52, r: 10, t: 26, b: 38 },
-      xaxis: { range: [-1.05, 1.05], title: "location on the city line" },
-      yaxis: { range: [tmin, tmax], title: "t (transport cost)" },
+      margin: { l: 92, r: 10, t: 26, b: 38 },
+      xaxis: { range: [-1.05, 1.05], title: "city direction (west to east)", ...cityAxisTicks() },
+      yaxis: {
+        range: [transportMin, transportMax],
+        title: { text: "transport quality (speed and comfort)", standoff: 10 },
+        ...transportAxisTicks(),
+        automargin: true,
+        tickfont: { size: 10 }
+      },
       legend: {
         orientation: "h",
         yanchor: "bottom",
@@ -442,7 +525,7 @@ def write_interactive_html(out_path="thesis_dashboard_fit_one_screen.html"):
   }
 
   function updateAll() {
-    const sol = solveBounds(state.N, state.t, state.e, state.g);
+    const sol = solveArea(state.market, state.transport, state.amenities, state.history);
     updateText(sol);
     drawLayout(sol);
     drawFig1();
@@ -453,7 +536,7 @@ def write_interactive_html(out_path="thesis_dashboard_fit_one_screen.html"):
     syncLabelsFromState();
     updateAll();
 
-    ["N","e","g","t"].forEach((id) => {
+    ["market","amenities","history","transport"].forEach((id) => {
       const el = document.getElementById(id);
       el.addEventListener("input", () => {
         state[id] = readSlider(id);
@@ -479,7 +562,8 @@ def write_interactive_html(out_path="thesis_dashboard_fit_one_screen.html"):
     out_path.write_text(html, encoding="utf-8")
     return out_path
 
-path = write_interactive_html("./data/yerevan_interactive/thesis_sectioned_dashboard.html")
+
+path = write_interactive_html("./data/yerevan_interactive/yerevan_business_dashboard.html")
 
 try:
     display(IFrame(src=str(path), width=1400, height=860))

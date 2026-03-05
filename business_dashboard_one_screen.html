@@ -57,14 +57,14 @@
 
     .controls {
       display: grid;
-      grid-template-columns: 1fr 300px;
+      grid-template-columns: 1fr 280px;
       gap: 12px;
       align-items: start;
     }
 
     .sliderRow {
       display: grid;
-      grid-template-columns: 160px 1fr 140px;
+      grid-template-columns: 120px 1fr 110px;
       gap: 10px;
       align-items: center;
       margin: 8px 0;
@@ -91,29 +91,30 @@
 </head>
 
 <body>
-  <h2>Moving centers:</h2>
+  <h2>Moving centers dashboard: 3 views, business drivers below</h2>
 
   <div class="grid3">
     <div class="card">
+      <div class="plotTitle">City snapshot <span class="pill">instant</span></div>
       <div class="small">
-        Thick segment is the <b>commercial area</b>. The X marks the <b>historical center</b>. The dot is the <b>commercial center</b>.
+        Thick segment is the <b>core business zone</b>. The X marks the <b>legacy hub</b>. The dot is the <b>demand center</b>.
       </div>
       <div id="plot_layout" class="plot plotSmall"></div>
     </div>
 
     <div class="card">
-      <div class="plotTitle">How the commercial area shifts when the historical center moves</div>
+      <div class="plotTitle">How the core zone shifts when the legacy hub moves</div>
       <div class="small">
-        We scan the historical center from west to east. Dashed line shows the current setting.
-        Green X markers show the current area edges for that setting.
+        We scan hub position from west to east. Dashed line shows the current hub setting.
+        Green X markers show the current zone edges for that hub.
       </div>
       <div id="plot_fig1" class="plot"></div>
     </div>
 
     <div class="card">
-      <div class="plotTitle">How the commercial area shifts with transport conditions</div>
+      <div class="plotTitle">How the core zone shifts as travel becomes harder</div>
       <div class="small">
-        We scan the transport factor from lower to higher. Dashed vertical line marks the historical center. Dots show the current setting.
+        We scan travel friction from easy to hard. Dashed vertical line marks the hub. Dots show the current friction.
       </div>
       <div id="plot_fig2" class="plot"></div>
     </div>
@@ -122,8 +123,8 @@
   <div class="card">
     <div class="controls">
       <div>
-        <div class="plotTitle">Commercial drivers</div>
-        <div class="small">Factors controls.</div>
+        <div class="plotTitle">Business drivers</div>
+        <div class="small">Use plain language controls. (Numbers are used internally but not shown.)</div>
 
         <div class="sliderRow">
           <div class="lbl">Market size</div>
@@ -132,37 +133,37 @@
         </div>
 
         <div class="sliderRow">
-          <div class="lbl">Importance of amenities</div>
-          <input id="amenities" type="range" min="0.01" max="1.00" step="0.01" value="0.10"/>
-          <div class="val" id="amenities_val"></div>
+          <div class="lbl">Customer diversity</div>
+          <input id="diversity" type="range" min="0.01" max="1.00" step="0.01" value="0.10"/>
+          <div class="val" id="diversity_val"></div>
         </div>
 
         <div class="sliderRow">
-          <div class="lbl">Historical center location</div>
-          <input id="history" type="range" min="0.00" max="1.00" step="0.01" value="0.25"/>
-          <div class="val" id="history_val"></div>
+          <div class="lbl">Legacy hub location</div>
+          <input id="hub" type="range" min="0.00" max="1.00" step="0.01" value="0.25"/>
+          <div class="val" id="hub_val"></div>
         </div>
 
         <div class="sliderRow">
-          <div class="lbl">Transport factor</div>
-          <input id="transport" type="range" min="0.00" max="1.50" step="0.01" value="0.25"/>
-          <div class="val" id="transport_val"></div>
+          <div class="lbl">Travel friction</div>
+          <input id="friction" type="range" min="0.00" max="1.50" step="0.01" value="0.25"/>
+          <div class="val" id="friction_val"></div>
         </div>
 
         <div class="small" style="margin-top:6px;">
-          Tip: When transport improves (faster and more comfortable), distance matters less and the commercial area can spread differently.
+          Tip: When travel gets harder, the core zone often shifts to reduce movement.
         </div>
       </div>
 
       <div>
         <div class="plotTitle">What this means right now</div>
         <div class="kvs">
-          <div style="margin-top:4px;"><b>Commercial area</b></div>
+          <div style="margin-top:4px;"><b>Core business zone</b></div>
           <div>Starts: <span id="q_out"></span></div>
           <div>Ends: <span id="p_out"></span></div>
 
-          <div style="margin-top:6px;"><b>Historical center</b>: <span id="history_out"></span></div>
-          <div><b>Commercial center</b>: <span id="mu_out"></span></div>
+          <div style="margin-top:6px;"><b>Legacy hub</b>: <span id="hub_out"></span></div>
+          <div><b>Demand center</b>: <span id="mu_out"></span></div>
 
           <hr/>
 
@@ -176,6 +177,7 @@
 <script>
   const EPS = 1e-9;
 
+  // Friendly direction labels for the city line.
   function posLabel(x){
     if (!isFinite(x)) return "unknown";
     if (x <= -0.75) return "far west";
@@ -187,8 +189,9 @@
     return "far east";
   }
 
-  function historyLabel(h){
+  function hubLabel(h){
     if (!isFinite(h)) return "unknown";
+    // hub is 0..1, map to west..east labels
     if (h <= 0.10) return "far west";
     if (h <= 0.30) return "west";
     if (h <= 0.55) return "near center";
@@ -196,6 +199,7 @@
     return "far east";
   }
 
+  // Slider value to plain-language strength labels.
   function strengthLabel(x, lo, hi, words){
     if (!isFinite(x)) return "unknown";
     const t = (x - lo) / (hi - lo);
@@ -211,19 +215,21 @@
     return (h && h > 50) ? h : fallback;
   }
 
-  // market = N, amenities = e, history = g, transport = t
-  function solveArea(market, transport, amenities, history) {
+  // Core model solver (same math, renamed to business-friendly parameters).
+  // market = N, diversity = e, hub = g, friction = t
+  function solveZone(market, friction, diversity, hub) {
     if (!(market > 0 && market < 2)) return { ok:false, reason:"Market size must be within the supported range." };
-    if (!(amenities > 0)) return { ok:false, reason:"Importance of amenities must be positive." };
-    if (!(transport >= 0)) return { ok:false, reason:"Transport factor must be zero or positive." };
+    if (!(diversity > 0)) return { ok:false, reason:"Customer diversity must be positive." };
+    if (!(friction >= 0)) return { ok:false, reason:"Travel friction must be zero or positive." };
 
     const M = 2 - market;
-    const theta = transport / amenities;
+    const theta = friction / diversity;
 
     function inCity(q, p) {
       return (q < p) && (q >= -1 - 1e-6) && (p <= 1 + 1e-6);
     }
 
+    // Candidate configurations (same as your original logic)
     let muB = NaN, pB = NaN, qB = NaN;
     if (theta > EPS) {
       muB = -M * market / (4 * theta);
@@ -241,7 +247,7 @@
     let muA = NaN, pA = NaN, qA = NaN;
     const denom = (market - 2 * theta);
     if (Math.abs(denom) > EPS) {
-      muA = market * history / denom;
+      muA = market * hub / denom;
       pA = muA + M / 2;
       qA = muA - M / 2;
     }
@@ -254,22 +260,22 @@
         score += 10.0 * (Math.max(0.0, (-1 - q)) + Math.max(0.0, (p - 1)));
       }
       if (kind === "A") {
-        score += Math.max(0.0, q - history) + Math.max(0.0, history - p);
+        score += Math.max(0.0, q - hub) + Math.max(0.0, hub - p);
       } else if (kind === "B") {
-        score += Math.max(0.0, p - history);
+        score += Math.max(0.0, p - hub);
       } else if (kind === "C") {
-        score += Math.max(0.0, history - q);
+        score += Math.max(0.0, hub - q);
       }
       return score;
     }
 
     const candidates = [];
     const sA = scoreCase("A", qA, pA, muA);
-    if (sA !== null) candidates.push([sA, "Historical center sits inside the commercial area.", qA, pA, muA]);
+    if (sA !== null) candidates.push([sA, "Legacy hub sits inside the core business zone.", qA, pA, muA]);
     const sB = scoreCase("B", qB, pB, muB);
-    if (sB !== null) candidates.push([sB, "Historical center is to the east of the commercial area.", qB, pB, muB]);
+    if (sB !== null) candidates.push([sB, "Legacy hub sits to the east of the core business zone.", qB, pB, muB]);
     const sC = scoreCase("C", qC, pC, muC);
-    if (sC !== null) candidates.push([sC, "Historical center is to the west of the commercial area.", qC, pC, muC]);
+    if (sC !== null) candidates.push([sC, "Legacy hub sits to the west of the core business zone.", qC, pC, muC]);
 
     if (candidates.length === 0) return { ok:false, reason:"No valid configuration found for these settings." };
 
@@ -278,7 +284,7 @@
 
     return {
       ok: true,
-      market, M, transport, amenities, history, theta,
+      market, M, friction, diversity, hub, theta,
       caseText: best[1],
       q: best[2],
       p: best[3],
@@ -286,43 +292,44 @@
     };
   }
 
-  const state = { market: 1.40, amenities: 0.10, history: 0.25, transport: 0.25 };
+  // UI state uses the friendly names
+  const state = { market: 1.40, diversity: 0.10, hub: 0.25, friction: 0.25 };
 
   function readSlider(id) {
     return parseFloat(document.getElementById(id).value);
   }
 
-  // Shorter labels so nothing gets clipped on the y axis
   const sliderWords = {
     market: ["very small", "small", "mid-size", "large", "very large"],
-    amenities: ["low", "some", "moderate", "high", "very high"],
-    history: ["far west", "west", "near center", "east", "far east"],
-    transport: ["slow", "basic", "comfortable", "fast", "very fast"]
+    diversity: ["very uniform", "uniform", "mixed", "diverse", "very diverse"],
+    hub: ["far west", "west", "near center", "east", "far east"],
+    friction: ["very easy", "easy", "moderate", "hard", "very hard"]
   };
 
   function syncLabelsFromState() {
+    // Labels only, no numbers shown. (You can still hover to see the raw number via title if you want.)
     const mv = strengthLabel(state.market, 0.20, 1.90, sliderWords.market);
-    const av = strengthLabel(state.amenities, 0.01, 1.00, sliderWords.amenities);
-    const hv = historyLabel(state.history);
-    const tv = strengthLabel(state.transport, 0.00, 1.50, sliderWords.transport);
+    const dv = strengthLabel(state.diversity, 0.01, 1.00, sliderWords.diversity);
+    const hv = hubLabel(state.hub);
+    const fv = strengthLabel(state.friction, 0.00, 1.50, sliderWords.friction);
 
     const set = (id, text, raw) => {
       const el = document.getElementById(id);
       el.textContent = text;
-      el.title = "raw: " + raw.toFixed(4);
+      el.title = "raw: " + raw.toFixed(4); // optional, not visible unless hovered
     };
 
     set("market_val", mv, state.market);
-    set("amenities_val", av, state.amenities);
-    set("history_val", hv, state.history);
-    set("transport_val", tv, state.transport);
+    set("diversity_val", dv, state.diversity);
+    set("hub_val", hv, state.hub);
+    set("friction_val", fv, state.friction);
   }
 
   function updateText(sol) {
     if (!sol.ok) {
       document.getElementById("q_out").textContent = "unknown";
       document.getElementById("p_out").textContent = "unknown";
-      document.getElementById("history_out").textContent = "unknown";
+      document.getElementById("hub_out").textContent = "unknown";
       document.getElementById("mu_out").textContent = "unknown";
       document.getElementById("case_out").textContent = sol.reason;
       return;
@@ -330,13 +337,14 @@
 
     document.getElementById("q_out").textContent = posLabel(sol.q);
     document.getElementById("p_out").textContent = posLabel(sol.p);
-    document.getElementById("history_out").textContent = historyLabel(sol.history);
+    document.getElementById("hub_out").textContent = hubLabel(sol.hub);
     document.getElementById("mu_out").textContent = posLabel(sol.mu);
     document.getElementById("case_out").textContent = sol.caseText;
 
+    // Keep raw values accessible on hover (optional)
     document.getElementById("q_out").title = "raw: " + sol.q.toFixed(4);
     document.getElementById("p_out").title = "raw: " + sol.p.toFixed(4);
-    document.getElementById("history_out").title = "raw: " + sol.history.toFixed(4);
+    document.getElementById("hub_out").title = "raw: " + sol.hub.toFixed(4);
     document.getElementById("mu_out").title = "raw: " + sol.mu.toFixed(4);
   }
 
@@ -348,7 +356,7 @@
     };
   }
 
-  function historyAxisTicks01(){
+  function hubAxisTicks01(){
     return {
       tickmode: "array",
       tickvals: [0, 0.25, 0.5, 0.75, 1.0],
@@ -356,17 +364,17 @@
     };
   }
 
-  function transportAxisTicks(){
+  function frictionAxisTicks(){
     return {
       tickmode: "array",
       tickvals: [0.0, 0.375, 0.75, 1.125, 1.5],
-      ticktext: ["slow", "basic", "comfortable", "fast", "very fast"]
+      ticktext: ["very easy", "easy", "moderate", "hard", "very hard"]
     };
   }
 
   function drawLayout(sol) {
-    let q = NaN, p = NaN, mu = NaN, history = NaN;
-    if (sol.ok) { q = sol.q; p = sol.p; mu = sol.mu; history = sol.history; }
+    let q = NaN, p = NaN, mu = NaN, hub = NaN;
+    if (sol.ok) { q = sol.q; p = sol.p; mu = sol.mu; hub = sol.hub; }
 
     const qd = clip(q, -1, 1);
     const pd = clip(p, -1, 1);
@@ -374,13 +382,13 @@
     const data = [
       { x: [-1, 1], y: [0, 0], mode: "lines", line: { width: 6 }, name: "city line" },
       { x: sol.ok ? [qd, pd] : [], y: sol.ok ? [0, 0] : [], mode: "lines",
-        line: { width: 18 }, opacity: 0.25, name: "commercial area" },
-      { x: sol.ok ? [history] : [], y: sol.ok ? [0] : [], mode: "markers+text",
-        marker: { size: 12, symbol: "x" }, text: ["historical center"], textposition: "top center", name: "historical center" },
+        line: { width: 18 }, opacity: 0.25, name: "core business zone" },
+      { x: sol.ok ? [hub] : [], y: sol.ok ? [0] : [], mode: "markers+text",
+        marker: { size: 12, symbol: "x" }, text: ["legacy hub"], textposition: "top center", name: "legacy hub" },
       { x: sol.ok ? [mu] : [], y: sol.ok ? [0] : [], mode: "markers+text",
-        marker: { size: 10, symbol: "circle" }, text: ["commercial center"], textposition: "top center", name: "commercial center" },
+        marker: { size: 10, symbol: "circle" }, text: ["demand center"], textposition: "top center", name: "demand center" },
       { x: sol.ok ? [q, p] : [], y: sol.ok ? [0, 0] : [], mode: "markers+text",
-        marker: { size: 14, symbol: "line-ns-open" }, text: ["start", "end"], textposition: "bottom center", name: "area edges" }
+        marker: { size: 14, symbol: "line-ns-open" }, text: ["start", "end"], textposition: "bottom center", name: "zone edges" }
     ];
 
     const layout = {
@@ -396,51 +404,51 @@
   }
 
   function drawFig1() {
-    const market = state.market, amenities = state.amenities, transport = state.transport;
-    const historyMax = 1.0;
+    const market = state.market, diversity = state.diversity, friction = state.friction;
+    const hubMax = 1.0;
     const n = 320;
 
-    const histories = [];
+    const hubs = [];
     const qs = [];
     const ps = [];
 
     for (let i=0; i<n; i++) {
-      const history = historyMax * (i/(n-1));
-      const sol = solveArea(market, transport, amenities, history);
-      histories.push(history);
+      const hub = hubMax * (i/(n-1));
+      const sol = solveZone(market, friction, diversity, hub);
+      hubs.push(hub);
       qs.push(sol.ok ? sol.q : NaN);
       ps.push(sol.ok ? sol.p : NaN);
     }
 
-    const historyCur = state.history;
-    const solCur = solveArea(market, transport, amenities, historyCur);
+    const hubCur = state.hub;
+    const solCur = solveZone(market, friction, diversity, hubCur);
     const qCur = solCur.ok ? solCur.q : NaN;
     const pCur = solCur.ok ? solCur.p : NaN;
 
     const yLo = -1.05, yHi = 1.05;
 
     const data = [
-      { x: histories, y: histories, mode: "lines", name: "reference" },
-      { x: histories, y: ps, mode: "lines", name: "east edge" },
-      { x: histories, y: qs, mode: "lines", name: "west edge" },
+      { x: hubs, y: hubs, mode: "lines", name: "hub reference" },
+      { x: hubs, y: ps, mode: "lines", name: "zone end" },
+      { x: hubs, y: qs, mode: "lines", name: "zone start" },
 
-      { x: histories, y: qs, mode: "lines", line: { width: 0 }, showlegend: false },
-      { x: histories, y: ps, mode: "lines", fill: "tonexty", opacity: 0.2, name: "commercial area" },
+      { x: hubs, y: qs, mode: "lines", line: { width: 0 }, showlegend: false },
+      { x: hubs, y: ps, mode: "lines", fill: "tonexty", opacity: 0.2, name: "core zone width" },
 
-      { x: [historyCur, historyCur], y: [yLo, yHi], mode: "lines",
-        line: { dash: "dash", width: 2 }, name: "current historical center" },
+      { x: [hubCur, hubCur], y: [yLo, yHi], mode: "lines",
+        line: { dash: "dash", width: 2 }, name: "current hub" },
 
-      { x: solCur.ok ? [historyCur, historyCur] : [], y: solCur.ok ? [qCur, pCur] : [],
+      { x: solCur.ok ? [hubCur, hubCur] : [], y: solCur.ok ? [qCur, pCur] : [],
         mode: "markers",
         marker: { symbol: "x", size: 11, color: "green", line: { width: 2, color: "green" } },
-        name: "current area edges" }
+        name: "current zone edges" }
     ];
 
     const layout = {
       font: { size: 11 },
-      margin: { l: 44, r: 10, t: 26, b: 38 },
-      xaxis: { range: [0, historyMax], title: "historical center (west to east)", ...historyAxisTicks01() },
-      yaxis: { range: [yLo, yHi], title: "commercial area position", ...cityAxisTicks() },
+      margin: { l: 40, r: 10, t: 26, b: 38 },
+      xaxis: { range: [0, hubMax], title: "legacy hub location (west to east)", ...hubAxisTicks01() },
+      yaxis: { range: [yLo, yHi], title: "zone position on the city line", ...cityAxisTicks() },
       legend: {
         orientation: "h",
         yanchor: "bottom",
@@ -456,56 +464,45 @@
   }
 
   function drawFig2() {
-    const market = state.market, amenities = state.amenities, history = state.history;
-    const transportMin = 0.0;
-    const transportMax = 1.5;
+    const market = state.market, diversity = state.diversity, hub = state.hub;
+    const frictionMin = 0.0;
+    const frictionMax = 1.5;
 
     const n = 280;
-    const transports = [];
+    const frs = [];
     const qs = [];
     const ps = [];
 
     for (let i=0; i<n; i++) {
-      const transport = transportMin + (transportMax - transportMin) * (i/(n-1));
-      const sol = solveArea(market, transport, amenities, history);
-      transports.push(transport);
+      const friction = frictionMin + (frictionMax - frictionMin) * (i/(n-1));
+      const sol = solveZone(market, friction, diversity, hub);
+      frs.push(friction);
       qs.push(sol.ok ? sol.q : NaN);
       ps.push(sol.ok ? sol.p : NaN);
     }
 
-    const solNow = solveArea(market, state.transport, amenities, history);
+    const solNow = solveZone(market, state.friction, diversity, hub);
     const qNow = solNow.ok ? solNow.q : NaN;
     const pNow = solNow.ok ? solNow.p : NaN;
 
     const data = [
-      { x: qs, y: transports, mode: "lines", name: "west edge" },
-      { x: ps, y: transports, mode: "lines", name: "east edge" },
+      { x: qs, y: frs, mode: "lines", name: "zone start" },
+      { x: ps, y: frs, mode: "lines", name: "zone end" },
 
-      { x: qs, y: transports, mode: "lines", line: { width: 0 }, showlegend: false },
-      { x: ps, y: transports, mode: "lines", fill: "tonextx", opacity: 0.2, name: "commercial area" },
+      { x: qs, y: frs, mode: "lines", line: { width: 0 }, showlegend: false },
+      { x: ps, y: frs, mode: "lines", fill: "tonextx", opacity: 0.2, name: "core zone width" },
 
-      { x: [history, history], y: [transportMin, transportMax], mode: "lines",
-        line: { dash: "dash" }, name: "historical center (fixed)" },
+      { x: [hub, hub], y: [frictionMin, frictionMax], mode: "lines",
+        line: { dash: "dash" }, name: "legacy hub (fixed)" },
 
-      { x: [qNow, pNow], y: [state.transport, state.transport], mode: "markers", marker: { size: 8 }, name: "current setting" }
+      { x: [qNow, pNow], y: [state.friction, state.friction], mode: "markers", marker: { size: 8 }, name: "current setting" }
     ];
 
-    // Key fixes:
-    // 1) Larger left margin so tick labels are not clipped
-    // 2) automargin true for extra safety
-    // 3) Short tick labels
-    // 4) Title with standoff for readability
     const layout = {
       font: { size: 11 },
-      margin: { l: 92, r: 10, t: 26, b: 38 },
+      margin: { l: 40, r: 10, t: 26, b: 38 },
       xaxis: { range: [-1.05, 1.05], title: "city direction (west to east)", ...cityAxisTicks() },
-      yaxis: {
-        range: [transportMin, transportMax],
-        title: { text: "transport quality (speed and comfort)", standoff: 10 },
-        ...transportAxisTicks(),
-        automargin: true,
-        tickfont: { size: 10 }
-      },
+      yaxis: { range: [frictionMin, frictionMax], title: "travel friction", ...frictionAxisTicks() },
       legend: {
         orientation: "h",
         yanchor: "bottom",
@@ -521,7 +518,7 @@
   }
 
   function updateAll() {
-    const sol = solveArea(state.market, state.transport, state.amenities, state.history);
+    const sol = solveZone(state.market, state.friction, state.diversity, state.hub);
     updateText(sol);
     drawLayout(sol);
     drawFig1();
@@ -532,7 +529,7 @@
     syncLabelsFromState();
     updateAll();
 
-    ["market","amenities","history","transport"].forEach((id) => {
+    ["market","diversity","hub","friction"].forEach((id) => {
       const el = document.getElementById(id);
       el.addEventListener("input", () => {
         state[id] = readSlider(id);

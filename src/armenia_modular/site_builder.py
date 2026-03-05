@@ -2012,10 +2012,7 @@ def build_landing_html(config: dict) -> str:
 
   <section class="section" id="gallery1">
     <div class="container">
-      <div class="sectionTitle">
-        <h2>${G1_TITLE}</h2>
-        <p>${G1_SUB}</p>
-      </div>
+
       ${GALLERY1_HTML}
     </div>
   </section>
@@ -2025,7 +2022,6 @@ def build_landing_html(config: dict) -> str:
       <div class="modelHeader">
         <div class="sectionTitle">
           <h2>${MODEL_TITLE}</h2>
-          <p>${MODEL_SUB}</p>
         </div>
 
         <div class="modelMiniBar">
@@ -2538,11 +2534,9 @@ def write_full_scrolly_site(
         "HERO_IMAGE_CAPTION": "",
 
         "G1_TITLE": "Context",
-        "G1_SUB": "Supporting visuals before the model.",
         "GALLERY1_HTML": build_gallery_html(g1, cols=3),
 
         "MODEL_TITLE": "Interactive model",
-        "MODEL_SUB": "Scroll-driven scenarios with a sticky frame.",
         "STEPS_HTML": build_steps_html(steps_all),
         "VIZ_FILENAME": viz_filename,
 
@@ -2611,7 +2605,7 @@ def write_full_scrolly_site(
         dash_html = build_dashboard_page_html(
             page_title=f"{title} | Dashboard",
             iframe_src=embed_extra_filename,
-            iframe_title="Theoretical modelling dashboard",
+            iframe_title="",
         )
         Path(os.path.join(out_dir, dashboard_page)).write_text(dash_html, encoding="utf-8")
 
