@@ -1498,20 +1498,7 @@ def build_gallery_html(items, cols=3):
     return f"""<div class="imgGrid cols{int(cols)}">{''.join(cards)}</div>"""
 
 
-def build_explain_blocks(blocks):
-    out = []
-    for b in blocks:
-        h = _escape(b.get("heading", ""))
-        p = _escape(b.get("body", ""))
-        out.append(
-            f"""
-            <div class="textCard">
-              <h3>{h}</h3>
-              <p>{p}</p>
-            </div>
-            """
-        )
-    return "\n".join(out)
+
 
 
 # =========================
@@ -2034,15 +2021,7 @@ def build_landing_html(config: dict) -> str:
     </div>
   </header>
 
-  <section class="section" id="gallery1">
-    <div class="container">
-      <div class="sectionTitle">
-        <h2>${G1_TITLE}</h2>
-        <p>${G1_SUB}</p>
-      </div>
-      ${GALLERY1_HTML}
-    </div>
-  </section>
+ 
 
   <section class="modelWrap" id="model">
     <div class="container">
@@ -2597,7 +2576,6 @@ def write_full_scrolly_site(
         "GALLERY2_HTML": build_gallery_html(g2, cols=2),
 
         "EXPLAIN_TITLE": "Explanation",
-        "EXPLAIN_BLOCKS": build_explain_blocks(explain_blocks),
         "EXTRA_EXPLAIN_HTML": "",
 
         "FOOTER_TEXT": f"""
