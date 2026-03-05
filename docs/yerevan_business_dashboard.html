@@ -18,9 +18,14 @@
       --line: rgba(0,0,0,0.12);
       --muted: rgba(0,0,0,0.62);
 
-      /* Keep plots from stretching too tall */
       --plotH: clamp(220px, 34vh, 320px);
       --plotHSmall: clamp(200px, 30vh, 280px);
+
+      /* palette */
+      --c-light: #E0ECEE;
+      --c-cyan:  #57D4E5;
+      --c-orange:#F0805B;
+      --c-red:   #EC4848;
     }
 
     html, body { height: 100%; }
@@ -64,14 +69,72 @@
 
     .sliderRow {
       display: grid;
-      grid-template-columns: 160px 1fr 140px;
+      grid-template-columns: 160px 1fr;
       gap: 10px;
       align-items: center;
-      margin: 8px 0;
+      margin: 10px 0;
     }
     .sliderRow .lbl { font-size: 12px; font-weight: 650; }
-    .sliderRow .val { font-size: 12px; text-align: right; color: #222; }
-    input[type="range"] { width: 100%; }
+
+    .sliderPack{
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+    }
+
+    /* thicker, recolored sliders */
+    input[type="range"]{
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 10px;
+      background: var(--c-cyan);
+      border-radius: 999px;
+      outline: none;
+    }
+    input[type="range"]::-webkit-slider-runnable-track{
+      height: 10px;
+      background: var(--c-cyan);
+      border-radius: 999px;
+    }
+    input[type="range"]::-webkit-slider-thumb{
+      -webkit-appearance: none;
+      appearance: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--c-cyan);
+      border: 3px solid #fff;
+      box-shadow: 0 0 0 2px rgba(0,0,0,0.12);
+      margin-top: -6px;
+      cursor: pointer;
+    }
+    input[type="range"]::-moz-range-track{
+      height: 10px;
+      background: var(--c-cyan);
+      border-radius: 999px;
+    }
+    input[type="range"]::-moz-range-thumb{
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--c-cyan);
+      border: 3px solid #fff;
+      box-shadow: 0 0 0 2px rgba(0,0,0,0.12);
+      cursor: pointer;
+    }
+
+    .sliderPack input[type="range"]{
+      flex: 1;
+      min-width: 0;
+    }
+    .sliderPack .val{
+      min-width: 120px;
+      text-align: right;
+      font-size: 12px;
+      color: #222;
+    }
 
     .kvs { font-size: 12px; line-height: 1.25; }
     .kvs b { font-weight: 650; }
@@ -84,8 +147,8 @@
         --plotH: clamp(240px, 38vh, 360px);
         --plotHSmall: clamp(220px, 34vh, 320px);
       }
-      .sliderRow { grid-template-columns: 1fr; gap: 6px; }
-      .sliderRow .val { text-align: left; }
+      .sliderRow { grid-template-columns: 1fr; }
+      .sliderPack .val{ min-width: 110px; text-align: left; }
     }
   </style>
 </head>
@@ -105,7 +168,7 @@
       <div class="plotTitle">How the commercial area shifts when the historical center moves</div>
       <div class="small">
         We scan the historical center from west to east. Dashed line shows the current setting.
-        Green X markers show the current area edges for that setting.
+        Markers show the current area edges for that setting.
       </div>
       <div id="plot_fig1" class="plot"></div>
     </div>
@@ -127,26 +190,34 @@
 
         <div class="sliderRow">
           <div class="lbl">Market size</div>
-          <input id="market" type="range" min="0.20" max="1.90" step="0.05" value="1.40"/>
-          <div class="val" id="market_val"></div>
+          <div class="sliderPack">
+            <input id="market" type="range" min="0.20" max="1.90" step="0.05" value="1.40"/>
+            <div class="val" id="market_val"></div>
+          </div>
         </div>
 
         <div class="sliderRow">
           <div class="lbl">Importance of amenities</div>
-          <input id="amenities" type="range" min="0.01" max="1.00" step="0.01" value="0.10"/>
-          <div class="val" id="amenities_val"></div>
+          <div class="sliderPack">
+            <input id="amenities" type="range" min="0.01" max="1.00" step="0.01" value="0.10"/>
+            <div class="val" id="amenities_val"></div>
+          </div>
         </div>
 
         <div class="sliderRow">
           <div class="lbl">Historical center location</div>
-          <input id="history" type="range" min="0.00" max="1.00" step="0.01" value="0.25"/>
-          <div class="val" id="history_val"></div>
+          <div class="sliderPack">
+            <input id="history" type="range" min="0.00" max="1.00" step="0.01" value="0.25"/>
+            <div class="val" id="history_val"></div>
+          </div>
         </div>
 
         <div class="sliderRow">
           <div class="lbl">Transport factor</div>
-          <input id="transport" type="range" min="0.00" max="1.50" step="0.01" value="0.25"/>
-          <div class="val" id="transport_val"></div>
+          <div class="sliderPack">
+            <input id="transport" type="range" min="0.00" max="1.50" step="0.01" value="0.25"/>
+            <div class="val" id="transport_val"></div>
+          </div>
         </div>
 
         <div class="small" style="margin-top:6px;">
@@ -175,6 +246,17 @@
 
 <script>
   const EPS = 1e-9;
+
+  // Palette
+  const C = {
+    light:  "#E0ECEE",
+    cyan:   "#57D4E5",
+    orange: "#F0805B",
+    red:    "#EC4848",
+    ink:    "rgba(0,0,0,0.78)",
+    grid:   "rgba(0,0,0,0.10)"
+  };
+  const FILL_LIGHT = "rgba(224,236,238,0.85)";
 
   function posLabel(x){
     if (!isFinite(x)) return "unknown";
@@ -292,7 +374,6 @@
     return parseFloat(document.getElementById(id).value);
   }
 
-  // Shorter labels so nothing gets clipped on the y axis
   const sliderWords = {
     market: ["very small", "small", "mid-size", "large", "very large"],
     amenities: ["low", "some", "moderate", "high", "very high"],
@@ -364,6 +445,16 @@
     };
   }
 
+  function baseAxisStyling(){
+    return {
+      showgrid: true,
+      gridcolor: C.grid,
+      zeroline: false,
+      tickfont: { size: 11, color: C.ink },
+      titlefont: { size: 13, color: C.ink }
+    };
+  }
+
   function drawLayout(sol) {
     let q = NaN, p = NaN, mu = NaN, history = NaN;
     if (sol.ok) { q = sol.q; p = sol.p; mu = sol.mu; history = sol.history; }
@@ -371,24 +462,70 @@
     const qd = clip(q, -1, 1);
     const pd = clip(p, -1, 1);
 
+    // extra separation so "start/end" never overlap the historical label
+    const histYShift = -54;
+    const edgeYShift = -18;
+
+    // if an edge is very close to the historical center, push it sideways a bit
+    const close = (sol.ok && isFinite(p) && isFinite(history)) ? Math.abs(p - history) : 999;
+    const endXShift = (close < 0.12) ? (p >= history ? 26 : -26) : 10;
+
+    const closeQ = (sol.ok && isFinite(q) && isFinite(history)) ? Math.abs(q - history) : 999;
+    const startXShift = (closeQ < 0.12) ? (q >= history ? 26 : -26) : -10;
+
     const data = [
-      { x: [-1, 1], y: [0, 0], mode: "lines", line: { width: 6 }, name: "city line" },
+      { x: [-1, 1], y: [0, 0], mode: "lines",
+        line: { width: 8, color: C.cyan }, name: "city line" },
+
       { x: sol.ok ? [qd, pd] : [], y: sol.ok ? [0, 0] : [], mode: "lines",
-        line: { width: 18 }, opacity: 0.25, name: "commercial area" },
-      { x: sol.ok ? [history] : [], y: sol.ok ? [0] : [], mode: "markers+text",
-        marker: { size: 12, symbol: "x" }, text: ["historical center"], textposition: "top center", name: "historical center" },
-      { x: sol.ok ? [mu] : [], y: sol.ok ? [0] : [], mode: "markers+text",
-        marker: { size: 10, symbol: "circle" }, text: ["commercial center"], textposition: "top center", name: "commercial center" },
-      { x: sol.ok ? [q, p] : [], y: sol.ok ? [0, 0] : [], mode: "markers+text",
-        marker: { size: 14, symbol: "line-ns-open" }, text: ["start", "end"], textposition: "bottom center", name: "area edges" }
+        line: { width: 22, color: C.light }, opacity: 1.0, name: "commercial area" },
+
+      { x: sol.ok ? [history] : [], y: sol.ok ? [0] : [], mode: "markers",
+        marker: { size: 14, symbol: "x", color: C.orange, line: { width: 3, color: C.orange } },
+        name: "historical center",
+        cliponaxis: false },
+
+      { x: sol.ok ? [mu] : [], y: sol.ok ? [0] : [], mode: "markers",
+        marker: { size: 14, symbol: "circle", color: C.red, line: { width: 2, color: C.red } },
+        name: "commercial center",
+        cliponaxis: false },
+
+      { x: sol.ok ? [q, p] : [], y: sol.ok ? [0, 0] : [], mode: "markers",
+        marker: { size: 18, symbol: "line-ns-open", color: C.cyan, line: { width: 3, color: C.cyan } },
+        name: "area edges",
+        cliponaxis: false }
     ];
 
+    const annotations = sol.ok ? [
+      {
+        x: mu, y: 0, text: "commercial center",
+        showarrow: false, yshift: 18, xshift: 0,
+        font: { size: 14, color: C.ink }
+      },
+      {
+        x: history, y: 0, text: "historical center",
+        showarrow: false, yshift: histYShift, xshift: 0,
+        font: { size: 14, color: C.ink }
+      },
+      {
+        x: q, y: 0, text: "start",
+        showarrow: false, yshift: edgeYShift, xshift: startXShift,
+        font: { size: 14, color: C.ink }
+      },
+      {
+        x: p, y: 0, text: "end",
+        showarrow: false, yshift: edgeYShift, xshift: endXShift,
+        font: { size: 14, color: C.ink }
+      }
+    ] : [];
+
     const layout = {
-      font: { size: 11 },
-      margin: { l: 26, r: 10, t: 4, b: 26 },
-      xaxis: { range: [-1.05, 1.05], title: "city direction (west to east)", ...cityAxisTicks() },
+      font: { size: 11, color: C.ink },
+      margin: { l: 26, r: 10, t: 4, b: 44 },
+      xaxis: { range: [-1.05, 1.05], title: "city direction (west to east)", ...cityAxisTicks(), ...baseAxisStyling() },
       yaxis: { range: [-0.8, 0.8], visible: false },
       showlegend: false,
+      annotations,
       height: elH("plot_layout", 260)
     };
 
@@ -420,27 +557,51 @@
     const yLo = -1.05, yHi = 1.05;
 
     const data = [
-      { x: histories, y: histories, mode: "lines", name: "reference" },
-      { x: histories, y: ps, mode: "lines", name: "east edge" },
-      { x: histories, y: qs, mode: "lines", name: "west edge" },
+      { x: histories, y: histories, mode: "lines",
+        line: { color: "rgba(0,0,0,0.18)", width: 2 },
+        name: "reference" },
 
-      { x: histories, y: qs, mode: "lines", line: { width: 0 }, showlegend: false },
-      { x: histories, y: ps, mode: "lines", fill: "tonexty", opacity: 0.2, name: "commercial area" },
+      { x: histories, y: ps, mode: "lines",
+        line: { color: C.red, width: 3 },
+        name: "east edge" },
+
+      { x: histories, y: qs, mode: "lines",
+        line: { color: C.cyan, width: 3 },
+        name: "west edge" },
+
+      { x: histories, y: qs, mode: "lines", line: { width: 0 }, showlegend: false, hoverinfo: "skip" },
+      { x: histories, y: ps, mode: "lines",
+        line: { width: 0 },
+        fill: "tonexty",
+        fillcolor: FILL_LIGHT,
+        name: "commercial area" },
 
       { x: [historyCur, historyCur], y: [yLo, yHi], mode: "lines",
-        line: { dash: "dash", width: 2 }, name: "current historical center" },
+        line: { dash: "dash", width: 2, color: C.orange }, name: "current historical center" },
 
       { x: solCur.ok ? [historyCur, historyCur] : [], y: solCur.ok ? [qCur, pCur] : [],
         mode: "markers",
-        marker: { symbol: "x", size: 11, color: "green", line: { width: 2, color: "green" } },
+        marker: { symbol: "x", size: 11, color: C.orange, line: { width: 2, color: C.orange } },
         name: "current area edges" }
     ];
 
     const layout = {
-      font: { size: 11 },
-      margin: { l: 44, r: 10, t: 26, b: 38 },
-      xaxis: { range: [0, historyMax], title: "historical center (west to east)", ...historyAxisTicks01() },
-      yaxis: { range: [yLo, yHi], title: "commercial area position", ...cityAxisTicks() },
+      font: { size: 11, color: C.ink },
+      margin: { l: 108, r: 10, t: 26, b: 38 },
+      xaxis: {
+        range: [0, historyMax],
+        title: "historical center (west to east)",
+        ...historyAxisTicks01(),
+        ...baseAxisStyling()
+      },
+      yaxis: {
+        range: [yLo, yHi],
+        title: { text: "commercial area position", standoff: 14 },
+        ...cityAxisTicks(),
+        ...baseAxisStyling(),
+        automargin: true,
+        tickfont: { size: 10, color: C.ink }
+      },
       legend: {
         orientation: "h",
         yanchor: "bottom",
@@ -478,33 +639,41 @@
     const pNow = solNow.ok ? solNow.p : NaN;
 
     const data = [
-      { x: qs, y: transports, mode: "lines", name: "west edge" },
-      { x: ps, y: transports, mode: "lines", name: "east edge" },
+      { x: qs, y: transports, mode: "lines",
+        line: { color: C.cyan, width: 3 },
+        name: "west edge" },
 
-      { x: qs, y: transports, mode: "lines", line: { width: 0 }, showlegend: false },
-      { x: ps, y: transports, mode: "lines", fill: "tonextx", opacity: 0.2, name: "commercial area" },
+      { x: ps, y: transports, mode: "lines",
+        line: { color: C.red, width: 3 },
+        name: "east edge" },
+
+      { x: qs, y: transports, mode: "lines", line: { width: 0 }, showlegend: false, hoverinfo: "skip" },
+      { x: ps, y: transports, mode: "lines",
+        line: { width: 0 },
+        fill: "tonextx",
+        fillcolor: FILL_LIGHT,
+        name: "commercial area" },
 
       { x: [history, history], y: [transportMin, transportMax], mode: "lines",
-        line: { dash: "dash" }, name: "historical center (fixed)" },
+        line: { dash: "dash", width: 2, color: C.orange }, name: "historical center (fixed)" },
 
-      { x: [qNow, pNow], y: [state.transport, state.transport], mode: "markers", marker: { size: 8 }, name: "current setting" }
+      { x: [qNow, pNow], y: [state.transport, state.transport],
+        mode: "markers",
+        marker: { size: 9, color: C.red, line: { width: 1, color: C.red } },
+        name: "current setting" }
     ];
 
-    // Key fixes:
-    // 1) Larger left margin so tick labels are not clipped
-    // 2) automargin true for extra safety
-    // 3) Short tick labels
-    // 4) Title with standoff for readability
     const layout = {
-      font: { size: 11 },
+      font: { size: 11, color: C.ink },
       margin: { l: 92, r: 10, t: 26, b: 38 },
-      xaxis: { range: [-1.05, 1.05], title: "city direction (west to east)", ...cityAxisTicks() },
+      xaxis: { range: [-1.05, 1.05], title: "city direction (west to east)", ...cityAxisTicks(), ...baseAxisStyling() },
       yaxis: {
         range: [transportMin, transportMax],
         title: { text: "transport quality (speed and comfort)", standoff: 10 },
         ...transportAxisTicks(),
+        ...baseAxisStyling(),
         automargin: true,
-        tickfont: { size: 10 }
+        tickfont: { size: 10, color: C.ink }
       },
       legend: {
         orientation: "h",

@@ -496,7 +496,7 @@ body{
 }
 
 /* Keep anchor jumps from hiding under nav */
-#gallery1, #model, #gallery2, #explain{
+#gallery1, #model,  #explain{
   scroll-margin-top: calc(var(--navH) + 16px) !important;
 }
 
@@ -1458,10 +1458,6 @@ def build_steps_html(steps: list[dict]) -> str:
                 <h3>{heading}</h3>
                 <p class="stepBody">{body}</p>
                 {hint_html}
-                <div class="chipRow">
-                  <span class="chip">Transport: {t:.2f}</span>
-                  <span class="chip">Amenity: {a:.2f}</span>
-                </div>
               </div>
             """
 
@@ -1667,6 +1663,8 @@ def build_dashboard_page_html(
 # =========================
 # Landing (index.html) generator
 # =========================
+from string import Template
+
 def build_landing_html(config: dict) -> str:
     body_class_attr = ' class="modelLayoutFocus"'
 
@@ -1683,7 +1681,6 @@ def build_landing_html(config: dict) -> str:
 
   <style>
     :root{
-      /* from your Style.svg palette */
       --accent: #F0805B;
       --text: #303030;
       --bg: #ffffff;
@@ -1720,15 +1717,34 @@ def build_landing_html(config: dict) -> str:
       justify-content:space-between;
       padding: 14px 0;
       gap: 16px;
+      min-width: 0;
     }
-    .brand{ font-weight: 700; letter-spacing: -0.02em; }
-    .navLinks{ display:flex; gap: 14px; flex-wrap: wrap; justify-content: flex-end; }
+    .brand{
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      white-space: nowrap;
+    }
+
+    /* Keep links on one line; allow horizontal scroll if needed */
+    .navLinks{
+      display:flex;
+      gap: 14px;
+      flex-wrap: nowrap;
+      justify-content: flex-end;
+      align-items: center;
+      white-space: nowrap;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      max-width: 100%;
+    }
     .navLinks a{
       font-size: 13px;
       color: var(--muted);
       padding: 8px 10px;
       border-radius: 999px;
       border: 1px solid transparent;
+      white-space: nowrap;
+      flex: 0 0 auto;
     }
     .navLinks a:hover{
       color: var(--text);
@@ -1736,7 +1752,7 @@ def build_landing_html(config: dict) -> str:
       background: rgba(255,255,255,.7);
     }
 
-    /* HERO, overlap like your reference (pic 2) */
+    /* HERO */
     .hero{
       position: relative;
       padding: 84px 0 54px 0;
@@ -1744,19 +1760,14 @@ def build_landing_html(config: dict) -> str:
       border-bottom: 1px solid var(--line);
       background: #fff;
     }
-    .hero .container{
-      position: relative;
-    }
+    .hero .container{ position: relative; }
 
-    .heroGrid{
-      position: relative;
-      min-height: 460px;
-    }
+    .heroGrid{ position: relative; min-height: 460px; }
 
     .heroText{
       position: relative;
       z-index: 2;
-      max-width: 920px;   /* wider so title becomes 2 lines */
+      max-width: 920px;
       padding-right: 20px;
     }
 
@@ -1767,7 +1778,7 @@ def build_landing_html(config: dict) -> str:
       margin: 0 0 18px 0;
       font-weight: 900;
       color: var(--accent);
-      max-width: 22ch;  /* helps keep it near 2 lines */
+      max-width: 22ch;
     }
 
     .sub{
@@ -1802,11 +1813,10 @@ def build_landing_html(config: dict) -> str:
       border-color: var(--accent);
     }
 
-    /* Hero artwork behind text */
     .heroArt{
       position: absolute;
       top: 50%;
-      right: -140px;              /* negative gives the overlap feel */
+      right: -140px;
       transform: translateY(-50%);
       z-index: 1;
       width: min(1120px, 78vw);
@@ -1821,8 +1831,6 @@ def build_landing_html(config: dict) -> str:
       height: auto;
       display:block;
       opacity: 0.98;
-
-      /* fade on the left like your reference */
       -webkit-mask-image: linear-gradient(to right,
         transparent 0%,
         rgba(0,0,0,.20) 16%,
@@ -1835,8 +1843,8 @@ def build_landing_html(config: dict) -> str:
         rgba(0,0,0,1) 100%);
     }
 
-    /* Sections (keep your original look) */
     .section{ padding: 46px 0; }
+
     .sectionTitle{
       display:flex;
       justify-content: space-between;
@@ -1850,6 +1858,7 @@ def build_landing_html(config: dict) -> str:
     .imgGrid{ display:grid; gap: 14px; }
     .imgGrid.cols3{ grid-template-columns: repeat(3, 1fr); }
     .imgGrid.cols2{ grid-template-columns: repeat(2, 1fr); }
+
     .imgCard{
       margin: 0;
       background: var(--panel);
@@ -1867,6 +1876,7 @@ def build_landing_html(config: dict) -> str:
       background: #fff;
     }
     .modelHeader{ padding: 46px 0 14px 0; }
+
     .modelGrid{
       display:grid;
       grid-template-columns: 1fr 1.2fr;
@@ -1926,8 +1936,17 @@ def build_landing_html(config: dict) -> str:
     .stepCard h3{ margin: 0 0 8px 0; font-size: 18px; letter-spacing: -0.02em; }
     .stepBody{ margin: 0 0 10px 0; color: rgba(0,0,0,.72); font-size: 14px; line-height: 1.55; }
     .stepHint{ margin: 0 0 10px 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+
     .chipRow{ display:flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
-    .chip{ display:inline-flex; padding: 6px 10px; border-radius: 999px; border: 1px solid var(--line); background: rgba(250,250,250,.9); font-size: 12px; color: rgba(0,0,0,.72); }
+    .chip{
+      display:inline-flex;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(250,250,250,.9);
+      font-size: 12px;
+      color: rgba(0,0,0,.72);
+    }
 
     .stepIdle .stepCard{
       opacity: 0;
@@ -1942,8 +1961,13 @@ def build_landing_html(config: dict) -> str:
       transform: none;
     }
 
-
-    footer{ border-top: 1px solid var(--line); padding: 26px 0 40px 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+    footer{
+      border-top: 1px solid var(--line);
+      padding: 26px 0 40px 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
 
     @media (max-width: 980px){
       .hero{ padding: 62px 0 40px 0; }
@@ -1970,7 +1994,6 @@ def build_landing_html(config: dict) -> str:
       .stickyViz{ position: relative; top: 0; height: 70vh; }
       .imgGrid.cols3{ grid-template-columns: 1fr; }
       .imgGrid.cols2{ grid-template-columns: 1fr; }
-      .explainGrid{ grid-template-columns: 1fr; }
       .step{ padding: var(--stepPad, 16vh) 0; }
     }
   </style>
@@ -1984,7 +2007,6 @@ def build_landing_html(config: dict) -> str:
         <div class="navLinks">
           <a href="#gallery1">Gallery</a>
           <a href="#model">Model</a>
-          <a href="#gallery2">More</a>
           <a href="#explain">Explanation</a>
         </div>
       </div>
@@ -2012,7 +2034,9 @@ def build_landing_html(config: dict) -> str:
 
   <section class="section" id="gallery1">
     <div class="container">
-
+      <div class="sectionTitle">
+        <h2>${G1_TITLE}</h2>
+      </div>
       ${GALLERY1_HTML}
     </div>
   </section>
@@ -2039,16 +2063,6 @@ def build_landing_html(config: dict) -> str:
           <iframe id="viz" src="${VIZ_FILENAME}" title="Interactive model" loading="lazy"></iframe>
         </div>
       </div>
-    </div>
-  </section>
-
-  <section class="section" id="gallery2">
-    <div class="container">
-      <div class="sectionTitle">
-        <h2>${G2_TITLE}</h2>
-        <p>${G2_SUB}</p>
-      </div>
-      ${GALLERY2_HTML}
     </div>
   </section>
 
@@ -2450,48 +2464,33 @@ def write_full_scrolly_site(
         {"src": svg_placeholder_data_uri("Context image 2"), "caption": "Replace with assets/ images"},
         {"src": svg_placeholder_data_uri("Context image 3"), "caption": "Replace with assets/ images"},
     ]
-    g2 = [
-        {"src": svg_placeholder_data_uri("More image 1"), "caption": "Replace with assets/ images"},
-        {"src": svg_placeholder_data_uri("More image 2"), "caption": "Replace with assets/ images"},
-    ]
 
     # 5) Steps
     scenario_steps = [
         dict(
             title="Baseline",
             heading="Baseline assumptions",
-            body="Reference case for transport and amenity strength.",
-            hint="Scroll to switch scenarios. The model updates immediately.",
-            t=1.00,
-            a=1.00
+            body="Reference case for transport and amenity strength."
         ),
         dict(
             title="Faster transport",
             heading="Faster transport",
-            body="Higher transport speed multiplier lowers time costs.",
-            t=1.50,
-            a=1.00
+            body="Higher transport speed lowers time costs."
         ),
         dict(
             title="Slower transport",
             heading="Slower transport",
-            body="Lower transport speed multiplier raises time costs.",
-            t=0.50,
-            a=1.00
+            body="Lower transport speed raises time costs."
         ),
         dict(
             title="Historic pull",
             heading="Historic amenities matter more",
-            body="Higher amenity multiplier strengthens amenity-related effects.",
-            t=1.00,
-            a=1.50
+            body="Higher amenity strengthens amenity-related effects."
         ),
         dict(
             title="Weaker amenities",
             heading="Historic amenities matter less",
-            body="Lower amenity multiplier weakens amenity-related effects.",
-            t=1.00,
-            a=0.50
+            body="Lower amenity weakens amenity-related effects."
         ),
     ]
 
@@ -2505,7 +2504,6 @@ def write_full_scrolly_site(
     )
 
     # 6) Explain blocks
-
     dashboard_page = "dashboard.html"
     dashboard_button_html = ""
     if embed_extra_filename:
@@ -2513,7 +2511,7 @@ def write_full_scrolly_site(
         <a class="btn btnPrimary" href="{_escape(dashboard_page)}">Open theoretical dashboard</a>
         """
 
-    # NEW: PDF button (footer)
+    # PDF button (footer)
     pdf_button_html = ""
     if pdf_href:
         pdf_button_html = f"""
@@ -2521,6 +2519,18 @@ def write_full_scrolly_site(
           {_escape(pdf_button_label)}
         </a>
         """
+
+    # NEW: Team block under the buttons (footer)
+    team_block_html = """
+    <div style="margin-top:6px; max-width: 980px;">
+      <div style="font-weight:800; margin-bottom:6px;">Team</div>
+      <div style="display:flex; flex-direction:column; gap:6px; line-height:1.55;">
+        <div><strong>Gleb Orlov</strong> - data collection and processing, development of the model for identifying zones, and development of the project website.</div>
+        <div><strong>Mariia Khomutova</strong> - data visualization, infographics, and project content.</div>
+        <div>Special thanks to <strong>Nikita Goncharov</strong> for the theoretical foundation of the model.</div>
+      </div>
+    </div>
+    """
 
     # 7) Landing config
     config = {
@@ -2540,10 +2550,6 @@ def write_full_scrolly_site(
         "STEPS_HTML": build_steps_html(steps_all),
         "VIZ_FILENAME": viz_filename,
 
-        "G2_TITLE": "More visuals",
-        "G2_SUB": "More figures or screenshots after the model.",
-        "GALLERY2_HTML": build_gallery_html(g2, cols=2),
-
         "EXPLAIN_TITLE": "Explanation",
         "EXPLAIN_SUB": "Short blocks explaining what is happening.",
         "EXTRA_EXPLAIN_HTML": "",
@@ -2554,6 +2560,7 @@ def write_full_scrolly_site(
               {pdf_button_html}
               {dashboard_button_html}
             </div>
+            {team_block_html}
           </div>
         """,
     }

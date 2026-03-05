@@ -11,7 +11,6 @@
 
   <style>
     :root{
-      /* from your Style.svg palette */
       --accent: #F0805B;
       --text: #303030;
       --bg: #ffffff;
@@ -48,15 +47,34 @@
       justify-content:space-between;
       padding: 14px 0;
       gap: 16px;
+      min-width: 0;
     }
-    .brand{ font-weight: 700; letter-spacing: -0.02em; }
-    .navLinks{ display:flex; gap: 14px; flex-wrap: wrap; justify-content: flex-end; }
+    .brand{
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      white-space: nowrap;
+    }
+
+    /* Keep links on one line; allow horizontal scroll if needed */
+    .navLinks{
+      display:flex;
+      gap: 14px;
+      flex-wrap: nowrap;
+      justify-content: flex-end;
+      align-items: center;
+      white-space: nowrap;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      max-width: 100%;
+    }
     .navLinks a{
       font-size: 13px;
       color: var(--muted);
       padding: 8px 10px;
       border-radius: 999px;
       border: 1px solid transparent;
+      white-space: nowrap;
+      flex: 0 0 auto;
     }
     .navLinks a:hover{
       color: var(--text);
@@ -64,7 +82,7 @@
       background: rgba(255,255,255,.7);
     }
 
-    /* HERO, overlap like your reference (pic 2) */
+    /* HERO */
     .hero{
       position: relative;
       padding: 84px 0 54px 0;
@@ -72,19 +90,14 @@
       border-bottom: 1px solid var(--line);
       background: #fff;
     }
-    .hero .container{
-      position: relative;
-    }
+    .hero .container{ position: relative; }
 
-    .heroGrid{
-      position: relative;
-      min-height: 460px;
-    }
+    .heroGrid{ position: relative; min-height: 460px; }
 
     .heroText{
       position: relative;
       z-index: 2;
-      max-width: 920px;   /* wider so title becomes 2 lines */
+      max-width: 920px;
       padding-right: 20px;
     }
 
@@ -95,7 +108,7 @@
       margin: 0 0 18px 0;
       font-weight: 900;
       color: var(--accent);
-      max-width: 22ch;  /* helps keep it near 2 lines */
+      max-width: 22ch;
     }
 
     .sub{
@@ -130,11 +143,10 @@
       border-color: var(--accent);
     }
 
-    /* Hero artwork behind text */
     .heroArt{
       position: absolute;
       top: 50%;
-      right: -140px;              /* negative gives the overlap feel */
+      right: -140px;
       transform: translateY(-50%);
       z-index: 1;
       width: min(1120px, 78vw);
@@ -149,8 +161,6 @@
       height: auto;
       display:block;
       opacity: 0.98;
-
-      /* fade on the left like your reference */
       -webkit-mask-image: linear-gradient(to right,
         transparent 0%,
         rgba(0,0,0,.20) 16%,
@@ -163,8 +173,8 @@
         rgba(0,0,0,1) 100%);
     }
 
-    /* Sections (keep your original look) */
     .section{ padding: 46px 0; }
+
     .sectionTitle{
       display:flex;
       justify-content: space-between;
@@ -178,6 +188,7 @@
     .imgGrid{ display:grid; gap: 14px; }
     .imgGrid.cols3{ grid-template-columns: repeat(3, 1fr); }
     .imgGrid.cols2{ grid-template-columns: repeat(2, 1fr); }
+
     .imgCard{
       margin: 0;
       background: var(--panel);
@@ -195,6 +206,7 @@
       background: #fff;
     }
     .modelHeader{ padding: 46px 0 14px 0; }
+
     .modelGrid{
       display:grid;
       grid-template-columns: 1fr 1.2fr;
@@ -254,8 +266,17 @@
     .stepCard h3{ margin: 0 0 8px 0; font-size: 18px; letter-spacing: -0.02em; }
     .stepBody{ margin: 0 0 10px 0; color: rgba(0,0,0,.72); font-size: 14px; line-height: 1.55; }
     .stepHint{ margin: 0 0 10px 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+
     .chipRow{ display:flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
-    .chip{ display:inline-flex; padding: 6px 10px; border-radius: 999px; border: 1px solid var(--line); background: rgba(250,250,250,.9); font-size: 12px; color: rgba(0,0,0,.72); }
+    .chip{
+      display:inline-flex;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(250,250,250,.9);
+      font-size: 12px;
+      color: rgba(0,0,0,.72);
+    }
 
     .stepIdle .stepCard{
       opacity: 0;
@@ -270,8 +291,13 @@
       transform: none;
     }
 
-
-    footer{ border-top: 1px solid var(--line); padding: 26px 0 40px 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+    footer{
+      border-top: 1px solid var(--line);
+      padding: 26px 0 40px 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
 
     @media (max-width: 980px){
       .hero{ padding: 62px 0 40px 0; }
@@ -298,7 +324,6 @@
       .stickyViz{ position: relative; top: 0; height: 70vh; }
       .imgGrid.cols3{ grid-template-columns: 1fr; }
       .imgGrid.cols2{ grid-template-columns: 1fr; }
-      .explainGrid{ grid-template-columns: 1fr; }
       .step{ padding: var(--stepPad, 16vh) 0; }
     }
   
@@ -328,7 +353,7 @@ body{
 }
 
 /* Keep anchor jumps from hiding under nav */
-#gallery1, #model, #gallery2, #explain{
+#gallery1, #model,  #explain{
   scroll-margin-top: calc(var(--navH) + 16px) !important;
 }
 
@@ -585,7 +610,6 @@ footer{
         <div class="navLinks">
           <a href="#gallery1">Gallery</a>
           <a href="#model">Model</a>
-          <a href="#gallery2">More</a>
           <a href="#explain">Explanation</a>
         </div>
       </div>
@@ -613,7 +637,9 @@ footer{
 
   <section class="section" id="gallery1">
     <div class="container">
-
+      <div class="sectionTitle">
+        <h2>Context</h2>
+      </div>
       <div class="imgGrid cols3">
             <figure class="imgCard">
               <img src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%221600%22%20height%3D%221000%22%20viewBox%3D%220%200%201600%201000%22%3E%0A%20%20%3Cdefs%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23f2f2f2%22/%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23dcdcdc%22/%3E%0A%20%20%20%20%3C/linearGradient%3E%0A%20%20%3C/defs%3E%0A%20%20%3Crect%20width%3D%221600%22%20height%3D%221000%22%20rx%3D%2248%22%20fill%3D%22url%28%23g%29%22/%3E%0A%20%20%3Crect%20x%3D%2248%22%20y%3D%2248%22%20width%3D%221504%22%20height%3D%22904%22%20rx%3D%2236%22%20fill%3D%22none%22%20stroke%3D%22%23bdbdbd%22%20stroke-width%3D%224%22/%3E%0A%20%20%3Ctext%20x%3D%2250%25%22%20y%3D%2252%25%22%20text-anchor%3D%22middle%22%20font-family%3D%22Inter%2C%20Arial%2C%20sans-serif%22%20font-size%3D%2254%22%20fill%3D%22%23333%22%3EContext%20image%201%3C/text%3E%0A%20%20%3Ctext%20x%3D%2250%25%22%20y%3D%2259%25%22%20text-anchor%3D%22middle%22%20font-family%3D%22Inter%2C%20Arial%2C%20sans-serif%22%20font-size%3D%2224%22%20fill%3D%22%23666%22%3E%0A%20%20%20%20Replace%20with%20assets/%20image%0A%20%20%3C/text%3E%0A%3C/svg%3E" alt="Replace with assets/ images" loading="lazy"/>
@@ -694,11 +720,7 @@ footer{
                 <div class="stepKicker">Scenario</div>
                 <h3>Baseline assumptions</h3>
                 <p class="stepBody">Reference case for transport and amenity strength.</p>
-                <p class='stepHint'>Scroll to switch scenarios. The model updates immediately.</p>
-                <div class="chipRow">
-                  <span class="chip">Transport: 1.00</span>
-                  <span class="chip">Amenity: 1.00</span>
-                </div>
+                
               </div>
             
             </section>
@@ -706,7 +728,7 @@ footer{
 
             <section class="step"
               data-title="Faster transport"
-              data-t="1.50"
+              data-t="1.00"
               data-a="1.00"
               data-view-lat=""
               data-view-lon=""
@@ -715,12 +737,8 @@ footer{
               <div class="stepCard">
                 <div class="stepKicker">Scenario</div>
                 <h3>Faster transport</h3>
-                <p class="stepBody">Higher transport speed multiplier lowers time costs.</p>
+                <p class="stepBody">Higher transport speed lowers time costs.</p>
                 
-                <div class="chipRow">
-                  <span class="chip">Transport: 1.50</span>
-                  <span class="chip">Amenity: 1.00</span>
-                </div>
               </div>
             
             </section>
@@ -728,7 +746,7 @@ footer{
 
             <section class="step"
               data-title="Slower transport"
-              data-t="0.50"
+              data-t="1.00"
               data-a="1.00"
               data-view-lat=""
               data-view-lon=""
@@ -737,12 +755,8 @@ footer{
               <div class="stepCard">
                 <div class="stepKicker">Scenario</div>
                 <h3>Slower transport</h3>
-                <p class="stepBody">Lower transport speed multiplier raises time costs.</p>
+                <p class="stepBody">Lower transport speed raises time costs.</p>
                 
-                <div class="chipRow">
-                  <span class="chip">Transport: 0.50</span>
-                  <span class="chip">Amenity: 1.00</span>
-                </div>
               </div>
             
             </section>
@@ -751,7 +765,7 @@ footer{
             <section class="step"
               data-title="Historic pull"
               data-t="1.00"
-              data-a="1.50"
+              data-a="1.00"
               data-view-lat=""
               data-view-lon=""
               data-view-zoom="" data-prog="75.00">
@@ -759,12 +773,8 @@ footer{
               <div class="stepCard">
                 <div class="stepKicker">Scenario</div>
                 <h3>Historic amenities matter more</h3>
-                <p class="stepBody">Higher amenity multiplier strengthens amenity-related effects.</p>
+                <p class="stepBody">Higher amenity strengthens amenity-related effects.</p>
                 
-                <div class="chipRow">
-                  <span class="chip">Transport: 1.00</span>
-                  <span class="chip">Amenity: 1.50</span>
-                </div>
               </div>
             
             </section>
@@ -773,7 +783,7 @@ footer{
             <section class="step"
               data-title="Weaker amenities"
               data-t="1.00"
-              data-a="0.50"
+              data-a="1.00"
               data-view-lat=""
               data-view-lon=""
               data-view-zoom="" data-prog="100.00">
@@ -781,12 +791,8 @@ footer{
               <div class="stepCard">
                 <div class="stepKicker">Scenario</div>
                 <h3>Historic amenities matter less</h3>
-                <p class="stepBody">Lower amenity multiplier weakens amenity-related effects.</p>
+                <p class="stepBody">Lower amenity weakens amenity-related effects.</p>
                 
-                <div class="chipRow">
-                  <span class="chip">Transport: 1.00</span>
-                  <span class="chip">Amenity: 0.50</span>
-                </div>
               </div>
             
             </section>
@@ -795,7 +801,7 @@ footer{
             <section class="step stepIdle" style="--stepPad:22.0vh;"
               data-title="Weaker amenities"
               data-t="1.00"
-              data-a="0.50"
+              data-a="1.00"
               data-view-lat=""
               data-view-lon=""
               data-view-zoom="" data-prog="100.00">
@@ -806,7 +812,7 @@ footer{
             <section class="step stepIdle" style="--stepPad:22.0vh;"
               data-title="Weaker amenities"
               data-t="1.00"
-              data-a="0.50"
+              data-a="1.00"
               data-view-lat=""
               data-view-lon=""
               data-view-zoom="" data-prog="100.00">
@@ -819,26 +825,6 @@ footer{
           <iframe id="viz" src="yerevan_sliders_single_business_polygon.html" title="Interactive model" loading="lazy"></iframe>
         </div>
       </div>
-    </div>
-  </section>
-
-  <section class="section" id="gallery2">
-    <div class="container">
-      <div class="sectionTitle">
-        <h2>More visuals</h2>
-        <p>More figures or screenshots after the model.</p>
-      </div>
-      <div class="imgGrid cols2">
-            <figure class="imgCard">
-              <img src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%221600%22%20height%3D%221000%22%20viewBox%3D%220%200%201600%201000%22%3E%0A%20%20%3Cdefs%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23f2f2f2%22/%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23dcdcdc%22/%3E%0A%20%20%20%20%3C/linearGradient%3E%0A%20%20%3C/defs%3E%0A%20%20%3Crect%20width%3D%221600%22%20height%3D%221000%22%20rx%3D%2248%22%20fill%3D%22url%28%23g%29%22/%3E%0A%20%20%3Crect%20x%3D%2248%22%20y%3D%2248%22%20width%3D%221504%22%20height%3D%22904%22%20rx%3D%2236%22%20fill%3D%22none%22%20stroke%3D%22%23bdbdbd%22%20stroke-width%3D%224%22/%3E%0A%20%20%3Ctext%20x%3D%2250%25%22%20y%3D%2252%25%22%20text-anchor%3D%22middle%22%20font-family%3D%22Inter%2C%20Arial%2C%20sans-serif%22%20font-size%3D%2254%22%20fill%3D%22%23333%22%3EMore%20image%201%3C/text%3E%0A%20%20%3Ctext%20x%3D%2250%25%22%20y%3D%2259%25%22%20text-anchor%3D%22middle%22%20font-family%3D%22Inter%2C%20Arial%2C%20sans-serif%22%20font-size%3D%2224%22%20fill%3D%22%23666%22%3E%0A%20%20%20%20Replace%20with%20assets/%20image%0A%20%20%3C/text%3E%0A%3C/svg%3E" alt="Replace with assets/ images" loading="lazy"/>
-              <figcaption>Replace with assets/ images</figcaption>
-            </figure>
-            
-            <figure class="imgCard">
-              <img src="data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%221600%22%20height%3D%221000%22%20viewBox%3D%220%200%201600%201000%22%3E%0A%20%20%3Cdefs%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23f2f2f2%22/%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23dcdcdc%22/%3E%0A%20%20%20%20%3C/linearGradient%3E%0A%20%20%3C/defs%3E%0A%20%20%3Crect%20width%3D%221600%22%20height%3D%221000%22%20rx%3D%2248%22%20fill%3D%22url%28%23g%29%22/%3E%0A%20%20%3Crect%20x%3D%2248%22%20y%3D%2248%22%20width%3D%221504%22%20height%3D%22904%22%20rx%3D%2236%22%20fill%3D%22none%22%20stroke%3D%22%23bdbdbd%22%20stroke-width%3D%224%22/%3E%0A%20%20%3Ctext%20x%3D%2250%25%22%20y%3D%2252%25%22%20text-anchor%3D%22middle%22%20font-family%3D%22Inter%2C%20Arial%2C%20sans-serif%22%20font-size%3D%2254%22%20fill%3D%22%23333%22%3EMore%20image%202%3C/text%3E%0A%20%20%3Ctext%20x%3D%2250%25%22%20y%3D%2259%25%22%20text-anchor%3D%22middle%22%20font-family%3D%22Inter%2C%20Arial%2C%20sans-serif%22%20font-size%3D%2224%22%20fill%3D%22%23666%22%3E%0A%20%20%20%20Replace%20with%20assets/%20image%0A%20%20%3C/text%3E%0A%3C/svg%3E" alt="Replace with assets/ images" loading="lazy"/>
-              <figcaption>Replace with assets/ images</figcaption>
-            </figure>
-            </div>
     </div>
   </section>
 
@@ -883,13 +869,23 @@ footer{
             <div style="display:flex; gap:12px; flex-wrap:wrap;">
               
         <a class="btn btnPrimary" href="assets/Armenia.pdf" target="_blank" rel="noopener">
-          Open Documentation
+          Open Documentation and Sources
         </a>
         
               
         <a class="btn btnPrimary" href="dashboard.html">Open theoretical dashboard</a>
         
             </div>
+            
+    <div style="margin-top:6px; max-width: 980px;">
+      <div style="font-weight:800; margin-bottom:6px;">Team</div>
+      <div style="display:flex; flex-direction:column; gap:6px; line-height:1.55;">
+        <div><strong>Gleb Orlov</strong> - data collection and processing, development of the model for identifying zones, and development of the project website.</div>
+        <div><strong>Mariia Khomutova</strong> - data visualization, infographics, and project content.</div>
+        <div>Special thanks to <strong>Nikita Goncharov</strong> for the theoretical foundation of the model.</div>
+      </div>
+    </div>
+    
           </div>
         
     </div>
