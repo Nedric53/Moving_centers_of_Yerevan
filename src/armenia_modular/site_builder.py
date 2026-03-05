@@ -165,7 +165,7 @@ def patch_landing_add_compare_embed_css(landing_html: str) -> str:
 def patch_landing_insert_compare_before_explain(
     landing_html: str,
     compare_href: str = "compare_business_areas.html",
-    title: str = "Commercial areas comparison",
+    title: str = "Business areas comparison",
     sub: str = "Compare Yerevan’s dynamic commercial area with other cities on a common meters scale.",
 ) -> str:
     """
@@ -1136,7 +1136,7 @@ def patch_interactive_ui_left_right_vertical_sliders(html_str: str) -> str:
     # -------------------------
     html_str = re.sub(
         r"muInfoEl\.textContent\s*=\s*`[^`]*`;\s*",
-        "muInfoEl.textContent = `Distance from Historic to Commercial Center: ${sep.toFixed(0)}m; Commercial area: ${areaKm2.toFixed(0)} km²`;\n",
+        "muInfoEl.textContent = `Distance from Historic to Commercial Center: ${sep.toFixed(0)}m; Business area: ${areaKm2.toFixed(0)} km²`;\n",
         html_str,
         count=1
     )
@@ -1217,12 +1217,12 @@ def patch_interactive_ui_left_right_vertical_sliders(html_str: str) -> str:
 
           <div class="lItem" style="grid-column:2;grid-row:2;">
             <span class="dotMu"></span>
-            <span>Commercial center</span>
+            <span>Business center (μ)</span>
           </div>
 
           <div class="lItem" style="grid-column:3;grid-row:1;">
             <img class="lIcon" src="assets/icon_business.png" alt="">
-            <span>Commercial area</span>
+            <span>Business area (polygon)</span>
           </div>
 
           <div class="lItem" style="grid-column:3;grid-row:2;">
@@ -1498,7 +1498,20 @@ def build_gallery_html(items, cols=3):
     return f"""<div class="imgGrid cols{int(cols)}">{''.join(cards)}</div>"""
 
 
-
+def build_explain_blocks(blocks):
+    out = []
+    for b in blocks:
+        h = _escape(b.get("heading", ""))
+        p = _escape(b.get("body", ""))
+        out.append(
+            f"""
+            <div class="textCard">
+              <h3>{h}</h3>
+              <p>{p}</p>
+            </div>
+            """
+        )
+    return "\n".join(out)
 
 
 # =========================
@@ -2021,7 +2034,15 @@ def build_landing_html(config: dict) -> str:
     </div>
   </header>
 
- 
+  <section class="section" id="gallery1">
+    <div class="container">
+      <div class="sectionTitle">
+        <h2>${G1_TITLE}</h2>
+        <p>${G1_SUB}</p>
+      </div>
+      ${GALLERY1_HTML}
+    </div>
+  </section>
 
   <section class="modelWrap" id="model">
     <div class="container">
@@ -2556,7 +2577,7 @@ def write_full_scrolly_site(
         "PAGE_TITLE": title,
         "BRAND": title,
         "HERO_TITLE": "Moving centers<br>of Yerevan",
-        "HERO_SUB": "How and why the commercial centers of cities are moving away from historical centers",
+        "HERO_SUB": "How and why the business centers of cities are moving away from historical centers",
         "CTA_PRIMARY": "Read story",
         "CTA_SECONDARY": "Learn model",
         "HERO_IMAGE": hero_image_rel,
@@ -2576,6 +2597,7 @@ def write_full_scrolly_site(
         "GALLERY2_HTML": build_gallery_html(g2, cols=2),
 
         "EXPLAIN_TITLE": "Explanation",
+        "EXPLAIN_BLOCKS": build_explain_blocks(explain_blocks),
         "EXTRA_EXPLAIN_HTML": "",
 
         "FOOTER_TEXT": f"""
