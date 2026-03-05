@@ -2005,7 +2005,7 @@ def build_landing_html(config: dict) -> str:
       <div class="navInner">
         <div class="brand">${BRAND}</div>
         <div class="navLinks">
-          <a href="#gallery1">Gallery</a>
+          <a href="#gallery1">Context</a>
           <a href="#model">Model</a>
           <a href="#explain">Explanation</a>
         </div>
@@ -2341,6 +2341,121 @@ def patch_landing_insert_poster_before_explain(
         raise ValueError("Could not find the Explanation section anchor.")
     return landing_html.replace(anchor, block + "\n" + anchor, 1)
 
+def build_default_context_text_html() -> str:
+    # NOTE: hyphens are used instead of em dashes.
+    return """
+      <div class="contextGroup">
+        <div class="contextHeading">What Centers Does a City Have</div>
+
+        <p><strong>Historical center</strong> - the historically formed part of a city where the original urban layout and historical buildings have typically been preserved. It usually contains a high concentration of cultural heritage sites such as monuments and architectural ensembles.</p>
+
+        <p><strong>Commercial center</strong> - a conceptual point where the city’s business activity is concentrated. This area typically has the highest number of jobs, offices, retail locations, and transport hubs. A city does not have a single, fixed commercial center, but the most active commercial zones can be identified and represented by a point placed roughly at their center.</p>
+      </div>
+
+      <div class="contextGroup">
+        <div class="contextHeading">Where Are Yerevan’s Centers</div>
+
+        <p>We consider <strong>Republic Square</strong> to be the approximate historical center of Yerevan, as it best fits the definition: it lies in the historic part of the city and contains many important historical and cultural landmarks.</p>
+
+        <p>The <strong>commercial center of Yerevan</strong> lies about <strong>1.1 km</strong> away, near the <strong>Yerevan City Council</strong>. We identified it using a model: first we determined the city’s main commercial cluster, and then calculated the centroid of that area.</p>
+      </div>
+
+      <div class="contextGroup">
+        <div class="contextHeading">Why Do the Historical and Commercial Centers Separate</div>
+
+        <p>Economic theory and empirical research provide explanations for this phenomenon. In modern approaches, two main factors influence the movement of business activity away from the historical center:</p>
+
+        <ul>
+          <li>the overall <strong>transport factors</strong> of different city districts;</li>
+          <li>the condition and cultural value of heritage sites (<strong>amenities</strong>), including how attractive and comfortable the historical center is for residents.</li>
+        </ul>
+
+        <p>Over time, commercial zones gradually shift away from the historical center. Using representative points at the centers of these zones allows us to track this drift.</p>
+
+        <p>In the interactive models below, we demonstrate how changes in <strong>transport factors</strong> and <strong>amenities</strong> shift the economic center relative to the historical one, expanding or narrowing the city’s zone of commercial activity.</p>
+      </div>
+    """
+
+
+def build_context_split_html(image_src: str, text_html: str, alt: str = "Context image") -> str:
+    return f"""
+      <div class="contextSplit">
+        <figure class="contextImgCard">
+          <img src="{_escape(image_src)}" alt="{_escape(alt)}" loading="lazy"/>
+        </figure>
+
+        <div class="contextText">
+          {text_html}
+        </div>
+      </div>
+    """
+
+
+def patch_landing_add_context_split_css(landing_html: str) -> str:
+    css = r"""
+
+/* ---- injected: Context split (image left, text right) ---- */
+.contextSplit{
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.contextImgCard{
+  margin: 0;
+  border: 0;
+  border-radius: var(--radius2);
+  overflow: hidden;
+  background: transparent;
+  box-shadow: none;
+}
+
+.contextImgCard img{
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.contextText{
+  font-size: 14px;
+  line-height: 1.6;
+  color: rgba(0,0,0,.78);
+}
+
+.contextGroup{ margin-bottom: 16px; }
+.contextGroup:last-child{ margin-bottom: 0; }
+
+.contextHeading{
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  margin: 0 0 10px 0;
+  font-size: 18px;
+  color: rgba(0,0,0,.90);
+}
+
+.contextText p{
+  margin: 0 0 10px 0;
+}
+
+.contextText ul{
+  margin: 0 0 10px 18px;
+  padding: 0;
+}
+
+@media (max-width: 980px){
+  .contextSplit{
+    grid-template-columns: 1fr;
+  }
+}
+/* ---- end injected block ---- */
+"""
+    style_close = landing_html.rfind("</style>")
+    if style_close == -1:
+        raise ValueError("Could not find </style> to inject context split CSS.")
+    return landing_html[:style_close] + css + "\n" + landing_html[style_close:]
+
+
 
 def write_full_scrolly_site(
     out_dir: str,
@@ -2359,10 +2474,13 @@ def write_full_scrolly_site(
     poster_dst_name: str = "Poster.svg",
     poster_title: str = "Poster",
     poster_sub: str = " ",
-    # NEW: PDF support (copied into assets + footer button)
+    # PDF support
     pdf_src_path: str | None = None,
     pdf_dst_name: str = "Armenia.pdf",
     pdf_button_label: str = "Open PDF",
+    # NEW: Context image (pic2) support
+    context_image_src_path: str | None = None,
+    context_image_dst_name: str = "context_image_2.png.png",
 ):
     os.makedirs(out_dir, exist_ok=True)
 
@@ -2381,11 +2499,11 @@ def write_full_scrolly_site(
         for fname, html_text in extra_html_files.items():
             Path(os.path.join(out_dir, fname)).write_text(html_text, encoding="utf-8")
 
-    # 3) Assets live inside the bundle
+    # 3) Assets directory
     assets_dir = os.path.join(out_dir, "assets")
     os.makedirs(assets_dir, exist_ok=True)
 
-    # 3a) Hero image into out_dir/assets/
+    # 3a) Hero image
     hero_rel = f"assets/{hero_image_dst_name}".replace(os.sep, "/")
     hero_abs = os.path.join(assets_dir, hero_image_dst_name)
 
@@ -2406,13 +2524,9 @@ def write_full_scrolly_site(
         if not same:
             shutil.copyfile(src_abs, dst_abs)
 
-    # If no hero provided and file is missing, use a placeholder data URI
-    if not os.path.exists(hero_abs):
-        hero_image_rel = svg_placeholder_data_uri("Hero image")
-    else:
-        hero_image_rel = hero_rel
+    hero_image_rel = hero_rel if os.path.exists(hero_abs) else svg_placeholder_data_uri("Hero image")
 
-    # 3b) Poster SVG into out_dir/assets/
+    # 3b) Poster SVG
     poster_rel = f"assets/{poster_dst_name}".replace(os.sep, "/")
     poster_abs = os.path.join(assets_dir, poster_dst_name)
 
@@ -2435,7 +2549,7 @@ def write_full_scrolly_site(
 
     poster_image_rel = poster_rel if os.path.exists(poster_abs) else svg_placeholder_data_uri("Poster (SVG)")
 
-    # 3c) PDF into out_dir/assets/ (NEW)
+    # 3c) PDF
     pdf_rel = f"assets/{pdf_dst_name}".replace(os.sep, "/")
     pdf_abs = os.path.join(assets_dir, pdf_dst_name)
 
@@ -2458,40 +2572,46 @@ def write_full_scrolly_site(
 
     pdf_href = pdf_rel if os.path.exists(pdf_abs) else ""
 
-    # 4) Gallery placeholders
-    g1 = [
-        {"src": svg_placeholder_data_uri("Context image 1"), "caption": "Replace with assets/ images"},
-        {"src": svg_placeholder_data_uri("Context image 2"), "caption": "Replace with assets/ images"},
-        {"src": svg_placeholder_data_uri("Context image 3"), "caption": "Replace with assets/ images"},
-    ]
+    # 3d) Context image (pic2)
+    context_rel = f"assets/{context_image_dst_name}".replace(os.sep, "/")
+    context_abs = os.path.join(assets_dir, context_image_dst_name)
+
+    # If a src path is provided, copy it into assets. If not provided,
+    # the code will use an already-existing file in out_dir/assets/ if present.
+    if context_image_src_path:
+        if not os.path.exists(context_image_src_path):
+            raise FileNotFoundError(f"Missing context image: {context_image_src_path}")
+
+        src_abs = os.path.abspath(context_image_src_path)
+        dst_abs = os.path.abspath(context_abs)
+
+        same = False
+        try:
+            if os.path.exists(dst_abs) and os.path.samefile(src_abs, dst_abs):
+                same = True
+        except Exception:
+            same = (src_abs == dst_abs)
+
+        if not same:
+            shutil.copyfile(src_abs, dst_abs)
+
+    context_image_rel = context_rel if os.path.exists(context_abs) else svg_placeholder_data_uri("Context image")
+
+    # 4) Context section HTML (image left, text right)
+    context_text_html = build_default_context_text_html()
+    context_block_html = build_context_split_html(
+        image_src=context_image_rel,
+        text_html=context_text_html,
+        alt="Yerevan centers map"
+    )
 
     # 5) Steps
     scenario_steps = [
-        dict(
-            title="Baseline",
-            heading="Baseline assumptions",
-            body="Reference case for transport and amenity strength."
-        ),
-        dict(
-            title="Faster transport",
-            heading="Faster transport",
-            body="Higher transport speed lowers time costs."
-        ),
-        dict(
-            title="Slower transport",
-            heading="Slower transport",
-            body="Lower transport speed raises time costs."
-        ),
-        dict(
-            title="Historic pull",
-            heading="Historic amenities matter more",
-            body="Higher amenity strengthens amenity-related effects."
-        ),
-        dict(
-            title="Weaker amenities",
-            heading="Historic amenities matter less",
-            body="Lower amenity weakens amenity-related effects."
-        ),
+        dict(title="Baseline", heading="Baseline assumptions", body="Reference case for transport and amenity strength."),
+        dict(title="Faster transport", heading="Faster transport", body="Higher transport speed lowers time costs."),
+        dict(title="Slower transport", heading="Slower transport", body="Lower transport speed raises time costs."),
+        dict(title="Historic pull", heading="Historic amenities matter more", body="Higher amenity strengthens amenity-related effects."),
+        dict(title="Weaker amenities", heading="Historic amenities matter less", body="Lower amenity weakens amenity-related effects."),
     ]
 
     scenario_steps = assign_progress_percent(scenario_steps)
@@ -2503,7 +2623,7 @@ def write_full_scrolly_site(
         tail_pad_vh=IDLE_TAIL_PAD_VH,
     )
 
-    # 6) Explain blocks
+    # 6) Dashboard button (optional)
     dashboard_page = "dashboard.html"
     dashboard_button_html = ""
     if embed_extra_filename:
@@ -2511,7 +2631,7 @@ def write_full_scrolly_site(
         <a class="btn btnPrimary" href="{_escape(dashboard_page)}">Open theoretical dashboard</a>
         """
 
-    # PDF button (footer)
+    # 7) PDF button (footer)
     pdf_button_html = ""
     if pdf_href:
         pdf_button_html = f"""
@@ -2520,7 +2640,7 @@ def write_full_scrolly_site(
         </a>
         """
 
-    # NEW: Team block under the buttons (footer)
+    # 8) Team block (footer)
     team_block_html = """
     <div style="margin-top:6px; max-width: 980px;">
       <div style="font-weight:800; margin-bottom:6px;">Team</div>
@@ -2532,19 +2652,20 @@ def write_full_scrolly_site(
     </div>
     """
 
-    # 7) Landing config
+    # 9) Landing config
     config = {
         "PAGE_TITLE": title,
         "BRAND": title,
         "HERO_TITLE": "Moving centers<br>of Yerevan",
-        "HERO_SUB": "How and why the commercial centers of cities are moving away from historical centers",
+        "HERO_SUB": "How and why the commercial centers of cities <br> are moving away from historical centers",
         "CTA_PRIMARY": "Read story",
         "CTA_SECONDARY": "Learn model",
         "HERO_IMAGE": hero_image_rel,
         "HERO_IMAGE_CAPTION": "",
 
         "G1_TITLE": "Context",
-        "GALLERY1_HTML": build_gallery_html(g1, cols=3),
+        # IMPORTANT: replaced gallery placeholders with the split block
+        "GALLERY1_HTML": context_block_html,
 
         "MODEL_TITLE": "Interactive model",
         "STEPS_HTML": build_steps_html(steps_all),
@@ -2565,7 +2686,7 @@ def write_full_scrolly_site(
         """,
     }
 
-    # 8) Compare page copy + patch (optional)
+    # 10) Compare page (optional) copy + patch
     if compare_html_src_path:
         if not os.path.exists(compare_html_src_path):
             raise FileNotFoundError(f"Missing compare HTML: {compare_html_src_path}")
@@ -2577,9 +2698,12 @@ def write_full_scrolly_site(
         txt = patch_compare_add_height_postmessage(txt)
         Path(dst).write_text(txt, encoding="utf-8")
 
-    # 9) Build landing + your existing model patch
+    # 11) Build landing + existing patches
     landing_html = build_landing_html(config)
     landing_html = patch_landing_for_model_focus_zoom(landing_html)
+
+    # NEW: add CSS for context split
+    landing_html = patch_landing_add_context_split_css(landing_html)
 
     if compare_html_src_path:
         landing_html = patch_landing_add_compare_embed_css(landing_html)
@@ -2591,7 +2715,7 @@ def write_full_scrolly_site(
         )
         landing_html = patch_landing_add_compare_autosize_js(landing_html)
 
-    # Insert poster section that scrolls with the page (no iframe)
+    # Poster section
     if poster_svg_src_path or os.path.exists(poster_abs):
         landing_html = patch_landing_add_poster_css(landing_html)
         landing_html = patch_landing_insert_poster_before_explain(
@@ -2607,7 +2731,7 @@ def write_full_scrolly_site(
     with open(landing_path, "w", encoding="utf-8") as f:
         f.write(landing_html)
 
-    # 10) Dashboard page (optional)
+    # 12) Dashboard page (optional)
     if embed_extra_filename:
         dash_html = build_dashboard_page_html(
             page_title=f"{title} | Dashboard",
