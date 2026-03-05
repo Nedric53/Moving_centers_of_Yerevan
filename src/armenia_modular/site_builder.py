@@ -342,18 +342,20 @@ def patch_compare_add_height_postmessage(compare_html: str) -> str:
   (function() {
     function _contentHeight() {
       try {
-        var wrap = document.querySelector(".wrap");
-        if (wrap) {
-          var h = Math.max(wrap.scrollHeight || 0, wrap.offsetHeight || 0);
-          if (h && isFinite(h)) return Math.ceil(h);
+        var wrap = document.querySelector(".wrap") || document.body;
+        if (!wrap) return 0;
+
+        var wrapTop = wrap.getBoundingClientRect().top;
+        var maxBottom = 0;
+
+        var kids = wrap.children && wrap.children.length ? wrap.children : (document.body ? document.body.children : []);
+        for (var i = 0; i < kids.length; i++) {
+          var r = kids[i].getBoundingClientRect();
+          if (r && isFinite(r.bottom)) maxBottom = Math.max(maxBottom, r.bottom);
         }
 
-        // Fallback only if .wrap not found
-        var b = document.body;
-        if (b) {
-          var hb = Math.max(b.scrollHeight || 0, b.offsetHeight || 0);
-          if (hb && isFinite(hb)) return Math.ceil(hb);
-        }
+        var h = Math.ceil(maxBottom - wrapTop);
+        return (h && isFinite(h)) ? h : 0;
       } catch (e) {}
       return 0;
     }
@@ -2005,7 +2007,7 @@ def build_landing_html(config: dict) -> str:
       <div class="navInner">
         <div class="brand">${BRAND}</div>
         <div class="navLinks">
-          <a href="#gallery1">Context</a>
+          <a href="#gallery1">What Centers Does a City Have</a>
           <a href="#model">Model</a>
           <a href="#explain">Explanation</a>
         </div>
@@ -2345,8 +2347,6 @@ def build_default_context_text_html() -> str:
     # NOTE: hyphens are used instead of em dashes.
     return """
       <div class="contextGroup">
-        <div class="contextHeading">What Centers Does a City Have</div>
-
         <p><strong>Historical center</strong> - the historically formed part of a city where the original urban layout and historical buildings have typically been preserved. It usually contains a high concentration of cultural heritage sites such as monuments and architectural ensembles.</p>
 
         <p><strong>Commercial center</strong> - a conceptual point where the city’s business activity is concentrated. This area typically has the highest number of jobs, offices, retail locations, and transport hubs. A city does not have a single, fixed commercial center, but the most active commercial zones can be identified and represented by a point placed roughly at their center.</p>
@@ -2606,12 +2606,38 @@ def write_full_scrolly_site(
     )
 
     # 5) Steps
+    # 5) Steps
     scenario_steps = [
-        dict(title="Baseline", heading="Baseline assumptions", body="Reference case for transport and amenity strength."),
-        dict(title="Faster transport", heading="Faster transport", body="Higher transport speed lowers time costs."),
-        dict(title="Slower transport", heading="Slower transport", body="Lower transport speed raises time costs."),
-        dict(title="Historic pull", heading="Historic amenities matter more", body="Higher amenity strengthens amenity-related effects."),
-        dict(title="Weaker amenities", heading="Historic amenities matter less", body="Lower amenity weakens amenity-related effects."),
+        dict(
+            title="Baseline",
+            heading="Baseline assumptions",
+            body="Reference case for transport and amenity strength.",
+            t=1.00, a=1.00,
+        ),
+        dict(
+            title="Faster transport",
+            heading="Faster transport",
+            body="Higher transport speed lowers time costs.",
+            t=1.25, a=1.00,
+        ),
+        dict(
+            title="Slower transport",
+            heading="Slower transport",
+            body="Lower transport speed raises time costs.",
+            t=0.75, a=1.00,
+        ),
+        dict(
+            title="Historic pull",
+            heading="Historic amenities matter more",
+            body="Higher amenity strengthens amenity-related effects.",
+            t=1.00, a=1.25,
+        ),
+        dict(
+            title="Weaker amenities",
+            heading="Historic amenities matter less",
+            body="Lower amenity weakens amenity-related effects.",
+            t=1.00, a=0.75,
+        ),
     ]
 
     scenario_steps = assign_progress_percent(scenario_steps)
@@ -2659,11 +2685,11 @@ def write_full_scrolly_site(
         "HERO_TITLE": "Moving centers<br>of Yerevan",
         "HERO_SUB": "How and why the commercial centers of cities <br> are moving away from historical centers",
         "CTA_PRIMARY": "Read story",
-        "CTA_SECONDARY": "Learn model",
+        "CTA_SECONDARY": "Explore the documentation",
         "HERO_IMAGE": hero_image_rel,
         "HERO_IMAGE_CAPTION": "",
 
-        "G1_TITLE": "Context",
+        "G1_TITLE": "What Centers Does a City Have",
         # IMPORTANT: replaced gallery placeholders with the split block
         "GALLERY1_HTML": context_block_html,
 

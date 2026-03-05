@@ -400,18 +400,20 @@
   (function() {
     function _contentHeight() {
       try {
-        var wrap = document.querySelector(".wrap");
-        if (wrap) {
-          var h = Math.max(wrap.scrollHeight || 0, wrap.offsetHeight || 0);
-          if (h && isFinite(h)) return Math.ceil(h);
+        var wrap = document.querySelector(".wrap") || document.body;
+        if (!wrap) return 0;
+
+        var wrapTop = wrap.getBoundingClientRect().top;
+        var maxBottom = 0;
+
+        var kids = wrap.children && wrap.children.length ? wrap.children : (document.body ? document.body.children : []);
+        for (var i = 0; i < kids.length; i++) {
+          var r = kids[i].getBoundingClientRect();
+          if (r && isFinite(r.bottom)) maxBottom = Math.max(maxBottom, r.bottom);
         }
 
-        // Fallback only if .wrap not found
-        var b = document.body;
-        if (b) {
-          var hb = Math.max(b.scrollHeight || 0, b.offsetHeight || 0);
-          if (hb && isFinite(hb)) return Math.ceil(hb);
-        }
+        var h = Math.ceil(maxBottom - wrapTop);
+        return (h && isFinite(h)) ? h : 0;
       } catch (e) {}
       return 0;
     }
