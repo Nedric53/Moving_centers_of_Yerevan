@@ -2399,7 +2399,9 @@ def patch_landing_add_context_split_css(landing_html: str) -> str:
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 18px;
-  align-items: start;
+
+  /* IMPORTANT: allow grid items to stretch to the tallest column */
+  align-items: stretch;
 }
 
 .contextImgCard{
@@ -2409,6 +2411,14 @@ def patch_landing_add_context_split_css(landing_html: str) -> str:
   overflow: hidden;
   background: transparent;
   box-shadow: none;
+
+  /* NEW: center the image inside the left grid cell */
+  display: flex;
+  align-items: center;      /* vertical centering */
+  justify-content: center;  /* horizontal centering */
+
+  /* makes sure it can stretch to match the text column height */
+  min-height: 100%;
 }
 
 .contextImgCard img{
@@ -2434,9 +2444,7 @@ def patch_landing_add_context_split_css(landing_html: str) -> str:
   color: rgba(0,0,0,.90);
 }
 
-.contextText p{
-  margin: 0 0 10px 0;
-}
+.contextText p{ margin: 0 0 10px 0; }
 
 .contextText ul{
   margin: 0 0 10px 18px;
@@ -2444,9 +2452,8 @@ def patch_landing_add_context_split_css(landing_html: str) -> str:
 }
 
 @media (max-width: 980px){
-  .contextSplit{
-    grid-template-columns: 1fr;
-  }
+  .contextSplit{ grid-template-columns: 1fr; }
+  .contextImgCard{ min-height: 0; }
 }
 /* ---- end injected block ---- */
 """

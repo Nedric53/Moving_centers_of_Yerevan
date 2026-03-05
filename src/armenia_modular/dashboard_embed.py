@@ -163,7 +163,6 @@ def write_interactive_html(out_path="yerevan_business_dashboard.html"):
 </head>
 
 <body>
-  <h2>Moving centers:</h2>
 
   <div class="grid3">
     <div class="card">
