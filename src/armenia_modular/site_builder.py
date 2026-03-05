@@ -165,8 +165,8 @@ def patch_landing_add_compare_embed_css(landing_html: str) -> str:
 def patch_landing_insert_compare_before_explain(
     landing_html: str,
     compare_href: str = "compare_business_areas.html",
-    title: str = "Business areas comparison",
-    sub: str = "Compare Yerevan’s dynamic business area with other cities on a common meters scale.",
+    title: str = "Commercial areas comparison",
+    sub: str = "Compare Yerevan’s dynamic commercial area with other cities on a common meters scale.",
 ) -> str:
     """
     Inserts the compare section immediately before the Explanation section.
@@ -195,20 +195,21 @@ def patch_landing_insert_compare_before_explain(
 def patch_landing_add_compare_autosize_js(landing_html: str) -> str:
     """
     Autosize compare iframe:
-    - Primary: accept postMessage({type:"compareHeight", height:<px>}) from compare page
-    - Also sends postMessage({type:"requestHeight"}) to request updates
-    - Same-origin fallback reads .wrap height (not document scrollHeight) to avoid growth loops
+    - Receives postMessage({type:"compareHeight", height:<px>})
+    - Same-origin fallback reads .wrap height
+    PLUS:
+    - Same-origin width sync: reads .wrap width and writes --compareContentW for poster alignment
     """
     if "compareIframeAutosize" in landing_html:
         return landing_html
 
     injected = r"""
-    // ---- injected: compare iframe autosize (stable, no growth loop) ----
+    // ---- injected: compare iframe autosize + width sync (stable) ----
     (function compareIframeAutosize() {
       const compareFrame = document.getElementById("compareFrame");
       if (!compareFrame) return;
 
-      const _COMPARE_PAD = 24; // small safety pad, avoid runaway growth
+      const _COMPARE_PAD = 24;
       let _lastSet = 0;
 
       function setCompareHeight(px) {
@@ -216,15 +217,12 @@ def patch_landing_add_compare_autosize_js(landing_html: str) -> str:
         if (typeof px !== "number" || !isFinite(px) || px <= 0) return;
 
         const next = Math.ceil(px + _COMPARE_PAD);
-
-        // Prevent tiny oscillations
         if (_lastSet && Math.abs(next - _lastSet) <= 2) return;
 
         _lastSet = next;
         compareFrame.style.height = next + "px";
       }
 
-      // Receive height from compare page
       window.addEventListener("message", (event) => {
         const d = event && event.data;
         if (!d || typeof d !== "object") return;
@@ -241,7 +239,6 @@ def patch_landing_add_compare_autosize_js(landing_html: str) -> str:
         } catch (e) {}
       }
 
-      // Same-origin fallback: measure .wrap (content), not documentElement.scrollHeight
       function _compareDoc() {
         try {
           return compareFrame.contentDocument || (compareFrame.contentWindow && compareFrame.contentWindow.document) || null;
@@ -250,12 +247,26 @@ def patch_landing_add_compare_autosize_js(landing_html: str) -> str:
         }
       }
 
+      function _wrapEl(doc) {
+        try {
+          if (!doc || !doc.querySelector) return null;
+          return doc.querySelector(".wrap") || null;
+        } catch (e) {
+          return null;
+        }
+      }
+
       function _computeContentHeightSameOrigin(doc) {
         try {
-          const wrap = doc && doc.querySelector && doc.querySelector(".wrap");
+          const wrap = _wrapEl(doc);
           if (wrap) {
             const h = Math.max(wrap.scrollHeight || 0, wrap.offsetHeight || 0);
             return (h && isFinite(h)) ? Math.ceil(h) : 0;
+          }
+          const b = doc && doc.body;
+          if (b) {
+            const hb = Math.max(b.scrollHeight || 0, b.offsetHeight || 0);
+            return (hb && isFinite(hb)) ? Math.ceil(hb) : 0;
           }
         } catch (e) {}
         return 0;
@@ -268,27 +279,40 @@ def patch_landing_add_compare_autosize_js(landing_html: str) -> str:
         if (h) setCompareHeight(h);
       }
 
+      function syncCompareContentWidthSameOrigin() {
+        const doc = _compareDoc();
+        if (!doc) return;
+
+        try {
+          const el = _wrapEl(doc) || (doc.body || null);
+          if (!el || !el.getBoundingClientRect) return;
+
+          const r = el.getBoundingClientRect();
+          const w = Math.ceil(r.width || 0);
+          if (!w || !isFinite(w) || w < 200) return;
+
+          document.documentElement.style.setProperty("--compareContentW", w + "px");
+        } catch (e) {}
+      }
+
       compareFrame.setAttribute("scrolling", "no");
       compareFrame.style.overflow = "hidden";
 
-      compareFrame.addEventListener("load", () => {
+      function onBurst() {
         requestCompareHeight();
-        setTimeout(requestCompareHeight, 120);
-        setTimeout(requestCompareHeight, 350);
-        setTimeout(requestCompareHeight, 900);
-
         resizeCompareFrameSameOrigin();
-        setTimeout(resizeCompareFrameSameOrigin, 120);
-        setTimeout(resizeCompareFrameSameOrigin, 900);
-      });
+        syncCompareContentWidthSameOrigin();
+
+        setTimeout(() => { requestCompareHeight(); resizeCompareFrameSameOrigin(); syncCompareContentWidthSameOrigin(); }, 120);
+        setTimeout(() => { requestCompareHeight(); resizeCompareFrameSameOrigin(); syncCompareContentWidthSameOrigin(); }, 350);
+        setTimeout(() => { requestCompareHeight(); resizeCompareFrameSameOrigin(); syncCompareContentWidthSameOrigin(); }, 900);
+      }
+
+      compareFrame.addEventListener("load", onBurst);
 
       window.addEventListener("resize", () => {
-        requestCompareHeight();
-        resizeCompareFrameSameOrigin();
-        setTimeout(() => {
-          requestCompareHeight();
-          resizeCompareFrameSameOrigin();
-        }, 250);
+        onBurst();
+        setTimeout(onBurst, 250);
       });
     })();
     // ---- end injected block ----
@@ -1112,7 +1136,7 @@ def patch_interactive_ui_left_right_vertical_sliders(html_str: str) -> str:
     # -------------------------
     html_str = re.sub(
         r"muInfoEl\.textContent\s*=\s*`[^`]*`;\s*",
-        "muInfoEl.textContent = `Distance from Historic to Business Center: ${sep.toFixed(0)}m; Business area: ${areaKm2.toFixed(0)} km²`;\n",
+        "muInfoEl.textContent = `Distance from Historic to Commercial Center: ${sep.toFixed(0)}m; Commercial area: ${areaKm2.toFixed(0)} km²`;\n",
         html_str,
         count=1
     )
@@ -1193,12 +1217,12 @@ def patch_interactive_ui_left_right_vertical_sliders(html_str: str) -> str:
 
           <div class="lItem" style="grid-column:2;grid-row:2;">
             <span class="dotMu"></span>
-            <span>Business center (μ)</span>
+            <span>Commercial center</span>
           </div>
 
           <div class="lItem" style="grid-column:3;grid-row:1;">
             <img class="lIcon" src="assets/icon_business.png" alt="">
-            <span>Business area (polygon)</span>
+            <span>Commercial area</span>
           </div>
 
           <div class="lItem" style="grid-column:3;grid-row:2;">
@@ -2058,10 +2082,7 @@ def build_landing_html(config: dict) -> str:
 
   <section class="section" id="explain">
     <div class="container">
-      <div class="sectionTitle">
-        <h2>${EXPLAIN_TITLE}</h2>
-        <p>${EXPLAIN_SUB}</p>
-      </div>
+      
       <div class="explainGrid">
         ${EXPLAIN_BLOCKS}
       </div>
@@ -2261,6 +2282,84 @@ def build_landing_html(config: dict) -> str:
 # =========================
 # One function to write full site
 # =========================
+def patch_landing_add_poster_css(landing_html: str) -> str:
+    css = r"""
+
+/* ---- injected: poster section (match compare width) ---- */
+:root{
+  /* JS will overwrite this based on compare iframe content */
+  --compareContentW: var(--max);
+}
+
+#poster{
+  scroll-margin-top: calc(var(--navH) + 16px) !important;
+}
+
+/* Make poster section align like compare (full width + modelPad) */
+#poster .container{
+  max-width: none !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  padding-left: var(--modelPad, 12px) !important;
+  padding-right: var(--modelPad, 12px) !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+#poster .posterCard{
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  border-radius: var(--radius2) !important;
+
+  /* Match actual compare content width */
+  max-width: min(var(--compareContentW), 100%) !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+#poster .posterImg{
+  width: 100% !important;
+  height: auto !important;
+  display: block !important;
+}
+/* ---- end injected block ---- */
+"""
+    style_close = landing_html.rfind("</style>")
+    if style_close == -1:
+        raise ValueError("Could not find </style> to inject poster CSS.")
+    return landing_html[:style_close] + css + "\n" + landing_html[style_close:]
+
+def patch_landing_insert_poster_before_explain(
+    landing_html: str,
+    poster_src: str = "assets/Poster.svg",
+    title: str = "Poster",
+    sub: str = "Detailed poster (SVG) embedded into the page.",
+) -> str:
+    """
+    Inserts a poster section immediately before the Explanation section.
+    Uses <img> so it scrolls with the site and never has an inner scrollbar.
+    """
+    block = f"""
+  <section class="section" id="poster">
+    <div class="container">
+      <div class="sectionTitle">
+        <h2>{_escape(title)}</h2>
+        <p>{_escape(sub)}</p>
+      </div>
+
+      <div class="posterCard">
+        <img class="posterImg" src="{_escape(poster_src)}" alt="{_escape(title)}" loading="lazy">
+      </div>
+    </div>
+  </section>
+"""
+    anchor = '<section class="section" id="explain">'
+    if anchor not in landing_html:
+        raise ValueError("Could not find the Explanation section anchor.")
+    return landing_html.replace(anchor, block + "\n" + anchor, 1)
+
+
 def write_full_scrolly_site(
     out_dir: str,
     interactive_html: str,
@@ -2272,7 +2371,16 @@ def write_full_scrolly_site(
     compare_html_src_path: str | None = None,
     compare_filename: str = "compare_business_areas.html",
     hero_image_src_path: str | None = None,
-    hero_image_dst_name: str = "Mask group.png",  # exact asset filename you want
+    hero_image_dst_name: str = "Mask group.png",
+    # Poster support
+    poster_svg_src_path: str | None = None,
+    poster_dst_name: str = "Poster.svg",
+    poster_title: str = "Poster",
+    poster_sub: str = " ",
+    # NEW: PDF support (copied into assets + footer button)
+    pdf_src_path: str | None = None,
+    pdf_dst_name: str = "Armenia.pdf",
+    pdf_button_label: str = "Open PDF",
 ):
     os.makedirs(out_dir, exist_ok=True)
 
@@ -2291,33 +2399,83 @@ def write_full_scrolly_site(
         for fname, html_text in extra_html_files.items():
             Path(os.path.join(out_dir, fname)).write_text(html_text, encoding="utf-8")
 
-    # 3) Hero image: always from assets/Mask group.png if present
-    assets_dir = os.path.join("assets")
+    # 3) Assets live inside the bundle
+    assets_dir = os.path.join(out_dir, "assets")
     os.makedirs(assets_dir, exist_ok=True)
-    desired_rel = (hero_image_dst_name).replace(os.sep, "/")
-    desired_abs = os.path.abspath(os.path.join("assets", hero_image_dst_name))
-    print(desired_abs)
-    # If user provides a source image, ensure it's in out_dir/assets with the right name
+
+    # 3a) Hero image into out_dir/assets/
+    hero_rel = f"assets/{hero_image_dst_name}".replace(os.sep, "/")
+    hero_abs = os.path.join(assets_dir, hero_image_dst_name)
+
     if hero_image_src_path:
         if not os.path.exists(hero_image_src_path):
             raise FileNotFoundError(f"Missing hero image: {hero_image_src_path}")
 
         src_abs = os.path.abspath(hero_image_src_path)
+        dst_abs = os.path.abspath(hero_abs)
 
-        # Avoid SameFileError
         same = False
         try:
-            if os.path.exists(desired_abs) and os.path.samefile(src_abs, desired_abs):
+            if os.path.exists(dst_abs) and os.path.samefile(src_abs, dst_abs):
                 same = True
         except Exception:
-            same = (src_abs == desired_abs)
+            same = (src_abs == dst_abs)
 
         if not same:
-            shutil.copyfile(src_abs, desired_abs)
+            shutil.copyfile(src_abs, dst_abs)
 
-    # Choose hero image path for HTML
-    hero_image_rel = desired_abs
-    
+    # If no hero provided and file is missing, use a placeholder data URI
+    if not os.path.exists(hero_abs):
+        hero_image_rel = svg_placeholder_data_uri("Hero image")
+    else:
+        hero_image_rel = hero_rel
+
+    # 3b) Poster SVG into out_dir/assets/
+    poster_rel = f"assets/{poster_dst_name}".replace(os.sep, "/")
+    poster_abs = os.path.join(assets_dir, poster_dst_name)
+
+    if poster_svg_src_path:
+        if not os.path.exists(poster_svg_src_path):
+            raise FileNotFoundError(f"Missing poster SVG: {poster_svg_src_path}")
+
+        src_abs = os.path.abspath(poster_svg_src_path)
+        dst_abs = os.path.abspath(poster_abs)
+
+        same = False
+        try:
+            if os.path.exists(dst_abs) and os.path.samefile(src_abs, dst_abs):
+                same = True
+        except Exception:
+            same = (src_abs == dst_abs)
+
+        if not same:
+            shutil.copyfile(src_abs, dst_abs)
+
+    poster_image_rel = poster_rel if os.path.exists(poster_abs) else svg_placeholder_data_uri("Poster (SVG)")
+
+    # 3c) PDF into out_dir/assets/ (NEW)
+    pdf_rel = f"assets/{pdf_dst_name}".replace(os.sep, "/")
+    pdf_abs = os.path.join(assets_dir, pdf_dst_name)
+
+    if pdf_src_path:
+        if not os.path.exists(pdf_src_path):
+            raise FileNotFoundError(f"Missing PDF: {pdf_src_path}")
+
+        src_abs = os.path.abspath(pdf_src_path)
+        dst_abs = os.path.abspath(pdf_abs)
+
+        same = False
+        try:
+            if os.path.exists(dst_abs) and os.path.samefile(src_abs, dst_abs):
+                same = True
+        except Exception:
+            same = (src_abs == dst_abs)
+
+        if not same:
+            shutil.copyfile(src_abs, dst_abs)
+
+    pdf_href = pdf_rel if os.path.exists(pdf_abs) else ""
+
     # 4) Gallery placeholders
     g1 = [
         {"src": svg_placeholder_data_uri("Context image 1"), "caption": "Replace with assets/ images"},
@@ -2402,17 +2560,24 @@ def write_full_scrolly_site(
     dashboard_button_html = ""
     if embed_extra_filename:
         dashboard_button_html = f"""
-        <div style="display:flex; flex-direction:column; gap:12px; margin-top: 12px;">
-          <a class="btn btnPrimary" href="{_escape(dashboard_page)}">Open theoretical dashboard</a>
-        </div>
+        <a class="btn btnPrimary" href="{_escape(dashboard_page)}">Open theoretical dashboard</a>
         """
 
-    # 7) Landing config (hero image is real asset now)
+    # NEW: PDF button (footer)
+    pdf_button_html = ""
+    if pdf_href:
+        pdf_button_html = f"""
+        <a class="btn btnPrimary" href="{_escape(pdf_href)}" target="_blank" rel="noopener">
+          {_escape(pdf_button_label)}
+        </a>
+        """
+
+    # 7) Landing config
     config = {
         "PAGE_TITLE": title,
         "BRAND": title,
         "HERO_TITLE": "Moving centers<br>of Yerevan",
-        "HERO_SUB": "How and why the business centers of cities are moving away from historical centers",
+        "HERO_SUB": "How and why the commercial centers of cities are moving away from historical centers",
         "CTA_PRIMARY": "Read story",
         "CTA_SECONDARY": "Learn model",
         "HERO_IMAGE": hero_image_rel,
@@ -2432,14 +2597,15 @@ def write_full_scrolly_site(
         "GALLERY2_HTML": build_gallery_html(g2, cols=2),
 
         "EXPLAIN_TITLE": "Explanation",
-        "EXPLAIN_SUB": "Short blocks explaining what is happening.",
         "EXPLAIN_BLOCKS": build_explain_blocks(explain_blocks),
         "EXTRA_EXPLAIN_HTML": "",
 
         "FOOTER_TEXT": f"""
           <div style="display:flex; flex-direction:column; gap:12px;">
-            <div>Static bundle. Serve the folder as a website to share it.</div>
-            {dashboard_button_html}
+            <div style="display:flex; gap:12px; flex-wrap:wrap;">
+              {pdf_button_html}
+              {dashboard_button_html}
+            </div>
           </div>
         """,
     }
@@ -2465,11 +2631,23 @@ def write_full_scrolly_site(
         landing_html = patch_landing_insert_compare_before_explain(
             landing_html,
             compare_href=compare_filename,
-            title="Заголовок блока",
-            sub="Сравнение бизнес-ареалов городов. Фигуры приведены к одной шкале и центрированы по историческому центру (0,0).",
+            title="",
+            sub="",
         )
         landing_html = patch_landing_add_compare_autosize_js(landing_html)
+
+    # Insert poster section that scrolls with the page (no iframe)
+    if poster_svg_src_path or os.path.exists(poster_abs):
+        landing_html = patch_landing_add_poster_css(landing_html)
+        landing_html = patch_landing_insert_poster_before_explain(
+            landing_html,
+            poster_src=poster_image_rel,
+            title=poster_title,
+            sub=poster_sub,
+        )
+
     landing_html = patch_landing_remove_borders(landing_html)
+
     landing_path = os.path.join(out_dir, landing_filename)
     with open(landing_path, "w", encoding="utf-8") as f:
         f.write(landing_html)

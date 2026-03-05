@@ -2,15 +2,14 @@
 #
 # Builds ONE HTML that:
 # 1) loads ALL city business-area polygons from POLY_DIR/*.geojson (fixed polygons)
-# 2) embeds your NEW Yerevan precomputed payload as gzip+base64 extracted from:
+# 2) embeds the Yerevan precomputed payload as gzip+base64 extracted from:
 #    data/yerevan_interactive/yerevan_business_polygon_precomputed.html
 # 3) renders both on a comparable METERS scale, centered at historic center (0,0)
-# 4) compares shapes using ONLY the OUTER BOUNDARY (ignore holes; MultiPolygon -> largest exterior ring)
 #
 # Inputs expected:
 # - data/city_centers/city_centers_business_polygon.csv
 # - data/city_centers/business_area_polygons_geojson/*.geojson
-# - data/yerevan_interactive/yerevan_business_polygon_precomputed.html   (gzip+b64 payload)
+# - data/yerevan_interactive/yerevan_business_polygon_precomputed.html
 #
 # Output:
 # - data/compare_business_areas/compare_business_areas.html
@@ -42,7 +41,6 @@ def extract_payload_b64_from_yerevan_html(html_text: str) -> str:
     """
     m = re.search(r'PAYLOAD_GZ_B64\s*=\s*"([^"]+)"\s*;', html_text)
     if not m:
-        # some builds may use single quotes
         m = re.search(r"PAYLOAD_GZ_B64\s*=\s*'([^']+)'\s*;", html_text)
     if not m:
         raise RuntimeError("Could not find PAYLOAD_GZ_B64 in Yerevan HTML")
@@ -223,10 +221,9 @@ HTML_TEMPLATE = r"""<!doctype html>
   <title>Business areas comparison</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    :root { --border:#e6e6e6; --text:#111; --muted:#666; --bg:#fff; }
+    :root { --border:#e6e6e6; --text:#111; --muted:#666; --bg:#fff; --accent:#56d3e5; }
     body { margin:0; font-family: Arial, sans-serif; background:var(--bg); color:var(--text); }
     .wrap { max-width: 1200px; margin: 0 auto; padding: 28px 22px 18px; }
-    h1 { margin: 0 0 10px; font-size: 44px; letter-spacing: -0.02em; }
     .desc { max-width: 980px; color: var(--muted); line-height: 1.35; font-size: 18px; margin-bottom: 22px; }
 
     .card {
@@ -255,12 +252,59 @@ HTML_TEMPLATE = r"""<!doctype html>
     .sliderBlock { margin-top: 20px; }
     .sliderName { font-weight: 700; margin: 18px 0 10px; }
     .sliderRow { display:flex; align-items:center; gap: 10px; }
-    input[type="range"]{ width: 100%; }
-    .valPill {
-      min-width: 56px;
-      text-align: right;
-      font-weight: 700;
-      font-variant-numeric: tabular-nums;
+
+    .sliderEnds{
+      display:flex;
+      justify-content:space-between;
+      margin-top:6px;
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    input[type="range"]{
+      -webkit-appearance:none;
+      appearance:none;
+      width:100%;
+      height:4px;
+      border-radius:999px;
+      background:var(--accent);
+      outline:none;
+    }
+
+    input[type="range"]::-webkit-slider-runnable-track{
+      height:4px;
+      border-radius:999px;
+      background:var(--accent);
+    }
+
+    /* Circle thumb (WebKit) */
+    input[type="range"]::-webkit-slider-thumb{
+      -webkit-appearance:none;
+      appearance:none;
+      width:14px;
+      height:14px;
+      border:none;
+      border-radius:50%;
+      background:var(--accent);
+      margin-top:-5px; /* centers the circle on a 4px track */
+      cursor:pointer;
+    }
+
+    input[type="range"]::-moz-range-track{
+      height:4px;
+      border:none;
+      border-radius:999px;
+      background:var(--accent);
+    }
+
+    /* Circle thumb (Firefox) */
+    input[type="range"]::-moz-range-thumb{
+      width:14px;
+      height:14px;
+      border:none;
+      border-radius:50%;
+      background:var(--accent);
+      cursor:pointer;
     }
 
     .right { position: relative; padding: 0; display:flex; flex-direction: column; }
@@ -277,8 +321,6 @@ HTML_TEMPLATE = r"""<!doctype html>
 
     svg { width: 100%; height: 100%; display:block; }
 
-    .footer { border-top: 1px solid var(--border); padding: 12px 18px; color: var(--muted); font-size: 14px; }
-
     .legendRow {
       display:flex; align-items:center; gap:14px; flex-wrap:wrap;
       padding: 12px 18px 6px;
@@ -291,53 +333,42 @@ HTML_TEMPLATE = r"""<!doctype html>
       border-top: 1px solid var(--border);
       color: var(--muted);
       font-size: 13px;
-      line-height: 1.35;
+      line-height: 1.45;
     }
     .kpi b { color: var(--text); }
-
-    .halo {
-      paint-order: stroke fill;
-      stroke: rgba(255,255,255,0.95);
-      stroke-width: 4;
-      stroke-linejoin: round;
-    }
   </style>
 </head>
 
 <body>
   <div class="wrap">
     <div class="desc">
-      Сравнение бизнес-ареалов городов. Фигуры приведены к одной шкале и центрированы по историческому центру (0,0).
-      Ереван меняется по слайдерам, берется из gzip+base64 предрасчета.
-      Сходство считается только по внешнему контуру (без дыр, MultiPolygon сводится к крупнейшему контуру).
+      Comparison of city business areas. Shapes are brought to the same scale and centered at the historical center (0,0).
+      Yerevan changes with the sliders and is loaded from a gzip+base64 precomputed payload.
     </div>
 
     <div class="card">
       <div class="left">
-        <div class="label">Выберите город, с которым хотите сравнить Ереван</div>
+        <div class="label">Select the city you want to compare Yerevan with</div>
         <select id="citySelect"></select>
 
-        <div class="sectionTitle" style="margin-top:18px;">Настройте показатели для Еревана</div>
+        <div class="sectionTitle" style="margin-top:18px;">Set up parameters for Yerevan</div>
 
         <div class="sliderBlock">
           <div class="sliderName">Transport factor</div>
           <div class="sliderRow">
             <input id="tSlider" type="range" min="0.10" max="2.00" step="0.01" value="1.00">
-            <div class="valPill" id="tVal">1.00</div>
           </div>
-          <div class="help" id="tSnap">snap: 1.00</div>
+          <div class="sliderEnds"><span>smaller</span><span>faster</span></div>
 
           <div class="sliderName" style="margin-top:18px;">Historic amenity strength</div>
           <div class="sliderRow">
             <input id="aSlider" type="range" min="0.10" max="2.00" step="0.01" value="1.00">
-            <div class="valPill" id="aVal">1.00</div>
           </div>
-          <div class="help" id="aSnap">snap: 1.00</div>
+          <div class="sliderEnds"><span>weaker</span><span>stronger</span></div>
 
           <div class="kpi">
-            <div><b>Ереван:</b> <span id="yKpi">...</span></div>
-            <div><b>Город сравнения:</b> <span id="cKpi">...</span></div>
-            <div><b>Самое похоже на:</b> <span id="matchCity">...</span></div>
+            <div><b>Yerevan:</b> <span id="yKpi">...</span></div>
+            <div><b>Comparison city:</b> <span id="cKpi">...</span></div>
           </div>
         </div>
       </div>
@@ -346,14 +377,14 @@ HTML_TEMPLATE = r"""<!doctype html>
         <div class="legendRow">
           <div class="legendItem"><span class="swatch" style="background: rgba(0, 155, 190, 0.18);"></span>Yerevan business area</div>
           <div class="legendItem"><span class="swatch" style="background: rgba(240, 145, 110, 0.18);"></span><span id="legendCityName">...</span> business area</div>
-          <div class="legendItem"><span class="swatch" style="background: rgba(220, 60, 60, 0.95); border:none;"></span>historical center of cities</div>
+          <div class="legendItem"><span class="swatch" style="background: rgba(220, 60, 60, 0.95); border:none;"></span>historical centers of the cities</div>
         </div>
 
         <div class="plotWrap">
-          <div class="plotLabel top">выше</div>
-          <div class="plotLabel bottom">ниже</div>
-          <div class="plotLabel left">левее</div>
-          <div class="plotLabel right">правее</div>
+          <div class="plotLabel top">up</div>
+          <div class="plotLabel bottom">down</div>
+          <div class="plotLabel left">left</div>
+          <div class="plotLabel right">right</div>
 
           <svg id="plot" preserveAspectRatio="xMidYMid meet">
             <line id="xAxis" x1="0" y1="0" x2="0" y2="0" stroke="#d7d7d7" stroke-width="1"></line>
@@ -363,15 +394,7 @@ HTML_TEMPLATE = r"""<!doctype html>
             <path id="yerPoly" d="" fill="rgba(0, 155, 190, 0.18)" stroke="rgba(0, 155, 190, 0.95)" stroke-width="2" fill-rule="evenodd"></path>
 
             <circle id="originDot" r="6" cx="0" cy="0" fill="rgba(220, 60, 60, 0.95)"></circle>
-
-            <text id="originLabel" class="halo" font-size="14" font-weight="700" fill="rgba(220, 60, 60, 0.95)">historical center of cities</text>
-            <text id="cityLabel" class="halo" font-size="14" font-weight="700" fill="rgba(240, 145, 110, 0.95)"></text>
-            <text id="yerLabel"  class="halo" font-size="14" font-weight="700" fill="rgba(0, 155, 190, 0.95)"></text>
           </svg>
-        </div>
-
-        <div class="footer">
-          Сходство: радиальная сигнатура по внешнему контуру, инвариантная к повороту. Внутренние отверстия игнорируются.
         </div>
       </div>
     </div>
@@ -383,7 +406,7 @@ HTML_TEMPLATE = r"""<!doctype html>
   <script>
     const cityPayload = __CITY_PAYLOAD__;
 
-    // embedded Yerevan gzip+base64 (copied from your Yerevan HTML)
+    // embedded Yerevan gzip+base64
     const YEREVAN_PAYLOAD_GZ_B64 = "__YEREVAN_PAYLOAD_GZ_B64__";
 
     function loadYerevanPayload() {
@@ -411,13 +434,8 @@ HTML_TEMPLATE = r"""<!doctype html>
 
     const tSlider = document.getElementById("tSlider");
     const aSlider = document.getElementById("aSlider");
-    const tValEl = document.getElementById("tVal");
-    const aValEl = document.getElementById("aVal");
-    const tSnapEl = document.getElementById("tSnap");
-    const aSnapEl = document.getElementById("aSnap");
     const yKpiEl = document.getElementById("yKpi");
     const cKpiEl = document.getElementById("cKpi");
-    const matchCityEl = document.getElementById("matchCity");
     const legendCityName = document.getElementById("legendCityName");
 
     const svg = document.getElementById("plot");
@@ -426,11 +444,7 @@ HTML_TEMPLATE = r"""<!doctype html>
 
     const cityPolyEl = document.getElementById("cityPoly");
     const yerPolyEl = document.getElementById("yerPoly");
-
     const originDot = document.getElementById("originDot");
-    const originLabel = document.getElementById("originLabel");
-    const cityLabel = document.getElementById("cityLabel");
-    const yerLabel = document.getElementById("yerLabel");
 
     const R = Math.max(500.0, cityPayload.extent_m);
 
@@ -474,27 +488,26 @@ HTML_TEMPLATE = r"""<!doctype html>
       return "";
     }
 
-    function geomCentroidMeters(geom) {
-      if (!geom) return {x:0,y:0};
-      let sx = 0, sy = 0, n = 0;
+    function updateAxes(w, h) {
+      const o = worldToSvg(0, 0, w, h);
+      xAxis.setAttribute("x1", 0);
+      xAxis.setAttribute("y1", o.y);
+      xAxis.setAttribute("x2", w);
+      xAxis.setAttribute("y2", o.y);
 
-      function addRing(ring) {
-        for (const p of ring) { sx += p[0]; sy += p[1]; n += 1; }
-      }
+      yAxis.setAttribute("x1", o.x);
+      yAxis.setAttribute("y1", 0);
+      yAxis.setAttribute("x2", o.x);
+      yAxis.setAttribute("y2", h);
 
-      if (geom.type === "Polygon") addRing(geom.coordinates[0]);
-      if (geom.type === "MultiPolygon") {
-        for (const poly of geom.coordinates) addRing(poly[0]);
-      }
-
-      if (n === 0) return {x:0,y:0};
-      return { x: sx / n, y: sy / n };
+      originDot.setAttribute("cx", o.x);
+      originDot.setAttribute("cy", o.y);
     }
 
     // Yerevan precomputed
     const tg = yerevanData.t_grid;
     const ag = yerevanData.a_grid;
-    const g = yerevanData.g;         // only lon/lat in your new payload
+    const g = yerevanData.g;
     const precomp = yerevanData.precomp;
 
     // compute gX,gY in EPSG:32638 in browser
@@ -543,201 +556,6 @@ HTML_TEMPLATE = r"""<!doctype html>
       return null;
     }
 
-    // Label collision avoidance (approx)
-    function textBoxApprox(text, x, y, fontSize) {
-      const w = Math.max(10, text.length * fontSize * 0.62);
-      const h = fontSize * 1.25;
-      return { x0: x, y0: y - h, x1: x + w, y1: y };
-    }
-
-    function boxesOverlap(a, b) {
-      return !(a.x1 < b.x0 || a.x0 > b.x1 || a.y1 < b.y0 || a.y0 > b.y1);
-    }
-
-    function placeLabel(el, text, wx, wy, w, h, usedBoxes, preferredOffsets) {
-      el.textContent = text;
-
-      const base = worldToSvg(wx, wy, w, h);
-      const fontSize = 14;
-
-      const offsets = preferredOffsets || [
-        [12, -12], [12, 18], [-160, -12], [-160, 18], [12, -30], [12, 34], [-220, -30], [-220, 34]
-      ];
-
-      for (const off of offsets) {
-        const px = base.x + off[0];
-        const py = base.y + off[1];
-        const box = textBoxApprox(text, px, py, fontSize);
-
-        let ok = true;
-        for (const ub of usedBoxes) {
-          if (boxesOverlap(box, ub)) { ok = false; break; }
-        }
-        if (ok) {
-          el.setAttribute("x", px.toFixed(2));
-          el.setAttribute("y", py.toFixed(2));
-          usedBoxes.push(box);
-          return;
-        }
-      }
-
-      const px = base.x + 12;
-      const py = base.y - 12;
-      el.setAttribute("x", px.toFixed(2));
-      el.setAttribute("y", py.toFixed(2));
-      usedBoxes.push(textBoxApprox(text, px, py, fontSize));
-    }
-
-    function updateAxes(w, h) {
-      const o = worldToSvg(0, 0, w, h);
-      xAxis.setAttribute("x1", 0);
-      xAxis.setAttribute("y1", o.y);
-      xAxis.setAttribute("x2", w);
-      xAxis.setAttribute("y2", o.y);
-
-      yAxis.setAttribute("x1", o.x);
-      yAxis.setAttribute("y1", 0);
-      yAxis.setAttribute("x2", o.x);
-      yAxis.setAttribute("y2", h);
-
-      originDot.setAttribute("cx", o.x);
-      originDot.setAttribute("cy", o.y);
-    }
-
-    // Similarity: radial signature computed ONLY from OUTER BOUNDARY
-    const K_SIG = 72;
-    const MAX_PTS = 2500;
-
-    function ringAreaAbs(ring) {
-      let a = 0;
-      for (let i = 0; i < ring.length - 1; i++) {
-        const x0 = ring[i][0], y0 = ring[i][1];
-        const x1 = ring[i+1][0], y1 = ring[i+1][1];
-        a += x0 * y1 - x1 * y0;
-      }
-      return Math.abs(0.5 * a);
-    }
-
-    function ringCentroidSigned(ring) {
-      let a = 0, cx2 = 0, cy2 = 0;
-      for (let i = 0; i < ring.length - 1; i++) {
-        const x0 = ring[i][0], y0 = ring[i][1];
-        const x1 = ring[i+1][0], y1 = ring[i+1][1];
-        const cross = x0 * y1 - x1 * y0;
-        a += cross;
-        cx2 += (x0 + x1) * cross;
-        cy2 += (y0 + y1) * cross;
-      }
-      a *= 0.5;
-      if (Math.abs(a) < 1e-9) return { x: ring[0][0], y: ring[0][1], a: 0 };
-      return { x: cx2 / (6 * a), y: cy2 / (6 * a), a: a };
-    }
-
-    function largestOuterRingOnly(geom) {
-      if (!geom) return null;
-
-      let bestRing = null;
-      let bestArea = -1;
-
-      if (geom.type === "Polygon") {
-        const ring = geom.coordinates[0];
-        return ring || null;
-      }
-
-      if (geom.type === "MultiPolygon") {
-        for (const poly of geom.coordinates) {
-          const ring = poly && poly[0] ? poly[0] : null;
-          if (!ring) continue;
-          const a = ringAreaAbs(ring);
-          if (a > bestArea) {
-            bestArea = a;
-            bestRing = ring;
-          }
-        }
-        return bestRing;
-      }
-
-      return null;
-    }
-
-    function fillZerosCircular(arr) {
-      const n = arr.length;
-      const out = arr.slice();
-      const nz = [];
-      for (let i = 0; i < n; i++) if (out[i] > 0) nz.push(i);
-      if (nz.length === 0) return out;
-
-      for (let i = 0; i < n; i++) {
-        if (out[i] > 0) continue;
-        let best = nz[0], bestd = 1e9;
-        for (const j of nz) {
-          const d = Math.min((i - j + n) % n, (j - i + n) % n);
-          if (d < bestd) { bestd = d; best = j; }
-        }
-        out[i] = out[best];
-      }
-      return out;
-    }
-
-    function normalizeL2(v) {
-      let s = 0;
-      for (let i = 0; i < v.length; i++) s += v[i] * v[i];
-      const n = Math.sqrt(s);
-      if (n < 1e-12) return v.slice();
-      return v.map(x => x / n);
-    }
-
-    function computeSignatureOuterOnly(geom, K) {
-      const ring = largestOuterRingOnly(geom);
-      if (!ring || ring.length < 4) return { sig: new Array(K).fill(0), area: 0 };
-
-      const rc = ringCentroidSigned(ring);
-      const cx0 = rc.x, cy0 = rc.y;
-      const areaAbs = Math.abs(rc.a);
-
-      const scale = Math.sqrt(Math.max(areaAbs, 1e-9));
-      const bins = new Array(K).fill(0);
-
-      const step = Math.max(1, Math.floor(ring.length / MAX_PTS));
-      for (let i = 0; i < ring.length; i += step) {
-        const dx = ring[i][0] - cx0;
-        const dy = ring[i][1] - cy0;
-        const r = Math.sqrt(dx*dx + dy*dy);
-
-        let ang = Math.atan2(dy, dx);
-        let t = (ang + Math.PI) / (2 * Math.PI);
-        let k = Math.floor(t * K);
-        if (k >= K) k = K - 1;
-
-        if (r > bins[k]) bins[k] = r;
-      }
-
-      const filled = fillZerosCircular(bins).map(x => x / scale);
-      return { sig: normalizeL2(filled), area: areaAbs / 1e6 };
-    }
-
-    function minCyclicMSE(a, b) {
-      const n = a.length;
-      let best = Infinity;
-      for (let shift = 0; shift < n; shift++) {
-        let s = 0;
-        for (let i = 0; i < n; i++) {
-          const d = a[i] - b[(i + shift) % n];
-          s += d * d;
-        }
-        const mse = s / n;
-        if (mse < best) best = mse;
-      }
-      return best;
-    }
-
-    // Precompute city signatures once
-    const citySigIndex = {};
-    for (const nm of cityNames) {
-      const g0 = cityPayload.cities[nm].geom_m;
-      citySigIndex[nm] = computeSignatureOuterOnly(g0, K_SIG);
-    }
-
     let pending = null;
     function scheduleUpdate() {
       if (pending) clearTimeout(pending);
@@ -756,24 +574,16 @@ HTML_TEMPLATE = r"""<!doctype html>
       const { w, h } = svgSize();
       updateAxes(w, h);
 
-      // comparison city polygon
       const cityObj = cityPayload.cities[cityName];
       const cityGeom = cityObj ? cityObj.geom_m : null;
       cityPolyEl.setAttribute("d", geomMetersToPath(cityGeom, w, h));
 
-      // slider raw
       const tRaw = parseFloat(tSlider.value);
       const aRaw = parseFloat(aSlider.value);
-      tValEl.textContent = tRaw.toFixed(2);
-      aValEl.textContent = aRaw.toFixed(2);
 
-      // snap
       const tS = snap(tRaw, tg);
       const aS = snap(aRaw, ag);
-      tSnapEl.textContent = "snap: " + tS.toFixed(2);
-      aSnapEl.textContent = "snap: " + aS.toFixed(2);
 
-      // pick precomputed entry
       const entry = precomp[keyFor(tS, aS)];
 
       let yerGeomRel = null;
@@ -784,64 +594,19 @@ HTML_TEMPLATE = r"""<!doctype html>
       yerPolyEl.setAttribute("d", geomMetersToPath(yerGeomRel, w, h));
 
       if (entry) {
-        yKpiEl.textContent = entry.area_km2.toFixed(2) + " km2 | sep: " + entry.sep_m.toFixed(0) + " m";
+        yKpiEl.innerHTML =
+          entry.area_km2.toFixed(2) +
+          ' km<sup>2</sup> | distance from commercial center to business center: ' +
+          entry.sep_m.toFixed(0) +
+          ' m';
       } else {
         yKpiEl.textContent = "no data";
       }
 
-      if (cityObj) cKpiEl.textContent = cityObj.area_km2.toFixed(2) + " km2";
-      else cKpiEl.textContent = "...";
-
-      // Labels with collision avoidance
-      const used = [];
-      placeLabel(originLabel, "historical center of cities", 0, 0, w, h, used, [[12, -14], [12, -34], [12, 22]]);
-
-      if (cityGeom) {
-        const cc = geomCentroidMeters(cityGeom);
-        placeLabel(cityLabel, cityName + " business area", cc.x, cc.y, w, h, used, [[12, -12], [12, 18], [-220, -12], [-220, 18]]);
+      if (cityObj) {
+        cKpiEl.innerHTML = cityObj.area_km2.toFixed(2) + ' km<sup>2</sup>';
       } else {
-        cityLabel.textContent = "";
-      }
-
-      if (yerGeomRel) {
-        const yc = geomCentroidMeters(yerGeomRel);
-        placeLabel(yerLabel, "Yerevan business area", yc.x, yc.y, w, h, used, [[12, 18], [12, -12], [-200, 18], [-200, -12]]);
-      } else {
-        yerLabel.textContent = "";
-      }
-
-      // Similarity match (outer bounds only)
-      if (yerGeomRel && cityNames.length > 0) {
-        const yd = computeSignatureOuterOnly(yerGeomRel, K_SIG);
-
-        let bestCity = null;
-        let bestScore = Infinity;
-
-        // set to 0 for pure outer-shape only
-        const W_AREA = 0.15;
-
-        for (const nm of cityNames) {
-          const cd = citySigIndex[nm];
-          if (!cd || !cd.sig) continue;
-
-          const shapeScore = minCyclicMSE(yd.sig, cd.sig);
-
-          let areaScore = 0;
-          if (W_AREA > 0 && yd.area > 0 && cd.area > 0) {
-            areaScore = Math.abs(Math.log(yd.area / cd.area));
-          }
-
-          const score = shapeScore + W_AREA * areaScore;
-          if (score < bestScore) {
-            bestScore = score;
-            bestCity = nm;
-          }
-        }
-
-        if (bestCity) matchCityEl.textContent = bestCity + " (score " + bestScore.toFixed(4) + ")";
-        else matchCityEl.textContent = "...";
-      } else {
-        matchCityEl.textContent = "...";
+        cKpiEl.textContent = "...";
       }
     }
 

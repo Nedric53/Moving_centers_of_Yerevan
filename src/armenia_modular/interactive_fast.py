@@ -708,15 +708,15 @@ def write_yerevan_single_polygon_html(
         bindCenterButton();
         window.addEventListener("load", bindCenterButton);
 
-        const baseStyle = () => {
-          return {
+        const baseStyle = () => {{
+          return {{
             fillColor: COLOR_HOT,
             fillOpacity: 0.0,
             color: COLOR_LINE,
             opacity: 0.0,
             weight: 0.0
-          };
-        };
+          }};
+        }};
 
         const gridLayer = L.geoJSON(data.geojson, {{
           style: baseStyle,
