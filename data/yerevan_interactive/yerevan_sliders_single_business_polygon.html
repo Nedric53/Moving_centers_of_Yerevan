@@ -559,7 +559,7 @@ L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
         <div class="legendGrid">
           <div class="lItem" style="grid-column:1;grid-row:1;">
             <span class="swatchHot"></span>
-            <span>Hot cells (share &gt; 0.1)</span>
+            <span>Commercial activity zone</span>
           </div>
 
           <div class="lItem" style="grid-column:1;grid-row:2;">
@@ -574,12 +574,12 @@ L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
 
           <div class="lItem" style="grid-column:2;grid-row:2;">
             <span class="dotMu"></span>
-            <span>Business center (μ)</span>
+            <span>Commercial center</span>
           </div>
 
           <div class="lItem" style="grid-column:3;grid-row:1;">
             <img class="lIcon" src="assets/icon_business.png" alt="">
-            <span>Business area (polygon)</span>
+            <span>Commercial area</span>
           </div>
 
           <div class="lItem" style="grid-column:3;grid-row:2;">
@@ -670,7 +670,7 @@ L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
 
           const muInfoEl = document.getElementById("muInfo");
           if (muInfoEl) {
-            muInfoEl.textContent = `Distance from Historic to Commercial Center: ${sep.toFixed(0)}m; Business area: ${areaKm2.toFixed(0)} km²`;
+            muInfoEl.textContent = `Distance from Historic to Commercial Center: ${sep.toFixed(0)}m; Commercial area: ${areaKm2.toFixed(0)} km²`;
 }
         }
 

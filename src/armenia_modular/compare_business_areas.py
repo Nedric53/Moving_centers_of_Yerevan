@@ -218,7 +218,7 @@ HTML_TEMPLATE = r"""<!doctype html>
 <html>
 <head>
   <meta charset="utf-8"/>
-  <title>Business areas comparison</title>
+  <title>Commercial areas comparison</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     :root { --border:#e6e6e6; --text:#111; --muted:#666; --bg:#fff; --accent:#56d3e5; }
@@ -342,8 +342,7 @@ HTML_TEMPLATE = r"""<!doctype html>
 <body>
   <div class="wrap">
     <div class="desc">
-      Comparison of city business areas. Shapes are brought to the same scale and centered at the historical center (0,0).
-      Yerevan changes with the sliders and is loaded from a gzip+base64 precomputed payload.
+      Comparison of commercial zones of various cities with the commercial activity zone of Yerevan
     </div>
 
     <div class="card">
@@ -375,8 +374,8 @@ HTML_TEMPLATE = r"""<!doctype html>
 
       <div class="right">
         <div class="legendRow">
-          <div class="legendItem"><span class="swatch" style="background: rgba(0, 155, 190, 0.18);"></span>Yerevan business area</div>
-          <div class="legendItem"><span class="swatch" style="background: rgba(240, 145, 110, 0.18);"></span><span id="legendCityName">...</span> business area</div>
+          <div class="legendItem"><span class="swatch" style="background: rgba(0, 155, 190, 0.18);"></span>Yerevan commercial area</div>
+          <div class="legendItem"><span class="swatch" style="background: rgba(240, 145, 110, 0.18);"></span><span id="legendCityName">...</span> commercial area</div>
           <div class="legendItem"><span class="swatch" style="background: rgba(220, 60, 60, 0.95); border:none;"></span>historical centers of the cities</div>
         </div>
 
@@ -596,7 +595,7 @@ HTML_TEMPLATE = r"""<!doctype html>
       if (entry) {
         yKpiEl.innerHTML =
           entry.area_km2.toFixed(2) +
-          ' km<sup>2</sup> | distance from commercial center to business center: ' +
+          ' km<sup>2</sup> | distance from commercial center to historical center: ' +
           entry.sep_m.toFixed(0) +
           ' m';
       } else {

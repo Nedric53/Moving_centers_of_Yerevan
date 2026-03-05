@@ -165,7 +165,7 @@ def patch_landing_add_compare_embed_css(landing_html: str) -> str:
 def patch_landing_insert_compare_before_explain(
     landing_html: str,
     compare_href: str = "compare_business_areas.html",
-    title: str = "Business areas comparison",
+    title: str = "Commercial areas comparison",
     sub: str = "Compare Yerevan’s dynamic commercial area with other cities on a common meters scale.",
 ) -> str:
     """
@@ -1136,7 +1136,7 @@ def patch_interactive_ui_left_right_vertical_sliders(html_str: str) -> str:
     # -------------------------
     html_str = re.sub(
         r"muInfoEl\.textContent\s*=\s*`[^`]*`;\s*",
-        "muInfoEl.textContent = `Distance from Historic to Commercial Center: ${sep.toFixed(0)}m; Business area: ${areaKm2.toFixed(0)} km²`;\n",
+        "muInfoEl.textContent = `Distance from Historic to Commercial Center: ${sep.toFixed(0)}m; Commercial area: ${areaKm2.toFixed(0)} km²`;\n",
         html_str,
         count=1
     )
@@ -1202,7 +1202,7 @@ def patch_interactive_ui_left_right_vertical_sliders(html_str: str) -> str:
         <div class="legendGrid">
           <div class="lItem" style="grid-column:1;grid-row:1;">
             <span class="swatchHot"></span>
-            <span>Hot cells (share &gt; 0.1)</span>
+            <span>Commercial activity zone</span>
           </div>
 
           <div class="lItem" style="grid-column:1;grid-row:2;">
@@ -1217,12 +1217,12 @@ def patch_interactive_ui_left_right_vertical_sliders(html_str: str) -> str:
 
           <div class="lItem" style="grid-column:2;grid-row:2;">
             <span class="dotMu"></span>
-            <span>Business center (μ)</span>
+            <span>Commercial center</span>
           </div>
 
           <div class="lItem" style="grid-column:3;grid-row:1;">
             <img class="lIcon" src="assets/icon_business.png" alt="">
-            <span>Business area (polygon)</span>
+            <span>Commercial area</span>
           </div>
 
           <div class="lItem" style="grid-column:3;grid-row:2;">
@@ -1498,20 +1498,6 @@ def build_gallery_html(items, cols=3):
     return f"""<div class="imgGrid cols{int(cols)}">{''.join(cards)}</div>"""
 
 
-def build_explain_blocks(blocks):
-    out = []
-    for b in blocks:
-        h = _escape(b.get("heading", ""))
-        p = _escape(b.get("body", ""))
-        out.append(
-            f"""
-            <div class="textCard">
-              <h3>{h}</h3>
-              <p>{p}</p>
-            </div>
-            """
-        )
-    return "\n".join(out)
 
 
 # =========================
@@ -1956,16 +1942,6 @@ def build_landing_html(config: dict) -> str:
       transform: none;
     }
 
-    .explainGrid{ display:grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }
-    .textCard{
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: var(--radius2);
-      padding: 18px 18px 16px 18px;
-      box-shadow: 0 1px 0 rgba(0,0,0,.04);
-    }
-    .textCard h3{ margin: 0 0 8px 0; font-size: 16px; }
-    .textCard p{ margin:0; color: rgba(0,0,0,.72); font-size: 14px; line-height: 1.6; }
 
     footer{ border-top: 1px solid var(--line); padding: 26px 0 40px 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
 
@@ -2082,10 +2058,6 @@ def build_landing_html(config: dict) -> str:
 
   <section class="section" id="explain">
     <div class="container">
-      
-      <div class="explainGrid">
-        ${EXPLAIN_BLOCKS}
-      </div>
       ${EXTRA_EXPLAIN_HTML}
     </div>
   </section>
@@ -2537,24 +2509,6 @@ def write_full_scrolly_site(
     )
 
     # 6) Explain blocks
-    explain_blocks = [
-        dict(
-            heading="Idle scroll",
-            body="Extra invisible spacer steps before the first and after the last scenario keep the model pinned long enough for the minibar and progress to be visible."
-        ),
-        dict(
-            heading="Width",
-            body="The model section uses near-full viewport width with small margins."
-        ),
-        dict(
-            heading="Cards",
-            body="Scenario cards are fixed-width and compact so the map is large."
-        ),
-        dict(
-            heading="Menu + bar",
-            body="The top menu is fixed; the progress bar appears only when the map is pinned and sits below the menu."
-        ),
-    ]
 
     dashboard_page = "dashboard.html"
     dashboard_button_html = ""
@@ -2577,7 +2531,7 @@ def write_full_scrolly_site(
         "PAGE_TITLE": title,
         "BRAND": title,
         "HERO_TITLE": "Moving centers<br>of Yerevan",
-        "HERO_SUB": "How and why the business centers of cities are moving away from historical centers",
+        "HERO_SUB": "How and why the commercial centers of cities are moving away from historical centers",
         "CTA_PRIMARY": "Read story",
         "CTA_SECONDARY": "Learn model",
         "HERO_IMAGE": hero_image_rel,
@@ -2597,7 +2551,7 @@ def write_full_scrolly_site(
         "GALLERY2_HTML": build_gallery_html(g2, cols=2),
 
         "EXPLAIN_TITLE": "Explanation",
-        "EXPLAIN_BLOCKS": build_explain_blocks(explain_blocks),
+        "EXPLAIN_SUB": "Short blocks explaining what is happening.",
         "EXTRA_EXPLAIN_HTML": "",
 
         "FOOTER_TEXT": f"""

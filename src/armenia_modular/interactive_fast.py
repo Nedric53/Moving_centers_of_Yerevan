@@ -770,7 +770,7 @@ def write_yerevan_single_polygon_html(
             <div class="legendGrid">
               <div class="lItem" style="grid-column:1;grid-row:1;">
                 <span class="swatchHot"></span>
-                <span>Hot cells (share &gt; 0.1)</span>
+                <span>Commercial activity zone</span>
               </div>
 
               <div class="lItem" style="grid-column:1;grid-row:2;">
