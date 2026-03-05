@@ -5,84 +5,358 @@
       <title>Yerevan sliders with single business polygon (fast)</title>
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-      <style>
-        body { margin:0; font-family: Arial, sans-serif; }
-        #map { height: 86vh; width: 100%; }
-        #controls {
-          height: 14vh; padding: 10px 14px; box-sizing: border-box;
-          display: grid; grid-template-columns: 1fr; gap: 8px;
-          border-top: 1px solid #ddd;
-        }
-        .row { display:flex; gap:12px; align-items:center; }
-        .label { width: 340px; }
-        .value { font-weight: 600; width: 70px; }
-        .info { margin-left: 8px; }
-        input[type="range"] { width: 460px; }
+      
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
 
-        .legend {
-          background: rgba(255,255,255,0.94);
-          padding: 10px 12px;
-          border-radius: 12px;
-          box-shadow: 0 10px 26px rgba(0,0,0,0.10);
-          color: #111;
-          font-size: 12px;
-          font-family: Inter, Arial, sans-serif;
-          max-width: 560px;
-        }
-        .legendGrid {
-          display: grid;
-          grid-template-columns: auto auto auto;
-          grid-template-rows: auto auto;
-          column-gap: 18px;
-          row-gap: 10px;
-          align-items: center;
-        }
-        .lItem {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          line-height: 1.2;
-          white-space: nowrap;
-        }
-        .swatchHot {
-          width: 12px;
-          height: 12px;
-          border-radius: 0;
-          border: 1px solid rgba(0,0,0,0.35);
-          background: rgba(240,128,90,0.55);
-          flex: 0 0 auto;
-        }
-        .swatchGrid {
-          width: 12px;
-          height: 12px;
-          border-radius: 0;
-          border: 1px solid rgba(0,0,0,0.35);
-          background: rgba(255,255,255,0.90);
-          flex: 0 0 auto;
-        }
-        .dotMu {
-          width: 12px;
-          height: 12px;
-          border-radius: 50%;
-          border: 2px solid #111;
-          background: #f0805a;
-          flex: 0 0 auto;
-        }
-        .lIcon {
-          width: 22px;
-          height: 22px;
-          object-fit: contain;
-          display: block;
-          flex: 0 0 auto;
-        }
-      </style>
+    :root{
+      --sliderBg: #E6E6E6;
+      --sliderFill: #9EDDE5;
+      --sliderThumb: #57D4E5;
+    }
+
+    html, body { height: 100%; }
+    body { margin: 0; font-family: Inter, Arial, sans-serif; overflow: hidden; background: #fff; }
+
+    #app { height: 100%; display: flex; flex-direction: column; }
+
+    #topRow {
+      flex: 1;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: clamp(86px, 7vw, 120px) 1fr clamp(86px, 7vw, 120px);
+      gap: 12px;
+      padding: 10px 10px 8px 10px;
+      box-sizing: border-box;
+      align-items: stretch;
+    }
+
+    /* Slider columns: no container, no border, no shadow */
+    .panel {
+      position: relative;
+      z-index: 5;
+      height: 100%;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+      padding: 0;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 0;
+      align-items: center;
+    }
+
+    .panelKicker {
+      font-size: 12px;
+      letter-spacing: 0.01em;
+      opacity: 0.90;
+      font-weight: 700;
+      text-align: center;
+      margin-top: 2px;
+    }
+
+    .panelSliderWrap{
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      width: 100%;
+      padding-top: 6px;
+      box-sizing: border-box;
+    }
+
+    .sliderStack{
+      position: relative;
+      height: 100%;
+      min-height: 0;
+      display: flex;
+      align-items: stretch;
+      gap: 8px;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    .vTicks{
+      position: relative;
+      width: 14px;
+      height: 100%;
+      opacity: 0.9;
+    }
+
+    .tickDot{
+      position: absolute;
+      left: 50%;
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(0,0,0,0.14);
+      transform: translate(-50%, -50%);
+      transition: transform 120ms ease, background 120ms ease, box-shadow 120ms ease;
+    }
+
+    .tickDot.isActive{
+      background: var(--sliderThumb);
+      transform: translate(-50%, -50%) scale(1.18);
+      box-shadow: 0 0 0 3px rgba(87,212,229,0.18);
+    }
+
+    /* Vertical slider */
+    .vSlider{
+      writing-mode: bt-lr;
+      width: 26px;
+      height: 100%;
+      padding: 0;
+      margin: 0;
+      background: transparent;
+      --fillPct: 50%;
+    }
+
+    .vSlider.pretty{
+      -webkit-appearance: slider-vertical;
+      appearance: slider-vertical;
+    }
+
+    /* WebKit track with filled portion */
+    .vSlider.pretty::-webkit-slider-runnable-track{
+      width: 14px;
+      border-radius: 999px;
+      border: 0;
+      background: linear-gradient(
+        to top,
+        var(--sliderFill) 0%,
+        var(--sliderFill) var(--fillPct),
+        var(--sliderBg) var(--fillPct),
+        var(--sliderBg) 100%
+      );
+    }
+
+    .vSlider.pretty::-webkit-slider-thumb{
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      background: var(--sliderThumb);
+      border: 2px solid #fff;
+      box-shadow: none;
+      margin-top: -2px;
+    }
+
+    /* Firefox */
+    .vSlider.pretty::-moz-range-track{
+      width: 14px;
+      border-radius: 999px;
+      border: 0;
+      background: var(--sliderBg);
+    }
+
+    .vSlider.pretty::-moz-range-progress{
+      background: var(--sliderFill);
+      border-radius: 999px;
+      height: 14px;
+    }
+
+    .vSlider.pretty::-moz-range-thumb{
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      background: var(--sliderThumb);
+      border: 2px solid #fff;
+      box-shadow: none;
+    }
+
+    /* Floating word label */
+    .thumbLabel{
+      z-index: 5000;
+      position: absolute;
+      left: calc(100% + 8px);
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 11px;
+      font-weight: 900;
+      padding: 5px 9px;
+      border-radius: 999px;
+      border: 1px solid rgba(0,0,0,0.10);
+      background: rgba(255,255,255,0.92);
+      white-space: nowrap;
+      pointer-events: none;
+      box-shadow: none;
+    }
+
+    #rightPanel .thumbLabel{
+      left: auto;
+      right: calc(100% + 8px);
+    }
+
+    /* Map: remove shadow */
+    .mapPanel {
+      position: relative;
+      z-index: 1;
+      border: 1px solid rgba(0,0,0,0.12);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: none;
+      background: #f3f3f3;
+      min-height: 0;
+    }
+
+    #map { width: 100%; height: 100%; }
+
+    .leaflet-control-attribution { display: none !important; }
+    .leaflet-top, .leaflet-bottom { z-index: 1000; }
+
+    /* Legend card (top-left) */
+    .legend {
+      background: rgba(255,255,255,0.94);
+      padding: 10px 12px;
+      border-radius: 12px;
+      box-shadow: 0 10px 26px rgba(0,0,0,0.10);
+      color: #111;
+      font-size: 12px;
+      font-family: Inter, Arial, sans-serif;
+      max-width: 560px;
+    }
+    .legendGrid{
+      display: grid;
+      grid-template-columns: auto auto auto;
+      grid-template-rows: auto auto;
+      column-gap: 18px;
+      row-gap: 10px;
+      align-items: center;
+    }
+    .lItem{
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+    .swatchHot{
+      width: 12px; height: 12px;
+      border-radius: 0;
+      border: 1px solid rgba(0,0,0,0.35);
+      background: rgba(240,128,90,0.55);
+      flex: 0 0 auto;
+    }
+    .swatchGrid{
+      width: 12px; height: 12px;
+      border-radius: 0;
+      border: 1px solid rgba(0,0,0,0.35);
+      background: rgba(255,255,255,0.90);
+      flex: 0 0 auto;
+    }
+    .dotMu{
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      border: 2px solid #111;
+      background: #f0805a;
+      flex: 0 0 auto;
+    }
+    .lIcon{
+      width: 22px;
+      height: 22px;
+      object-fit: contain;
+      display: block;
+      flex: 0 0 auto;
+    }
+
+    /* Bottom bar: keep minimal */
+    #bottomBar {
+      border-top: 1px solid rgba(0,0,0,0.12);
+      padding: 10px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      background: transparent;
+      box-sizing: border-box;
+    }
+
+    .barLeft { display: flex; align-items: center; gap: 10px; }
+
+    .barBtn {
+      height: 30px;
+      padding: 0 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(0,0,0,0.18);
+      background: rgba(255,255,255,0.92);
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      font-family: Inter, Arial, sans-serif;
+    }
+
+    .barValue {
+      font-size: 13px;
+      font-weight: 800;
+      white-space: nowrap;
+      font-family: Inter, Arial, sans-serif;
+      opacity: 0.92;
+      text-align: right;
+      flex: 1;
+    }
+
+    @media (max-width: 560px) {
+      #topRow {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto minmax(240px, 1fr) auto;
+      }
+      .mapPanel { min-height: 45vh; }
+
+      .vSlider { height: 160px; }
+      .vTicks { height: 160px; }
+    }
+  </style>
+
     </head>
     <body>
-      <div id="map"></div>
-      <div id="controls">
-        <div class="row">
-          <div class="label">Transport factor (0.1..2.0)</div>
-          <div class="value" id="tVal"></div>
+      
+  <div id="app">
+    <div id="topRow">
+
+      <div class="panel" id="leftPanel">
+        <div class="panelKicker">Transport</div>
+        <div class="panelSliderWrap">
+          <div class="sliderStack" id="tStack">
+            <div class="vTicks" id="tTicks" aria-hidden="true"></div>
+            <div class="thumbLabel" id="tVal"></div>
+            <input id="tSlider" class="vSlider pretty" type="range"
+                   min="0" max="2.00" step="0.01" value="1.00"
+                   aria-label="Transport slider">
+          </div>
+        </div>
+      </div>
+
+      <div class="mapPanel" id="mapPanel">
+        <div id="map"></div>
+      </div>
+
+      <div class="panel" id="rightPanel">
+        <div class="panelKicker">Amenities</div>
+        <div class="panelSliderWrap">
+          <div class="sliderStack" id="aStack">
+            <div class="vTicks" id="aTicks" aria-hidden="true"></div>
+            <div class="thumbLabel" id="aVal"></div>
+            <input id="aSlider" class="vSlider pretty" type="range"
+                   min="0" max="2.00" step="0.01" value="1.00"
+                   aria-label="Amenities slider">
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div id="bottomBar">
+      <div class="barLeft">
+        <button id="centerBtn" class="barBtn" type="button">Center map</button>
+      </div>
+      <div class="barValue" id="muInfo"></div>
+    </div>
+  </div>
+<div class="value" id="tVal"></div>
           <input id="tSlider" type="range" min="0.10" max="2.00" step="0.01" value="1.00">
           <div class="info">Higher = faster</div>
         </div>
@@ -169,9 +443,11 @@
 
         const g = data.g;
 
-        const map = L.map("map", { preferCanvas: true }).setView([g.lat, g.lon], 11);
+        const map = L.map("map", { preferCanvas: true }).setView([g.lat, g.lon], 12.0);
 
-        L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+        
+    try { map.zoomControl.setPosition('topright'); } catch(e) {}
+L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
           maxZoom: 19,
           subdomains: "abcd",
           attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
@@ -269,68 +545,56 @@
         }
 
         // Horizontal 2 x 3 legend
-        const legend = L.control({ position: "topleft" });
-        legend.onAdd = function() {
-          const div = L.DomUtil.create("div", "legend");
+        
+    const legend = L.control({ position: "topleft" });
+    legend.onAdd = function() {
+      const div = L.DomUtil.create("div", "legend");
 
-          const cellSize = data.cell_size_m;
-          const cellTxt = (cellSize && isFinite(cellSize))
-            ? `Grid cell: about ${Math.round(cellSize)} m on a side.`
-            : "Grid cell: one model cell.";
+      const cellSize = data.cell_size_m;
+      const cellTxt = (cellSize && isFinite(cellSize))
+        ? `Grid cell: about ${Math.round(cellSize)} m on a side.`
+        : "Grid cell: one model cell.";
 
-          const histIconUrl2 = (data.assets && data.assets.historical_icon)
-            ? data.assets.historical_icon
-            : "assets/icon_historical.png";
+      div.innerHTML = `
+        <div class="legendGrid">
+          <div class="lItem" style="grid-column:1;grid-row:1;">
+            <span class="swatchHot"></span>
+            <span>Commercial activity zone</span>
+          </div>
 
-          const bizAreaIconUrl = (data.assets && data.assets.business_area_icon)
-            ? data.assets.business_area_icon
-            : "assets/icon_business.png";
+          <div class="lItem" style="grid-column:1;grid-row:2;">
+            <span class="swatchGrid"></span>
+            <span>${cellTxt}</span>
+          </div>
 
-          const adminIconUrl = (data.assets && data.assets.administrative_icon)
-            ? data.assets.administrative_icon
-            : "assets/icon_administrative.png";
+          <div class="lItem" style="grid-column:2;grid-row:1;">
+            <img class="lIcon" src="assets/icon_historical.png" alt="">
+            <span>Historical center</span>
+          </div>
 
-          div.innerHTML = `
-            <div class="legendGrid">
-              <div class="lItem" style="grid-column:1;grid-row:1;">
-                <span class="swatchHot"></span>
-                <span>Commercial activity zone</span>
-              </div>
+          <div class="lItem" style="grid-column:2;grid-row:2;">
+            <span class="dotMu"></span>
+            <span>Commercial center</span>
+          </div>
 
-              <div class="lItem" style="grid-column:1;grid-row:2;">
-                <span class="swatchGrid"></span>
-                <span>${cellTxt}</span>
-              </div>
+          <div class="lItem" style="grid-column:3;grid-row:1;">
+            <img class="lIcon" src="assets/icon_business.png" alt="">
+            <span>Commercial area</span>
+          </div>
 
-              <div class="lItem" style="grid-column:2;grid-row:1;">
-                <img class="lIcon" src="${histIconUrl2}" alt="">
-                <span>Historical center</span>
-              </div>
+          <div class="lItem" style="grid-column:3;grid-row:2;">
+            <img class="lIcon" src="assets/icon_administrative.png" alt="">
+            <span>Administrative borders</span>
+          </div>
+        </div>
+      `;
 
-              <div class="lItem" style="grid-column:2;grid-row:2;">
-                <span class="dotMu"></span>
-                <span>Business center (μ)</span>
-              </div>
-
-              <div class="lItem" style="grid-column:3;grid-row:1;">
-                <img class="lIcon" src="${bizAreaIconUrl}" alt="">
-                <span>Business area (polygon)</span>
-              </div>
-
-              <div class="lItem" style="grid-column:3;grid-row:2;">
-                <img class="lIcon" src="${adminIconUrl}" alt="">
-                <span>Administrative borders</span>
-              </div>
-            </div>
-          `;
-
-          L.DomEvent.disableClickPropagation(div);
-          L.DomEvent.disableScrollPropagation(div);
-          return div;
-        };
-        legend.addTo(map);
-
-        // Business polygon
+      L.DomEvent.disableClickPropagation(div);
+      L.DomEvent.disableScrollPropagation(div);
+      return div;
+    };
+    legend.addTo(map);
+// Business polygon
         const bizLayer = L.geoJSON(null, {
           interactive: false,
           style: () => ({
@@ -406,9 +670,8 @@
 
           const muInfoEl = document.getElementById("muInfo");
           if (muInfoEl) {
-            muInfoEl.textContent =
-              `μ: (${(mu && mu.lon) ? mu.lon.toFixed(5) : "?"}, ${(mu && mu.lat) ? mu.lat.toFixed(5) : "?"}) | |μ-g|: ${sep.toFixed(0)} m | business area: ${areaKm2.toFixed(2)} km²`;
-          }
+            muInfoEl.textContent = `Distance from Historic to Commercial Center: ${sep.toFixed(0)}m; Commercial area: ${areaKm2.toFixed(0)} km²`;
+}
         }
 
         let _raf = 0;
@@ -440,7 +703,207 @@
         document.getElementById("aSlider").addEventListener("input", scheduleUpdate);
 
         update();
-      </script>
+      
+    // ---- injected: Center map binding ----
+    (function(){
+      const btn = document.getElementById("centerBtn");
+      if (!btn) return;
+      btn.addEventListener("click", () => {
+        try {
+          const z = (map && map.getZoom) ? map.getZoom() : 12;
+          map.setView([g.lat, g.lon], z, { animate: true });
+        } catch(e) {}
+      });
+    })();
+    // ---- end injected block ----
+
+
+    // ---- injected: symmetric word sliders (0..2, baseline=1) ----
+    const T_MIN = 0.0, T_MAX = 2.0;
+    const A_MIN = 0.0, A_MAX = 2.0;
+
+    const TRANSPORT_STOPS = [0.50, 0.75, 1.00, 1.25, 1.50];
+    const TRANSPORT_WORDS = ["Very slow", "Slower", "Baseline", "Faster", "Very fast"];
+
+    const AMENITY_STOPS = [0.50, 0.75, 1.00, 1.25, 1.50];
+    const AMENITY_WORDS = ["Very weak", "Weaker", "Baseline", "Stronger", "Very strong"];
+
+    function clamp(x, lo, hi){ return Math.max(lo, Math.min(hi, x)); }
+
+    function valueToTopPct(v, vmin, vmax) {
+      const p = (clamp(v, vmin, vmax) - vmin) / (vmax - vmin);
+      return (100 * (1 - p));
+    }
+
+    function valueToFillPct(v, vmin, vmax) {
+      const p = (clamp(v, vmin, vmax) - vmin) / (vmax - vmin);
+      return (100 * p);
+    }
+
+    function setSliderFill(sliderEl, vmin, vmax) {
+      if (!sliderEl) return;
+      const v = parseFloat(sliderEl.value);
+      if (!isFinite(v)) return;
+      const pct = valueToFillPct(v, vmin, vmax);
+      sliderEl.style.setProperty("--fillPct", pct.toFixed(2) + "%");
+    }
+
+    function nearestStop(v, stops) {
+      let bestI = 0;
+      let bestD = Infinity;
+      for (let i = 0; i < stops.length; i++) {
+        const d = Math.abs(v - stops[i]);
+        if (d < bestD) { bestD = d; bestI = i; }
+      }
+      return { val: stops[bestI], idx: bestI };
+    }
+
+    function buildTicks(elId, stops, vmin, vmax) {
+      const el = document.getElementById(elId);
+      if (!el) return [];
+      el.innerHTML = "";
+      const dots = [];
+      for (let i = 0; i < stops.length; i++) {
+        const d = document.createElement("div");
+        d.className = "tickDot";
+        d.style.top = valueToTopPct(stops[i], vmin, vmax).toFixed(2) + "%";
+        el.appendChild(d);
+        dots.push(d);
+      }
+      return dots;
+    }
+
+    const _tDots = buildTicks("tTicks", TRANSPORT_STOPS, T_MIN, T_MAX);
+    const _aDots = buildTicks("aTicks", AMENITY_STOPS, A_MIN, A_MAX);
+
+    function setActiveDot(dots, idx){
+      for (let i = 0; i < dots.length; i++) dots[i].classList.toggle("isActive", i === idx);
+    }
+
+    function positionLabel(labelEl, v, vmin, vmax) {
+      if (!labelEl) return;
+      labelEl.style.top = valueToTopPct(v, vmin, vmax).toFixed(2) + "%";
+    }
+
+    function snapSlider(sliderEl, stops) {
+      if (!sliderEl) return { idx: 0, val: NaN };
+      const v = parseFloat(sliderEl.value);
+      const ns = nearestStop(v, stops);
+      sliderEl.value = String(ns.val.toFixed(2));
+      return ns;
+    }
+
+    function updateWordsAndTicks() {
+      const tSlider = document.getElementById("tSlider");
+      const aSlider = document.getElementById("aSlider");
+      const tLabel = document.getElementById("tVal");
+      const aLabel = document.getElementById("aVal");
+
+      if (!tSlider || !aSlider) return;
+
+      const tV = parseFloat(tSlider.value);
+      const aV = parseFloat(aSlider.value);
+
+      const tN = nearestStop(tV, TRANSPORT_STOPS);
+      const aN = nearestStop(aV, AMENITY_STOPS);
+
+      if (tLabel) tLabel.textContent = TRANSPORT_WORDS[tN.idx];
+      if (aLabel) aLabel.textContent = AMENITY_WORDS[aN.idx];
+
+      positionLabel(tLabel, tV, T_MIN, T_MAX);
+      positionLabel(aLabel, aV, A_MIN, A_MAX);
+
+      setActiveDot(_tDots, tN.idx);
+      setActiveDot(_aDots, aN.idx);
+
+      setSliderFill(tSlider, T_MIN, T_MAX);
+      setSliderFill(aSlider, A_MIN, A_MAX);
+    }
+
+    if (typeof update === "function" && !update.__wordsWrapped) {
+      const _origUpdate = update;
+      update = function() {
+        const tSlider = document.getElementById("tSlider");
+        const aSlider = document.getElementById("aSlider");
+        snapSlider(tSlider, TRANSPORT_STOPS);
+        snapSlider(aSlider, AMENITY_STOPS);
+        const r = _origUpdate();
+        updateWordsAndTicks();
+        return r;
+      };
+      update.__wordsWrapped = true;
+    }
+
+    const _t = document.getElementById("tSlider");
+    const _a = document.getElementById("aSlider");
+    if (_t) _t.addEventListener("input", () => { updateWordsAndTicks(); });
+    if (_a) _a.addEventListener("input", () => { updateWordsAndTicks(); });
+
+    setTimeout(updateWordsAndTicks, 0);
+    // ---- end injected block ----
+
+
+    // ---- scrollytelling control hooks (injected) ----
+    function _dispatchInput(el) {
+      try {
+        el.dispatchEvent(new Event("input", { bubbles: true }));
+        el.dispatchEvent(new Event("change", { bubbles: true }));
+      } catch (e) {}
+    }
+
+    function setSliders(tVal, aVal) {
+      const tSlider = document.getElementById("tSlider");
+      const aSlider = document.getElementById("aSlider");
+      if (!tSlider || !aSlider) return;
+
+      if (typeof tVal === "number" && isFinite(tVal)) tSlider.value = String(tVal);
+      if (typeof aVal === "number" && isFinite(aVal)) aSlider.value = String(aVal);
+
+      _dispatchInput(tSlider);
+      _dispatchInput(aSlider);
+
+      try {
+        if (typeof update === "function") update();
+      } catch (e) {}
+    }
+
+    function setMapView(lat, lon, zoom) {
+      if (typeof lat === "number" && typeof lon === "number" && typeof zoom === "number") {
+        try {
+          map.setView([lat, lon], zoom, { animate: true });
+        } catch (e) {}
+      }
+    }
+
+    let _invT = 0;
+    function invalidateMapSize() {
+      try {
+        clearTimeout(_invT);
+        _invT = setTimeout(() => map.invalidateSize(), 0);
+      } catch (e) {}
+    }
+
+    function postReady() {
+      try {
+        window.parent && window.parent.postMessage({ type: "vizReady" }, "*");
+      } catch (e) {}
+    }
+
+    window.addEventListener("message", (event) => {
+      const msg = event.data;
+      if (!msg || typeof msg !== "object") return;
+
+      if (msg.type === "setSliders") setSliders(msg.t, msg.a);
+      if (msg.type === "setView") setMapView(msg.lat, msg.lon, msg.zoom);
+      if (msg.type === "invalidateSize") invalidateMapSize();
+
+      if (msg.type === "ping") postReady();
+    });
+
+    postReady();
+    // ---- end injected block ----
+    
+</script>
     </body>
     </html>
     
