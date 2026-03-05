@@ -86,49 +86,6 @@ def write_interactive_html(out_path="yerevan_business_dashboard.html"):
       gap: 10px;
       width: 100%;
     }
-
-    /* thicker, recolored sliders */
-    input[type="range"]{
-      -webkit-appearance: none;
-      appearance: none;
-      width: 100%;
-      height: 10px;
-      background: var(--c-cyan);
-      border-radius: 999px;
-      outline: none;
-    }
-    input[type="range"]::-webkit-slider-runnable-track{
-      height: 10px;
-      background: var(--c-cyan);
-      border-radius: 999px;
-    }
-    input[type="range"]::-webkit-slider-thumb{
-      -webkit-appearance: none;
-      appearance: none;
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
-      background: var(--c-cyan);
-      border: 3px solid #fff;
-      box-shadow: 0 0 0 2px rgba(0,0,0,0.12);
-      margin-top: -6px;
-      cursor: pointer;
-    }
-    input[type="range"]::-moz-range-track{
-      height: 10px;
-      background: var(--c-cyan);
-      border-radius: 999px;
-    }
-    input[type="range"]::-moz-range-thumb{
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
-      background: var(--c-cyan);
-      border: 3px solid #fff;
-      box-shadow: 0 0 0 2px rgba(0,0,0,0.12);
-      cursor: pointer;
-    }
-
     .sliderPack input[type="range"]{
       flex: 1;
       min-width: 0;
@@ -138,6 +95,54 @@ def write_interactive_html(out_path="yerevan_business_dashboard.html"):
       text-align: right;
       font-size: 12px;
       color: #222;
+    }
+
+    /* THINNER sliders, and only the "filled" part is cyan (handled via JS gradient) */
+    input[type="range"]{
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 999px;
+      outline: none;
+      background: var(--c-light); /* default (JS will overwrite with gradient) */
+    }
+    input[type="range"]::-webkit-slider-runnable-track{
+      height: 6px;
+      border-radius: 999px;
+      background: transparent; /* let input background show through */
+    }
+    input[type="range"]::-webkit-slider-thumb{
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--c-cyan);
+      border: 3px solid #fff;
+      box-shadow: 0 0 0 2px rgba(0,0,0,0.12);
+      margin-top: -5px; /* centers on 6px track */
+      cursor: pointer;
+    }
+
+    input[type="range"]::-moz-range-track{
+      height: 6px;
+      border-radius: 999px;
+      background: var(--c-light);
+    }
+    input[type="range"]::-moz-range-progress{
+      height: 6px;
+      border-radius: 999px;
+      background: var(--c-cyan);
+    }
+    input[type="range"]::-moz-range-thumb{
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--c-cyan);
+      border: 3px solid #fff;
+      box-shadow: 0 0 0 2px rgba(0,0,0,0.12);
+      cursor: pointer;
     }
 
     .kvs { font-size: 12px; line-height: 1.25; }
@@ -295,6 +300,21 @@ def write_interactive_html(out_path="yerevan_business_dashboard.html"):
     const el = document.getElementById(id);
     const h = el ? el.clientHeight : 0;
     return (h && h > 50) ? h : fallback;
+  }
+
+  // Fill slider track only up to the thumb (Chrome/Edge/Safari)
+  function setSliderFill(el){
+    if (!el) return;
+    const min = parseFloat(el.min);
+    const max = parseFloat(el.max);
+    const val = parseFloat(el.value);
+    if (!isFinite(min) || !isFinite(max) || !isFinite(val) || max <= min) return;
+    const pct = 100 * (val - min) / (max - min);
+    el.style.background = `linear-gradient(to right, ${C.cyan} 0%, ${C.cyan} ${pct}%, ${C.light} ${pct}%, ${C.light} 100%)`;
+  }
+
+  function applySliderFills(){
+    ["market","amenities","history","transport"].forEach((id) => setSliderFill(document.getElementById(id)));
   }
 
   // market = N, amenities = e, history = g, transport = t
@@ -466,13 +486,11 @@ def write_interactive_html(out_path="yerevan_business_dashboard.html"):
     const qd = clip(q, -1, 1);
     const pd = clip(p, -1, 1);
 
-    // extra separation so "start/end" never overlap the historical label
     const histYShift = -54;
     const edgeYShift = -18;
 
-    // if an edge is very close to the historical center, push it sideways a bit
-    const close = (sol.ok && isFinite(p) && isFinite(history)) ? Math.abs(p - history) : 999;
-    const endXShift = (close < 0.12) ? (p >= history ? 26 : -26) : 10;
+    const closeP = (sol.ok && isFinite(p) && isFinite(history)) ? Math.abs(p - history) : 999;
+    const endXShift = (closeP < 0.12) ? (p >= history ? 26 : -26) : 10;
 
     const closeQ = (sol.ok && isFinite(q) && isFinite(history)) ? Math.abs(q - history) : 999;
     const startXShift = (closeQ < 0.12) ? (q >= history ? 26 : -26) : -10;
@@ -501,26 +519,17 @@ def write_interactive_html(out_path="yerevan_business_dashboard.html"):
     ];
 
     const annotations = sol.ok ? [
-      {
-        x: mu, y: 0, text: "commercial center",
-        showarrow: false, yshift: 18, xshift: 0,
-        font: { size: 14, color: C.ink }
-      },
-      {
-        x: history, y: 0, text: "historical center",
-        showarrow: false, yshift: histYShift, xshift: 0,
-        font: { size: 14, color: C.ink }
-      },
-      {
-        x: q, y: 0, text: "start",
-        showarrow: false, yshift: edgeYShift, xshift: startXShift,
-        font: { size: 14, color: C.ink }
-      },
-      {
-        x: p, y: 0, text: "end",
-        showarrow: false, yshift: edgeYShift, xshift: endXShift,
-        font: { size: 14, color: C.ink }
-      }
+      { x: mu, y: 0, text: "commercial center", showarrow: false, yshift: 18, xshift: 0,
+        font: { size: 14, color: C.ink } },
+
+      { x: history, y: 0, text: "historical center", showarrow: false, yshift: histYShift, xshift: 0,
+        font: { size: 14, color: C.ink } },
+
+      { x: q, y: 0, text: "start", showarrow: false, yshift: edgeYShift, xshift: startXShift,
+        font: { size: 14, color: C.ink } },
+
+      { x: p, y: 0, text: "end", showarrow: false, yshift: edgeYShift, xshift: endXShift,
+        font: { size: 14, color: C.ink } }
     ] : [];
 
     const layout = {
@@ -703,6 +712,7 @@ def write_interactive_html(out_path="yerevan_business_dashboard.html"):
 
   function wireUp() {
     syncLabelsFromState();
+    applySliderFills();
     updateAll();
 
     ["market","amenities","history","transport"].forEach((id) => {
@@ -710,6 +720,7 @@ def write_interactive_html(out_path="yerevan_business_dashboard.html"):
       el.addEventListener("input", () => {
         state[id] = readSlider(id);
         syncLabelsFromState();
+        setSliderFill(el);
         updateAll();
       });
     });
