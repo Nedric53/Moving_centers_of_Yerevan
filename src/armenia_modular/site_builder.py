@@ -1284,8 +1284,7 @@ def patch_interactive_ui_left_right_vertical_sliders(html_str: str) -> str:
     const A_MIN = 0.0, A_MAX = 2.0;
 
     const TRANSPORT_STOPS = [0.50, 0.75, 1.00, 1.25, 1.50];
-    const TRANSPORT_WORDS = ["Very slow", "Slower", "Baseline", "Faster", "Very fast"];
-
+    TRANSPORT_WORDS = ["Very fast", "Faster", "Baseline", "Slower", "Very slow"]
     const AMENITY_STOPS = [0.50, 0.75, 1.00, 1.25, 1.50];
     const AMENITY_WORDS = ["Very weak", "Weaker", "Baseline", "Stronger", "Very strong"];
 
@@ -2622,15 +2621,15 @@ def write_full_scrolly_site(
             t=1.00, a=1.00,
         ),
         dict(
-            title="Faster transport",
-            heading="Faster transport",
-            body="Higher transport speed lowers time costs.",
-            t=1.25, a=1.00,
-        ),
-        dict(
             title="Slower transport",
             heading="Slower transport",
             body="Lower transport speed raises time costs.",
+            t=1.25, a=1.00,
+        ),
+        dict(
+            title="Faster transport",
+            heading="Faster transport",
+            body="Higher transport speed lowers time costs.",
             t=0.75, a=1.00,
         ),
         dict(

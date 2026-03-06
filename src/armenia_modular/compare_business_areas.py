@@ -357,7 +357,7 @@ HTML_TEMPLATE = r"""<!doctype html>
           <div class="sliderRow">
             <input id="tSlider" type="range" min="0.10" max="2.00" step="0.01" value="1.00">
           </div>
-          <div class="sliderEnds"><span>smaller</span><span>faster</span></div>
+          <div class="sliderEnds"><span>slower</span><span>faster</span></div>
 
           <div class="sliderName" style="margin-top:18px;">Historic amenity strength</div>
           <div class="sliderRow">
