@@ -996,10 +996,16 @@ def patch_interactive_ui_left_right_vertical_sliders(html_str: str) -> str:
         <div class="panelSliderWrap">
           <div class="sliderStack" id="tStack">
             <div class="vTicks" id="tTicks" aria-hidden="true"></div>
-            <div class="thumbLabel" id="tVal"></div>
-            <input id="tSlider" class="vSlider pretty" type="range"
-                   min="0" max="2.00" step="0.01" value="1.00"
-                   aria-label="Transport slider">
+            <div class="vRailWrap">
+              <div class="thumbLabel" id="tVal"></div>
+              <div class="vSliderVisual" aria-hidden="true">
+                <div class="vSliderTrack"></div>
+                <div class="vSliderThumb"></div>
+              </div>
+              <input id="tSlider" class="vSliderInput" type="range"
+                     min="0" max="2.00" step="0.01" value="1.00"
+                     aria-label="Transport slider">
+            </div>
           </div>
         </div>
       </div>
@@ -1013,10 +1019,16 @@ def patch_interactive_ui_left_right_vertical_sliders(html_str: str) -> str:
         <div class="panelSliderWrap">
           <div class="sliderStack" id="aStack">
             <div class="vTicks" id="aTicks" aria-hidden="true"></div>
-            <div class="thumbLabel" id="aVal"></div>
-            <input id="aSlider" class="vSlider pretty" type="range"
-                   min="0" max="2.00" step="0.01" value="1.00"
-                   aria-label="Amenities slider">
+            <div class="vRailWrap">
+              <div class="thumbLabel" id="aVal"></div>
+              <div class="vSliderVisual" aria-hidden="true">
+                <div class="vSliderTrack"></div>
+                <div class="vSliderThumb"></div>
+              </div>
+              <input id="aSlider" class="vSliderInput" type="range"
+                     min="0" max="2.00" step="0.01" value="1.00"
+                     aria-label="Amenities slider">
+            </div>
           </div>
         </div>
       </div>
@@ -1073,6 +1085,7 @@ def patch_interactive_ui_left_right_vertical_sliders(html_str: str) -> str:
       padding: 10px 10px 8px 10px;
       box-sizing: border-box;
       align-items: stretch;
+      overflow: hidden;
     }
 
     /* Slider columns: no container, no border, no shadow */
@@ -1092,6 +1105,8 @@ def patch_interactive_ui_left_right_vertical_sliders(html_str: str) -> str:
       gap: 6px;
       min-width: 0;
       align-items: center;
+      min-height: 0;
+      overflow: visible;
     }
     #leftPanel { grid-area: left; }
     #mapPanel { grid-area: map; }
@@ -1110,22 +1125,25 @@ def patch_interactive_ui_left_right_vertical_sliders(html_str: str) -> str:
       flex: 1;
       min-height: 0;
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       justify-content: center;
       width: 100%;
-      padding-top: 6px;
+      padding: 8px 0 12px 0;
       box-sizing: border-box;
+      overflow: visible;
     }
 
     .sliderStack{
       position: relative;
-      height: 100%;
+      height: calc(100% - 10px);
       min-height: 0;
-      display: flex;
+      display: grid;
+      grid-template-columns: 14px 30px;
       align-items: stretch;
       gap: 8px;
       padding: 0;
       box-sizing: border-box;
+      overflow: visible;
     }
 
     .vTicks{
@@ -1152,61 +1170,67 @@ def patch_interactive_ui_left_right_vertical_sliders(html_str: str) -> str:
       box-shadow: 0 0 0 2px rgba(86,211,229,0.18);
     }
 
-    /* Vertical slider */
-    .vSlider{
-      writing-mode: bt-lr;
+    .vRailWrap{
+      position: relative;
+      width: 30px;
+      height: 100%;
+      min-height: 0;
+      display: flex;
+      align-items: stretch;
+      justify-content: center;
+      --fillPct: 50%;
+      overflow: visible;
+    }
+
+    .vSliderVisual{
+      position: relative;
       width: 18px;
       height: 100%;
-      padding: 0;
-      margin: 0;
-      background: transparent;
-      --fillPct: 50%;
+      pointer-events: none;
     }
 
-    .vSlider.pretty{
+    .vSliderTrack{
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 4px;
+      border-radius: 999px;
+      background: var(--sliderAccent);
+    }
+
+    .vSliderThumb{
+      position: absolute;
+      left: 50%;
+      bottom: calc(var(--fillPct, 50%) - 7px);
+      transform: translateX(-50%);
+      width: 14px;
+      height: 14px;
+      border-radius: 999px;
+      background: var(--sliderAccent);
+      box-shadow: none;
+    }
+
+    .vSliderInput{
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      opacity: 0;
+      cursor: pointer;
+      writing-mode: vertical-lr;
+      direction: rtl;
       -webkit-appearance: slider-vertical;
       appearance: slider-vertical;
+      background: transparent;
+      accent-color: transparent;
     }
 
-    /* WebKit track with filled portion */
-    .vSlider.pretty::-webkit-slider-runnable-track{
-      width: 4px;
-      border-radius: 999px;
-      border: 0;
-      background: var(--sliderAccent);
-    }
-
-    .vSlider.pretty::-webkit-slider-thumb{
-      -webkit-appearance: none;
-      width: 14px;
-      height: 14px;
-      border-radius: 999px;
-      background: var(--sliderAccent);
-      border: 0;
-      box-shadow: none;
-      margin-top: -5px;
-    }
-
-    /* Firefox */
-    .vSlider.pretty::-moz-range-track{
-      width: 4px;
-      border-radius: 999px;
-      border: 0;
-      background: var(--sliderAccent);
-    }
-
-    .vSlider.pretty::-moz-range-progress{
-      background: var(--sliderAccent);
-      border-radius: 999px;
-      height: 4px;
-    }
-
-    .vSlider.pretty::-moz-range-thumb{
-      width: 14px;
-      height: 14px;
-      border-radius: 999px;
-      background: var(--sliderAccent);
-      border: 0;
+    .vSliderInput:focus,
+    .vSliderInput:focus-visible{
+      outline: none;
       box-shadow: none;
     }
 
@@ -1385,9 +1409,10 @@ def patch_interactive_ui_left_right_vertical_sliders(html_str: str) -> str:
         font-size: 11px;
       }
       .panelSliderWrap{
-        padding-top: 4px;
+        padding: 6px 0 10px 0;
       }
       .sliderStack {
+        grid-template-columns: 10px 24px;
         gap: 5px;
       }
       .vTicks{
@@ -1397,18 +1422,11 @@ def patch_interactive_ui_left_right_vertical_sliders(html_str: str) -> str:
         width: 5px;
         height: 5px;
       }
-      .vSlider{
+      .vRailWrap{
+        width: 24px;
+      }
+      .vSliderVisual{
         width: 16px;
-      }
-      .vSlider.pretty::-webkit-slider-runnable-track,
-      .vSlider.pretty::-moz-range-track,
-      .vSlider.pretty::-moz-range-progress{
-        width: 4px;
-      }
-      .vSlider.pretty::-webkit-slider-thumb,
-      .vSlider.pretty::-moz-range-thumb{
-        width: 14px;
-        height: 14px;
       }
       .thumbLabel{
         display: none;
@@ -1485,12 +1503,16 @@ def patch_interactive_ui_left_right_vertical_sliders(html_str: str) -> str:
         font-size: 9px;
       }
       .sliderStack{
+        grid-template-columns: 8px 22px;
         gap: 4px;
       }
       .vTicks{
         width: 8px;
       }
-      .vSlider{
+      .vRailWrap{
+        width: 22px;
+      }
+      .vSliderVisual{
         width: 14px;
       }
       .legend{
@@ -1723,8 +1745,10 @@ def patch_interactive_ui_left_right_vertical_sliders(html_str: str) -> str:
       if (!sliderEl) return;
       const v = parseFloat(sliderEl.value);
       if (!isFinite(v)) return;
-      const pct = valueToFillPct(v, vmin, vmax);
-      sliderEl.style.setProperty("--fillPct", pct.toFixed(2) + "%");
+      const pct = valueToFillPct(v, vmin, vmax).toFixed(2) + "%";
+      sliderEl.style.setProperty("--fillPct", pct);
+      const railWrap = sliderEl.closest(".vRailWrap");
+      if (railWrap) railWrap.style.setProperty("--fillPct", pct);
     }
 
     function nearestStop(v, stops) {
