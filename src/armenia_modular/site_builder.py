@@ -690,7 +690,7 @@ body.modelPinned #model .stickyViz{
   }
 
   #model .step{
-    min-height: 52vh !important;
+    min-height: 62vh !important;
     padding: 0 !important;
     display: block !important;
   }
@@ -772,7 +772,7 @@ body.modelPinned #model .stickyViz{
   }
 
   #model .step{
-    min-height: 40vh !important;
+    min-height: 50vh !important;
   }
 }
 
@@ -2343,9 +2343,9 @@ def build_landing_html(config: dict) -> str:
     }
     .progress > div{ height: 100%; width: 0%; background: #111; }
 
-    .step{ padding: var(--stepPad, 24vh) 0; }
-    .step:first-child:not(.stepIdle){ padding-top: 14vh; }
-    .step:last-child:not(.stepIdle){ padding-bottom: 14vh; }
+    .step{ padding: var(--stepPad, 34vh) 0; }
+    .step:first-child:not(.stepIdle){ padding-top: 18vh; }
+    .step:last-child:not(.stepIdle){ padding-bottom: 18vh; }
 
     .stepCard{
       background: #fff;
@@ -2467,9 +2467,9 @@ def build_landing_html(config: dict) -> str:
       }
       .imgGrid.cols3{ grid-template-columns: 1fr; }
       .imgGrid.cols2{ grid-template-columns: 1fr; }
-      .step{ padding: var(--stepPad, 8vh) 0; }
+      .step{ padding: var(--stepPad, 14vh) 0; }
       .step:first-child:not(.stepIdle){ padding-top: 0; }
-      .step:last-child:not(.stepIdle){ padding-bottom: 4vh; }
+      .step:last-child:not(.stepIdle){ padding-bottom: 8vh; }
       .stepIdle{ display: none; }
     }
 
@@ -2867,7 +2867,7 @@ def build_landing_html(config: dict) -> str:
 
       scroller = scrollama();
       scroller
-        .setup({ step: scrollerSteps, offset: compactMq.matches ? 0.74 : stackedMq.matches ? 0.68 : 0.62 })
+        .setup({ step: scrollerSteps, offset: compactMq.matches ? 0.64 : stackedMq.matches ? 0.60 : 0.56 })
         .onStepEnter((resp) => {
           schedulePinnedCheck();
           activateStep(resp.element, steps.indexOf(resp.element));
