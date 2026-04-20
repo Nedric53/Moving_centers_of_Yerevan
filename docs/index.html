@@ -1,0 +1,1649 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Yerevan scrolly</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --accent: #F0805B;
+      --text: #303030;
+      --bg: #ffffff;
+
+      --panel: #ffffff;
+      --muted: rgba(48,48,48,.70);
+      --line: rgba(48,48,48,.14);
+      --shadow: 0 14px 40px rgba(0,0,0,.08);
+      --radius2: 24px;
+      --max: 1160px;
+      --vizH: 680px;
+    }
+
+    html{ scroll-behavior: smooth; }
+    body{
+      margin:0;
+      font-family: Inter, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+      -webkit-text-size-adjust: 100%;
+    }
+    a{ color: inherit; text-decoration: none; }
+    .container{ max-width: var(--max); margin: 0 auto; padding: 0 22px; }
+
+    .nav{
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(255,255,255,.86);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--line);
+    }
+    .navInner{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding: 14px 0;
+      gap: 16px;
+      min-width: 0;
+    }
+    .brand{
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      white-space: nowrap;
+    }
+
+    /* Keep links on one line; allow horizontal scroll if needed */
+    .navLinks{
+      display:flex;
+      gap: 14px;
+      flex-wrap: nowrap;
+      justify-content: flex-end;
+      align-items: center;
+      white-space: nowrap;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      max-width: 100%;
+    }
+    .navLinks a{
+      font-size: 13px;
+      color: var(--muted);
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      white-space: nowrap;
+      flex: 0 0 auto;
+    }
+    .navLinks a:hover{
+      color: var(--text);
+      border-color: var(--line);
+      background: rgba(255,255,255,.7);
+    }
+
+    /* HERO */
+    .hero{
+      position: relative;
+      padding: 84px 0 54px 0;
+      overflow: hidden;
+      border-bottom: 1px solid var(--line);
+      background: #fff;
+    }
+    .hero .container{ position: relative; }
+
+    .heroGrid{ position: relative; min-height: 460px; }
+
+    .heroText{
+      position: relative;
+      z-index: 2;
+      max-width: 920px;
+      padding-right: 20px;
+    }
+
+    h1{
+      font-size: clamp(44px, 5.2vw, 76px);
+      line-height: 1.02;
+      letter-spacing: -0.04em;
+      margin: 0 0 18px 0;
+      font-weight: 900;
+      color: var(--accent);
+      max-width: 22ch;
+    }
+
+    .sub{
+      font-size: 20px;
+      color: var(--text);
+      line-height: 1.55;
+      max-width: 60ch;
+      margin: 0 0 26px 0;
+      opacity: 0.92;
+    }
+
+    .ctaRow{ display:flex; gap: 12px; flex-wrap: wrap; align-items:center; }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      height: 44px;
+      padding: 0 18px;
+      border-radius: 999px;
+      border: 1px solid var(--accent);
+      background: transparent;
+      font-weight: 800;
+      font-size: 14px;
+      color: var(--accent);
+      box-sizing: border-box;
+    }
+
+    .btnPrimary{
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    .heroArt{
+      position: absolute;
+      top: 50%;
+      right: -140px;
+      transform: translateY(-50%);
+      z-index: 1;
+      width: min(1120px, 78vw);
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      pointer-events: none;
+    }
+
+    .heroArt img{
+      width: 100%;
+      height: auto;
+      display:block;
+      opacity: 0.98;
+      -webkit-mask-image: linear-gradient(to right,
+        transparent 0%,
+        rgba(0,0,0,.20) 16%,
+        rgba(0,0,0,1) 40%,
+        rgba(0,0,0,1) 100%);
+      mask-image: linear-gradient(to right,
+        transparent 0%,
+        rgba(0,0,0,.20) 16%,
+        rgba(0,0,0,1) 40%,
+        rgba(0,0,0,1) 100%);
+    }
+
+    .section{ padding: 46px 0; }
+
+    .sectionTitle{
+      display:flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .sectionTitle h2{ margin:0; font-size: 22px; letter-spacing: -0.02em; }
+    .sectionTitle p{ margin:0; color: var(--muted); font-size: 13px; max-width: 58ch; line-height: 1.5; }
+
+    .imgGrid{ display:grid; gap: 14px; }
+    .imgGrid.cols3{ grid-template-columns: repeat(3, 1fr); }
+    .imgGrid.cols2{ grid-template-columns: repeat(2, 1fr); }
+
+    .imgCard{
+      margin: 0;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius2);
+      overflow:hidden;
+      box-shadow: none;
+    }
+    .imgCard img{ width: 100%; height: 280px; object-fit: cover; display:block; }
+    .imgCard figcaption{ padding: 12px 14px; font-size: 13px; color: var(--muted); line-height: 1.4; }
+
+    .modelWrap{
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      background: #fff;
+    }
+    .modelHeader{ padding: 46px 0 14px 0; }
+
+    .modelGrid{
+      display:grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 18px;
+      padding-bottom: 48px;
+    }
+    .stepsCol{ padding-right: 10px; }
+
+    .stickyViz{
+      position: sticky;
+      top: 74px;
+      height: var(--vizH);
+      border: 1px solid var(--line);
+      border-radius: var(--radius2);
+      overflow:hidden;
+      background: #f3f3f3;
+      box-shadow: var(--shadow);
+    }
+    .stickyViz iframe{ width: 100%; height: 100%; border: 0; display:block; background: #fff; }
+
+    .modelMiniBar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 14px;
+      padding: 10px 0 16px 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .progress{
+      height: 6px;
+      flex: 1;
+      background: rgba(0,0,0,.08);
+      border-radius: 999px;
+      overflow:hidden;
+    }
+    .progress > div{ height: 100%; width: 0%; background: #111; }
+
+    .step{ padding: var(--stepPad, 24vh) 0; }
+    .step:first-child:not(.stepIdle){ padding-top: 14vh; }
+    .step:last-child:not(.stepIdle){ padding-bottom: 14vh; }
+
+    .stepCard{
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius2);
+      padding: 16px 16px 14px 16px;
+      box-shadow: none;
+      transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+      cursor: pointer;
+    }
+    .step.is-active .stepCard{
+      border-color: rgba(0,0,0,.55);
+      box-shadow: none;
+      transform: translateY(-1px);
+    }
+    .stepKicker{ font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+    .stepCard h3{ margin: 0 0 8px 0; font-size: 18px; letter-spacing: -0.02em; }
+    .stepBody{ margin: 0 0 10px 0; color: rgba(0,0,0,.72); font-size: 14px; line-height: 1.55; }
+    .stepHint{ margin: 0 0 10px 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+
+    .chipRow{ display:flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+    .chip{
+      display:inline-flex;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(250,250,250,.9);
+      font-size: 12px;
+      color: rgba(0,0,0,.72);
+    }
+
+    .stepIdle .stepCard{
+      opacity: 0;
+      pointer-events: none;
+      border-color: transparent;
+      box-shadow: none;
+      transform: none;
+      cursor: default;
+    }
+    .stepIdle.is-active .stepCard{
+      border-color: transparent;
+      box-shadow: none;
+      transform: none;
+    }
+
+    footer{
+      border-top: 1px solid var(--line);
+      padding: 26px 0 40px 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 980px){
+      .container{ padding: 0 16px; }
+      .section{ padding: 34px 0; }
+      .navInner{
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+      .brand{ white-space: normal; }
+      .navLinks{
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+        justify-content: stretch;
+        align-items: stretch;
+        overflow: visible;
+        white-space: normal;
+        padding-bottom: 0;
+      }
+      .navLinks a{
+        font-size: 11px;
+        padding: 8px 6px;
+        white-space: normal;
+        text-align: center;
+        line-height: 1.25;
+        min-width: 0;
+      }
+      .hero{ padding: 62px 0 40px 0; }
+      .heroGrid{ min-height: 0; }
+      .heroText{ max-width: none; }
+      h1{ font-size: clamp(38px, 8vw, 58px); max-width: none; }
+      .sub{ font-size: 17px; line-height: 1.45; }
+      .sectionTitle{
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .btn{
+        width: 100%;
+        max-width: 320px;
+      }
+
+      .heroArt{
+        position: relative;
+        top: auto;
+        right: auto;
+        transform: none;
+        width: auto;
+        margin-top: 18px;
+        justify-content: center;
+      }
+      .heroArt img{
+        width: min(920px, 96vw);
+        -webkit-mask-image: none;
+        mask-image: none;
+      }
+
+      .modelGrid{ grid-template-columns: 1fr; }
+      .stepsCol{ padding-right: 0; }
+      .stickyViz{
+        order: -1;
+        position: sticky;
+        top: calc(var(--navH, 68px) + 10px);
+        height: var(--vizH);
+        border-radius: 18px;
+      }
+      .imgGrid.cols3{ grid-template-columns: 1fr; }
+      .imgGrid.cols2{ grid-template-columns: 1fr; }
+      .step{ padding: var(--stepPad, 8vh) 0; }
+      .step:first-child:not(.stepIdle){ padding-top: 0; }
+      .step:last-child:not(.stepIdle){ padding-bottom: 4vh; }
+      .stepIdle{ display: none; }
+    }
+
+    @media (max-width: 760px){
+      .navLinks{
+        gap: 6px;
+      }
+      .navLinks a{
+        font-size: 10px;
+        padding: 7px 4px;
+      }
+      .stickyViz{
+        height: var(--vizH);
+      }
+    }
+  
+
+/* ---- injected: align model section + stabilize responsive scrolly layout ---- */
+
+:root{
+  --navH: 68px;     /* JS overwrites */
+  --miniBarH: 0px;  /* becomes >0 only while pinned */
+  --modelPad: 22px; /* keep aligned with the rest of the page */
+  --gapTop: 10px;
+  --stepsW: 320px;
+  --vizH: 680px;
+}
+
+/* Top menu always visible */
+.nav{
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 300 !important;
+}
+
+/* Page starts below fixed nav */
+body{
+  padding-top: var(--navH) !important;
+}
+
+/* Keep anchor jumps from hiding under nav */
+#gallery1, #model,  #explain{
+  scroll-margin-top: calc(var(--navH) + 16px) !important;
+}
+
+/* Keep model section aligned with the same page grid */
+#model .container{
+  max-width: var(--max) !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+#model .modelHeader{
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+#model .modelGrid{
+  display: grid !important;
+  grid-template-columns: minmax(280px, var(--stepsW)) minmax(0, 1fr) !important;
+  gap: 22px !important;
+  align-items: start !important;
+}
+
+/* Ensure the right column can expand fully */
+#model .stickyViz{
+  min-width: 0 !important;
+}
+
+#model .stepsCol{
+  width: var(--stepsW) !important;
+  max-width: var(--stepsW) !important;
+  padding-right: 0 !important;
+  opacity: 0.98 !important;
+}
+
+/* Make step cards compact */
+#model .stepCard{
+  max-width: var(--stepsW) !important;
+  padding: 12px 12px 10px 12px !important;
+  border-radius: 20px !important;
+}
+#model .stepKicker{
+  font-size: 10px !important;
+}
+#model .stepCard h3{
+  font-size: 16px !important;
+  margin-bottom: 6px !important;
+}
+#model .stepBody{
+  font-size: 13px !important;
+  line-height: 1.45 !important;
+}
+#model .chip{
+  font-size: 11px !important;
+  padding: 5px 9px !important;
+}
+
+#model .mobileStepOverlay{
+  display: none;
+}
+
+/* Sticky map: always stick below nav, plus minibar when pinned */
+#model .stickyViz{
+  position: sticky !important;
+  top: var(--vizTop, calc(var(--navH) + var(--miniBarH) + var(--gapTop))) !important;
+  height: var(--vizH) !important;
+  transition: none !important;
+}
+
+/* Hide minibar by default */
+#model .modelMiniBar{
+  display: none !important;
+}
+
+/* Show minibar only while pinned, below nav */
+body.modelPinned{
+  --miniBarH: 56px;
+}
+
+body.modelPinned #model .modelMiniBar{
+  display: flex !important;
+  position: fixed !important;
+  top: var(--navH) !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 250 !important;
+  background: rgba(250,250,250,.94) !important;
+  backdrop-filter: blur(10px) !important;
+  border-bottom: 1px solid rgba(15,15,16,.12) !important;
+  padding: 8px 18px 12px 18px !important;
+}
+
+/* Extra safety: when pinned, keep stickyViz pushed down */
+body.modelPinned #model .stickyViz{
+  top: var(--vizTop, calc(var(--navH) + var(--miniBarH) + var(--gapTop))) !important;
+  height: var(--vizH) !important;
+}
+
+/* Smaller overall section paddings can help the map feel bigger */
+#model.modelWrap, .modelWrap{
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* Tablet/mobile stacked scrolly */
+@media (max-width: 980px){
+  :root{
+    --stepsW: 100%;
+    --modelPad: 22px;
+  }
+
+  #model .modelGrid{
+    grid-template-columns: 1fr !important;
+  }
+
+  #model .stepsCol{
+    width: 100% !important;
+    max-width: none !important;
+    order: 2 !important;
+  }
+
+  #model .stickyViz{
+    order: 1 !important;
+    position: sticky !important;
+    top: var(--vizTop, calc(var(--navH) + 10px)) !important;
+    height: var(--vizH) !important;
+    min-height: 0 !important;
+    z-index: 2 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+
+  #model .stickyViz iframe{
+    position: relative !important;
+    z-index: 1 !important;
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+  }
+
+  #model .mobileStepOverlay{
+    display: block !important;
+    position: relative !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    margin: 0 12px 12px 12px !important;
+    z-index: 2;
+    padding: 12px 14px 12px 14px;
+    border-radius: 16px;
+    background: rgba(255,255,255,0.94);
+    box-shadow: none;
+    pointer-events: none;
+    backdrop-filter: blur(10px);
+  }
+
+  #model .mobileStepKicker{
+    font-size: 11px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  #model .mobileStepTitle{
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: 6px;
+    color: var(--text);
+  }
+
+  #model .mobileStepBody{
+    font-size: 14px;
+    line-height: 1.45;
+    color: rgba(0,0,0,.76);
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+  }
+
+  #model .step{
+    min-height: 52vh !important;
+    padding: 0 !important;
+    display: block !important;
+  }
+
+  #model .stepCard{
+    opacity: 0 !important;
+    pointer-events: none !important;
+    max-height: 0 !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+
+  #model .step.is-active .stepCard{
+    transform: none !important;
+  }
+
+  #model .stepIdle{
+    display: none !important;
+  }
+
+  body.modelPinned{
+    --miniBarH: 0px;
+  }
+
+  #model .modelMiniBar,
+  body.modelPinned #model .modelMiniBar{
+    display: flex !important;
+    position: static !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    z-index: auto !important;
+    padding: 0 0 12px 0 !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    border-bottom: 0 !important;
+  }
+
+  body.modelStackedPinned{
+    --miniBarH: 56px;
+  }
+
+  body.modelStackedPinned #model .modelMiniBar{
+    display: flex !important;
+    position: fixed !important;
+    top: var(--navH) !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 240 !important;
+    padding: 8px 18px 12px 18px !important;
+    background: rgba(250,250,250,.94) !important;
+    backdrop-filter: blur(10px) !important;
+    border-bottom: 1px solid rgba(15,15,16,.12) !important;
+  }
+}
+
+@media (max-width: 680px){
+  #model .stickyViz{
+    height: var(--vizH) !important;
+    gap: 8px !important;
+  }
+
+  #model .mobileStepOverlay{
+    margin: 0 8px 8px 8px !important;
+    padding: 10px 12px 10px 12px;
+    border-radius: 16px;
+  }
+
+  #model .mobileStepTitle{
+    font-size: 15px;
+  }
+
+  #model .mobileStepBody{
+    font-size: 12px;
+    -webkit-line-clamp: 2;
+  }
+
+  #model .step{
+    min-height: 40vh !important;
+  }
+}
+
+/* ---- end injected block ---- */
+
+
+
+/* ---- injected: Context split (image left, text right) ---- */
+.contextSplit{
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 18px;
+
+  /* IMPORTANT: allow grid items to stretch to the tallest column */
+  align-items: stretch;
+}
+
+.contextImgCard{
+  margin: 0;
+  border: 0;
+  border-radius: var(--radius2);
+  overflow: hidden;
+  background: transparent;
+  box-shadow: none;
+
+  /* NEW: center the image inside the left grid cell */
+  display: flex;
+  align-items: center;      /* vertical centering */
+  justify-content: center;  /* horizontal centering */
+
+  /* makes sure it can stretch to match the text column height */
+  min-height: 100%;
+}
+
+.contextImgCard img{
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.contextText{
+  font-size: 14px;
+  line-height: 1.6;
+  color: rgba(0,0,0,.78);
+}
+
+.contextGroup{ margin-bottom: 16px; }
+.contextGroup:last-child{ margin-bottom: 0; }
+
+.contextHeading{
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  margin: 0 0 10px 0;
+  font-size: 18px;
+  color: rgba(0,0,0,.90);
+}
+
+.contextText p{ margin: 0 0 10px 0; }
+
+.contextText ul{
+  margin: 0 0 10px 18px;
+  padding: 0;
+}
+
+@media (max-width: 980px){
+  .contextSplit{ grid-template-columns: 1fr; }
+  .contextImgCard{ min-height: 0; }
+}
+/* ---- end injected block ---- */
+
+
+
+/* ---- injected: compare section aligned + iframe embed ---- */
+#compare{
+  scroll-margin-top: calc(var(--navH) + 16px) !important;
+}
+
+#compare .container{
+  max-width: var(--max) !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Borderless embed wrapper */
+#compare .embedCard{
+  background: transparent !important;   /* or #fff if you prefer */
+  border: 0 !important;
+  box-shadow: none !important;
+  border-radius: var(--radius2) !important;
+  overflow: hidden !important;
+}
+
+#compare .embedCard iframe{
+  width: 100%;
+  height: 700px;        /* initial, JS will override */
+  border: 0;
+  display: block;
+  overflow: hidden;
+}
+/* ---- end injected block ---- */
+
+
+
+/* ---- injected: poster section (match compare width) ---- */
+:root{
+  /* JS will overwrite this based on compare iframe content */
+  --compareContentW: var(--max);
+}
+
+#poster{
+  scroll-margin-top: calc(var(--navH) + 16px) !important;
+}
+
+/* Make poster section align like compare (full width + modelPad) */
+#poster .container{
+  max-width: var(--max) !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+#poster .posterCard{
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  border-radius: var(--radius2) !important;
+
+  /* Match actual compare content width */
+  max-width: min(var(--compareContentW), 100%) !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+#poster .posterImg{
+  width: 100% !important;
+  height: auto !important;
+  display: block !important;
+}
+/* ---- end injected block ---- */
+
+
+
+/* ---- injected: borderless unified look ---- */
+
+/* Main page chrome */
+.nav,
+.hero,
+.modelWrap,
+footer{
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Cards / framed blocks */
+.imgCard,
+.stepCard,
+.textCard,
+#model .stickyViz,
+#compare .embedCard{
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Keep clean white surfaces, just without frames */
+.imgCard,
+.stepCard,
+.textCard,
+#model .stickyViz{
+  background: #fff !important;
+}
+
+/* Optional: soften section separation */
+.section{
+  border: 0 !important;
+}
+
+/* ---- end injected block ---- */
+
+</style>
+</head>
+
+<body id="top class="modelLayoutFocus">
+  <div class="nav">
+    <div class="container">
+      <div class="navInner">
+        <div class="brand">Yerevan scrolly</div>
+        <div class="navLinks">
+          <a href="#gallery1">What Centers Does a City Have</a>
+          <a href="#model">Model</a>
+          <a href="#explain">Explanation</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <header class="hero">
+    <div class="container">
+      <div class="heroGrid">
+        <div class="heroText">
+          <h1>Moving centers<br>of Yerevan</h1>
+          <p class="sub">How and why the commercial centers of cities <br> are moving away from historical centers</p>
+          <div class="ctaRow">
+            <a class="btn btnPrimary" href="#model">Read story</a>
+            <a class="btn" href="#explain">Explore the documentation</a>
+          </div>
+        </div>
+
+        <div class="heroArt" aria-hidden="true">
+          <img src="assets/hero_cover.png" alt="" loading="eager">
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section class="section" id="gallery1">
+    <div class="container">
+      <div class="sectionTitle">
+        <h2>What Centers Does a City Have</h2>
+      </div>
+      
+      <div class="contextSplit">
+        <figure class="contextImgCard">
+          <img src="assets/city_centers_map.png" alt="Yerevan centers map" loading="lazy"/>
+        </figure>
+
+        <div class="contextText">
+          
+      <div class="contextGroup">
+        <p><strong>Historical center</strong> — the historically formed part of a city where the original urban layout and historical buildings have typically been preserved. It usually contains a high concentration of cultural heritage sites such as monuments and architectural ensembles.</p>
+
+        <p><strong>Commercial center</strong> — a conceptual point where the city’s business activity is concentrated. This area typically has the highest number of jobs, offices, retail locations, and transport hubs. A city does not have a single, fixed commercial center, but the most active commercial zones can be identified and represented by a point placed roughly at their center.</p>
+      </div>
+
+      <div class="contextGroup">
+        <div class="contextHeading">Where Are Yerevan’s Centers</div>
+
+        <p>We consider <strong>Republic Square</strong> to be the approximate historical center of Yerevan, as it best fits the definition: it lies in the historic part of the city and contains many important historical and cultural landmarks.</p>
+
+        <p>The <strong>commercial center of Yerevan</strong> lies about <strong>1.1 km</strong> away, near the <strong>Yerevan City Council</strong>. We identified it using a model: first we determined the city’s main commercial cluster, and then calculated the centroid of that area.</p>
+      </div>
+
+      <div class="contextGroup">
+        <div class="contextHeading">Why Do the Historical and Commercial Centers Separate</div>
+
+        <p>Economic theory and empirical research provide explanations for this phenomenon. In modern approaches, two main factors influence the movement of business activity away from the historical center:</p>
+
+        <ul>
+          <li>the overall <strong>transport factors</strong> of different city districts;</li>
+          <li>the condition and cultural value of heritage sites (<strong>amenities</strong>), including how attractive and comfortable the historical center is for residents.</li>
+        </ul>
+
+        <p>Over time, commercial zones gradually shift away from the historical center. Using representative points at the centers of these zones allows us to track this drift.</p>
+
+        <p>In the interactive models below, we demonstrate how changes in <strong>transport factors</strong> and <strong>amenities</strong> shift the economic center relative to the historical one, expanding or narrowing the city’s zone of commercial activity.</p>
+      </div>
+    
+        </div>
+      </div>
+    
+    </div>
+  </section>
+
+  <section class="modelWrap" id="model">
+    <div class="container">
+      <div class="modelHeader">
+        <div class="sectionTitle">
+          <h2>Interactive model</h2>
+        </div>
+
+        <div class="modelMiniBar">
+          <div id="stepName">Baseline</div>
+          <div class="progress"><div id="progBar"></div></div>
+        </div>
+      </div>
+
+      <div class="modelGrid">
+        <div class="stepsCol">
+          
+            <section class="step stepIdle" style="--stepPad:22.0vh;"
+              data-title="Baseline"
+              data-t="1.00"
+              data-a="1.00"
+              data-view-lat=""
+              data-view-lon=""
+              data-view-zoom="" data-prog="0.00">
+              <div class="stepCard stepCardIdle" aria-hidden="true"></div>
+            </section>
+            
+
+            <section class="step stepIdle" style="--stepPad:22.0vh;"
+              data-title="Baseline"
+              data-t="1.00"
+              data-a="1.00"
+              data-view-lat=""
+              data-view-lon=""
+              data-view-zoom="" data-prog="0.00">
+              <div class="stepCard stepCardIdle" aria-hidden="true"></div>
+            </section>
+            
+
+            <section class="step stepIdle" style="--stepPad:22.0vh;"
+              data-title="Baseline"
+              data-t="1.00"
+              data-a="1.00"
+              data-view-lat=""
+              data-view-lon=""
+              data-view-zoom="" data-prog="0.00">
+              <div class="stepCard stepCardIdle" aria-hidden="true"></div>
+            </section>
+            
+
+            <section class="step"
+              data-title="Baseline"
+              data-t="1.00"
+              data-a="1.00"
+              data-view-lat=""
+              data-view-lon=""
+              data-view-zoom="" data-prog="0.00">
+              
+              <div class="stepCard">
+                <div class="stepKicker">Scenario</div>
+                <h3>Baseline assumptions</h3>
+                <p class="stepBody">Reference case for transport and amenity strength.</p>
+                
+              </div>
+            
+            </section>
+            
+
+            <section class="step"
+              data-title="Slower transport"
+              data-t="1.25"
+              data-a="1.00"
+              data-view-lat=""
+              data-view-lon=""
+              data-view-zoom="" data-prog="25.00">
+              
+              <div class="stepCard">
+                <div class="stepKicker">Scenario</div>
+                <h3>Slower transport</h3>
+                <p class="stepBody">Lower transport speed raises time costs.</p>
+                
+              </div>
+            
+            </section>
+            
+
+            <section class="step"
+              data-title="Faster transport"
+              data-t="0.75"
+              data-a="1.00"
+              data-view-lat=""
+              data-view-lon=""
+              data-view-zoom="" data-prog="50.00">
+              
+              <div class="stepCard">
+                <div class="stepKicker">Scenario</div>
+                <h3>Faster transport</h3>
+                <p class="stepBody">Higher transport speed lowers time costs.</p>
+                
+              </div>
+            
+            </section>
+            
+
+            <section class="step"
+              data-title="Historic pull"
+              data-t="1.00"
+              data-a="1.25"
+              data-view-lat=""
+              data-view-lon=""
+              data-view-zoom="" data-prog="75.00">
+              
+              <div class="stepCard">
+                <div class="stepKicker">Scenario</div>
+                <h3>Historic amenities matter more</h3>
+                <p class="stepBody">Higher amenity strengthens amenity-related effects.</p>
+                
+              </div>
+            
+            </section>
+            
+
+            <section class="step"
+              data-title="Weaker amenities"
+              data-t="1.00"
+              data-a="0.75"
+              data-view-lat=""
+              data-view-lon=""
+              data-view-zoom="" data-prog="100.00">
+              
+              <div class="stepCard">
+                <div class="stepKicker">Scenario</div>
+                <h3>Historic amenities matter less</h3>
+                <p class="stepBody">Lower amenity weakens amenity-related effects.</p>
+                
+              </div>
+            
+            </section>
+            
+
+            <section class="step stepIdle" style="--stepPad:22.0vh;"
+              data-title="Weaker amenities"
+              data-t="1.00"
+              data-a="0.75"
+              data-view-lat=""
+              data-view-lon=""
+              data-view-zoom="" data-prog="100.00">
+              <div class="stepCard stepCardIdle" aria-hidden="true"></div>
+            </section>
+            
+
+            <section class="step stepIdle" style="--stepPad:22.0vh;"
+              data-title="Weaker amenities"
+              data-t="1.00"
+              data-a="0.75"
+              data-view-lat=""
+              data-view-lon=""
+              data-view-zoom="" data-prog="100.00">
+              <div class="stepCard stepCardIdle" aria-hidden="true"></div>
+            </section>
+            
+        </div>
+
+        <div class="stickyViz">
+          <iframe id="viz" src="yerevan_interactive_model.html" title="Interactive model" loading="lazy"></iframe>
+          <div class="mobileStepOverlay" id="mobileStepOverlay" aria-live="polite" hidden>
+            <div class="mobileStepKicker" id="mobileStepKicker"></div>
+            <div class="mobileStepTitle" id="mobileStepTitle"></div>
+            <div class="mobileStepBody" id="mobileStepBody"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  
+  <section class="section" id="compare">
+    <div class="container">
+      <div class="sectionTitle">
+        <h2></h2>
+        <p></p>
+      </div>
+
+      <div class="embedCard">
+        <iframe id="compareFrame" src="city_business_area_comparison.html" title="" loading="eager" scrolling="no"></iframe>
+      </div>
+    </div>
+  </section>
+
+
+  <section class="section" id="poster">
+    <div class="container">
+      <div class="sectionTitle">
+        <h2>Poster</h2>
+        <p> </p>
+      </div>
+
+      <div class="posterCard">
+        <img class="posterImg" src="assets/project_poster.svg" alt="Poster" loading="lazy">
+      </div>
+    </div>
+  </section>
+
+<section class="section" id="explain">
+    <div class="container">
+      
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      
+          <div style="display:flex; flex-direction:column; gap:12px;">
+            <div style="display:flex; gap:12px; flex-wrap:wrap;">
+              
+        <a class="btn btnPrimary" href="assets/project_brief.pdf" target="_blank" rel="noopener">
+          Open PDF
+        </a>
+        
+              
+        <a class="btn btnPrimary" href="theoretical_model_dashboard.html">Open theoretical dashboard</a>
+        
+            </div>
+            
+        <hr style="border:0; border-top:1px solid rgba(15,15,16,.12); margin:14px 0 10px 0;">
+
+        <div style="margin-top:6px; max-width: 980px;">
+          <div style="font-weight:800; margin-bottom:6px;">Team</div>
+          <div style="display:flex; flex-direction:column; gap:6px; line-height:1.55;">
+            <div><strong>Gleb Orlov</strong> — data collection and processing, development of the model for identifying zones, and development of the project website.</div>
+            <div><strong>Mariia Khomutova</strong> — data visualization, infographics, and project content.</div>
+            <div>Special thanks to <strong>Nikita Goncharov</strong> for the theoretical foundation of the model.</div>
+          </div>
+        </div>
+    
+          </div>
+        
+    </div>
+  </footer>
+
+  <script src="https://unpkg.com/scrollama"></script>
+  <script>
+    const iframe = document.getElementById("viz");
+    const steps = Array.from(document.querySelectorAll(".step"));
+    const stepName = document.getElementById("stepName");
+    const progBar = document.getElementById("progBar");
+    const stickyVizEl = document.querySelector("#model .stickyViz");
+    const modelEl = document.getElementById("model");
+    const navEl = document.querySelector(".nav");
+    const stackedMq = window.matchMedia("(max-width: 980px)");
+    const compactMq = window.matchMedia("(max-width: 680px)");
+    const mobileStepOverlayEl = document.getElementById("mobileStepOverlay");
+    const mobileStepKickerEl = document.getElementById("mobileStepKicker");
+    const mobileStepTitleEl = document.getElementById("mobileStepTitle");
+    const mobileStepBodyEl = document.getElementById("mobileStepBody");
+
+    const pending = { sliders: null, view: null, invalidate: false };
+
+    function _postToViz(msg) {
+      if (!iframe || !iframe.contentWindow) return;
+      iframe.contentWindow.postMessage(msg, "*");
+    }
+
+    function _remember(msg) {
+      if (!msg || typeof msg !== "object") return;
+      if (msg.type === "setSliders") pending.sliders = msg;
+      if (msg.type === "setView") pending.view = msg;
+      if (msg.type === "invalidateSize") pending.invalidate = true;
+    }
+
+    function replayPending() {
+      if (!iframe || !iframe.contentWindow) return;
+      _postToViz({ type: "ping" });
+      if (pending.sliders) _postToViz(pending.sliders);
+      if (pending.view) _postToViz(pending.view);
+      if (pending.invalidate) _postToViz({ type: "invalidateSize" });
+    }
+
+    function sendToViz(msg) {
+      _remember(msg);
+      if (!iframe || !iframe.contentWindow) return;
+      _postToViz(msg);
+    }
+
+    if (iframe) {
+      iframe.addEventListener("load", () => {
+        syncVizHeight();
+        replayPending();
+        sendToViz({ type: "invalidateSize" });
+      });
+    }
+
+    function syncNavHeightVar() {
+      if (!navEl) return;
+      const h = navEl.getBoundingClientRect().height || 68;
+      document.documentElement.style.setProperty("--navH", Math.round(h) + "px");
+      document.documentElement.style.setProperty("--vizTop", "calc(" + Math.round(h) + "px + 10px)");
+    }
+
+    let lastVizH = 0;
+    function syncVizHeight() {
+      if (!stickyVizEl) return;
+
+      const width = stickyVizEl.getBoundingClientRect().width || stickyVizEl.clientWidth || 0;
+      const navH = navEl ? (navEl.getBoundingClientRect().height || 68) : 68;
+      const viewportH = window.innerHeight || document.documentElement.clientHeight || 800;
+      const iframePhone = width > 0 && width <= 520;
+      const iframeCompact = width > 0 && width <= 680;
+      const stacked = stackedMq.matches;
+
+      let target;
+      let minH;
+      let maxH;
+
+      if (iframePhone) {
+        target = Math.round((width * 1.06) + 74);
+        minH = 450;
+        maxH = 520;
+      } else if (iframeCompact) {
+        target = Math.round((width * 0.92) + 82);
+        minH = 470;
+        maxH = 560;
+      } else if (stacked) {
+        target = Math.round((width * 0.68) + 96);
+        minH = 520;
+        maxH = 720;
+      } else {
+        target = Math.round(width * 0.68);
+        minH = 560;
+        maxH = 760;
+      }
+
+      target = Math.max(minH, Math.min(target, maxH));
+      const topBase = navH + ((!stacked && pinnedOn) ? 56 : 0);
+      const usableH = Math.max(0, viewportH - topBase - 20);
+      const minGap = stacked ? 10 : 18;
+      const centeredGap = Math.max(minGap, Math.round((usableH - target) / 2));
+      const centeredTop = topBase + centeredGap;
+      document.documentElement.style.setProperty("--vizTop", centeredTop + "px");
+      if (Math.abs(target - lastVizH) < 2) return;
+
+      lastVizH = target;
+      document.documentElement.style.setProperty("--vizH", target + "px");
+      stickyVizEl.style.height = target + "px";
+
+      setTimeout(() => sendToViz({ type: "invalidateSize" }), 90);
+    }
+
+    window.addEventListener("resize", () => {
+      syncNavHeightVar();
+      syncVizHeight();
+      schedulePinnedCheck();
+    });
+
+    setTimeout(() => {
+      syncNavHeightVar();
+      syncVizHeight();
+    }, 0);
+
+    let lastIdx = -1;
+    function syncMobileStepOverlay(stepEl) {
+      if (!mobileStepOverlayEl || !stepEl) return;
+
+      const kicker = (stepEl.querySelector(".stepKicker")?.textContent || "Scenario").trim();
+      const title = (stepEl.dataset.title || stepEl.querySelector(".stepCard h3")?.textContent || "").trim();
+      const body = (stepEl.querySelector(".stepBody")?.textContent || "").trim();
+      const hint = (stepEl.querySelector(".stepHint")?.textContent || "").trim();
+
+      if (mobileStepKickerEl) mobileStepKickerEl.textContent = kicker;
+      if (mobileStepTitleEl) mobileStepTitleEl.textContent = title;
+      if (mobileStepBodyEl) {
+        const bodyText = [body, hint].filter(Boolean).join(" ");
+        mobileStepBodyEl.textContent = bodyText;
+      }
+      mobileStepOverlayEl.hidden = false;
+    }
+
+    function activateStep(el, idx) {
+      if (!el) return;
+      if (idx === lastIdx) return;
+      lastIdx = idx;
+
+      steps.forEach(s => s.classList.remove("is-active"));
+      el.classList.add("is-active");
+      syncMobileStepOverlay(el);
+
+      const title = el.dataset.title || ("Step " + String(idx + 1));
+      if (stepName) stepName.textContent = title;
+
+      if (el.classList.contains("stepIdle")) {
+        const pctIdle = parseFloat(el.dataset.prog);
+        if (progBar && isFinite(pctIdle)) {
+          progBar.style.width = String(pctIdle.toFixed(1)) + "%";
+        }
+        return;
+      }
+
+      const t = parseFloat(el.dataset.t);
+      const a = parseFloat(el.dataset.a);
+
+      const lat = parseFloat(el.dataset.viewLat);
+      const lon = parseFloat(el.dataset.viewLon);
+      const zoom = parseFloat(el.dataset.viewZoom);
+
+      if (isFinite(t) && isFinite(a)) sendToViz({ type: "setSliders", t: t, a: a });
+      if (isFinite(lat) && isFinite(lon) && isFinite(zoom)) sendToViz({ type: "setView", lat: lat, lon: lon, zoom: zoom });
+
+      const pct = parseFloat(el.dataset.prog);
+      if (progBar) {
+        if (isFinite(pct)) {
+          progBar.style.width = String(pct.toFixed(1)) + "%";
+        } else {
+          const fallback = steps.length <= 1 ? 100 : (idx / (steps.length - 1)) * 100;
+          progBar.style.width = String(fallback.toFixed(1)) + "%";
+        }
+      }
+    }
+
+    let pinnedOn = false;
+    let scroller = null;
+    let stepControlsBound = false;
+    let stackedPinnedOn = false;
+
+    function firstInteractiveStep() {
+      return steps.find((step) => !step.classList.contains("stepIdle")) || steps[0] || null;
+    }
+
+    function bindStepControls() {
+      if (stepControlsBound) return;
+      stepControlsBound = true;
+
+      steps.forEach((step, idx) => {
+        if (!step || step.classList.contains("stepIdle")) return;
+        step.setAttribute("tabindex", "0");
+
+        step.addEventListener("click", () => activateStep(step, idx));
+        step.addEventListener("keydown", (event) => {
+          if (event.key !== "Enter" && event.key !== " ") return;
+          event.preventDefault();
+          activateStep(step, idx);
+        });
+      });
+    }
+
+    function setPinned(on) {
+      const next = !!on;
+      if (pinnedOn === next) return;
+      pinnedOn = next;
+      document.body.classList.toggle("modelPinned", pinnedOn);
+      syncVizHeight();
+
+      setTimeout(() => {
+        sendToViz({ type: "invalidateSize" });
+        replayPending();
+      }, 140);
+    }
+
+    function setStackedPinned(on) {
+      const next = !!on;
+      if (stackedPinnedOn === next) return;
+      stackedPinnedOn = next;
+      document.body.classList.toggle("modelStackedPinned", stackedPinnedOn);
+      syncVizHeight();
+    }
+
+    function computePinned() {
+      if (stackedMq.matches) { setPinned(false); return; }
+      if (!stickyVizEl) { setPinned(false); return; }
+
+      const cs = getComputedStyle(stickyVizEl);
+      const pos = cs.position;
+      if (pos !== "sticky" && pos !== "-webkit-sticky") { setPinned(false); return; }
+
+      const r = stickyVizEl.getBoundingClientRect();
+      const topPx = parseFloat(cs.top) || 0;
+      const vh = window.innerHeight || 800;
+
+      const delta = Math.abs(r.top - topPx);
+      const pinned = pinnedOn ? (delta <= 26) : (delta <= 2);
+      const visible = r.bottom > (topPx + 140) && r.top < (vh - 140);
+
+      setPinned(pinned && visible);
+    }
+
+    let pinRAF = 0;
+    function schedulePinnedCheck() {
+      if (stackedMq.matches) {
+        cancelAnimationFrame(pinRAF);
+        setPinned(false);
+        if (!modelEl) {
+          setStackedPinned(false);
+          return;
+        }
+        const navH = navEl ? (navEl.getBoundingClientRect().height || 68) : 68;
+        const rect = modelEl.getBoundingClientRect();
+        const active = rect.top <= (navH + 18) && rect.bottom >= (navH + 140);
+        setStackedPinned(active);
+        return;
+      }
+      setStackedPinned(false);
+      cancelAnimationFrame(pinRAF);
+      pinRAF = requestAnimationFrame(computePinned);
+    }
+
+    window.addEventListener("scroll", schedulePinnedCheck, { passive: true });
+
+    if (stickyVizEl && "ResizeObserver" in window) {
+      const ro = new ResizeObserver(() => {
+        setTimeout(() => sendToViz({ type: "invalidateSize" }), 140);
+      });
+      ro.observe(stickyVizEl);
+    }
+
+    function destroyScroller() {
+      if (!scroller) return;
+      try { scroller.destroy(); } catch (e) {}
+      scroller = null;
+    }
+
+    function initScrollerMode() {
+      destroyScroller();
+      bindStepControls();
+      const scrollerSteps = stackedMq.matches
+        ? steps.filter((step) => step && !step.classList.contains("stepIdle"))
+        : steps.slice();
+
+      if (!scrollerSteps.length) {
+        const first = firstInteractiveStep();
+        if (first) activateStep(first, steps.indexOf(first));
+        setPinned(false);
+        return;
+      }
+
+      scroller = scrollama();
+      scroller
+        .setup({ step: scrollerSteps, offset: compactMq.matches ? 0.74 : stackedMq.matches ? 0.68 : 0.62 })
+        .onStepEnter((resp) => {
+          schedulePinnedCheck();
+          activateStep(resp.element, steps.indexOf(resp.element));
+        })
+        .onStepExit((resp) => {
+          if (resp.direction === "up" && resp.index > 0) {
+            const prev = scrollerSteps[resp.index - 1];
+            if (prev) activateStep(prev, steps.indexOf(prev));
+          }
+          schedulePinnedCheck();
+        });
+    }
+
+    window.addEventListener("message", (event) => {
+      if (event.data && event.data.type === "vizReady") {
+        syncVizHeight();
+        replayPending();
+        sendToViz({ type: "invalidateSize" });
+      }
+    });
+
+    syncNavHeightVar();
+    syncVizHeight();
+    bindStepControls();
+    initScrollerMode();
+    schedulePinnedCheck();
+    setTimeout(() => {
+      const first = firstInteractiveStep() || steps[0];
+      if (first) activateStep(first, steps.indexOf(first));
+      syncVizHeight();
+      replayPending();
+      sendToViz({ type: "invalidateSize" });
+      initScrollerMode();
+      schedulePinnedCheck();
+    }, 700);
+
+    [stackedMq, compactMq].forEach((mq) => {
+      if (!mq || !mq.addEventListener) return;
+      mq.addEventListener("change", () => {
+        syncNavHeightVar();
+        syncVizHeight();
+        initScrollerMode();
+        schedulePinnedCheck();
+      });
+    });
+  
+
+    // ---- injected: compare iframe autosize + width sync (stable) ----
+    (function compareIframeAutosize() {
+      const compareFrame = document.getElementById("compareFrame");
+      if (!compareFrame) return;
+
+      const _COMPARE_PAD = 24;
+      let _lastSet = 0;
+
+      function setCompareHeight(px) {
+        if (!compareFrame) return;
+        if (typeof px !== "number" || !isFinite(px) || px <= 0) return;
+
+        const next = Math.ceil(px + _COMPARE_PAD);
+        if (_lastSet && Math.abs(next - _lastSet) <= 2) return;
+
+        _lastSet = next;
+        compareFrame.style.height = next + "px";
+      }
+
+      window.addEventListener("message", (event) => {
+        const d = event && event.data;
+        if (!d || typeof d !== "object") return;
+        if (d.type === "compareHeight" && typeof d.height === "number") {
+          setCompareHeight(d.height);
+        }
+      });
+
+      function requestCompareHeight() {
+        try {
+          if (compareFrame && compareFrame.contentWindow) {
+            compareFrame.contentWindow.postMessage({ type: "requestHeight" }, "*");
+          }
+        } catch (e) {}
+      }
+
+      function _compareDoc() {
+        try {
+          return compareFrame.contentDocument || (compareFrame.contentWindow && compareFrame.contentWindow.document) || null;
+        } catch (e) {
+          return null;
+        }
+      }
+
+      function _wrapEl(doc) {
+        try {
+          if (!doc || !doc.querySelector) return null;
+          return doc.querySelector(".wrap") || null;
+        } catch (e) {
+          return null;
+        }
+      }
+
+      function _computeContentHeightSameOrigin(doc) {
+        try {
+          const wrap = _wrapEl(doc);
+          if (wrap) {
+            const h = Math.max(wrap.scrollHeight || 0, wrap.offsetHeight || 0);
+            return (h && isFinite(h)) ? Math.ceil(h) : 0;
+          }
+          const b = doc && doc.body;
+          if (b) {
+            const hb = Math.max(b.scrollHeight || 0, b.offsetHeight || 0);
+            return (hb && isFinite(hb)) ? Math.ceil(hb) : 0;
+          }
+        } catch (e) {}
+        return 0;
+      }
+
+      function resizeCompareFrameSameOrigin() {
+        const doc = _compareDoc();
+        if (!doc) return;
+        const h = _computeContentHeightSameOrigin(doc);
+        if (h) setCompareHeight(h);
+      }
+
+      function syncCompareContentWidthSameOrigin() {
+        const doc = _compareDoc();
+        if (!doc) return;
+
+        try {
+          const el = _wrapEl(doc) || (doc.body || null);
+          if (!el || !el.getBoundingClientRect) return;
+
+          const r = el.getBoundingClientRect();
+          const w = Math.ceil(r.width || 0);
+          if (!w || !isFinite(w) || w < 200) return;
+
+          document.documentElement.style.setProperty("--compareContentW", w + "px");
+        } catch (e) {}
+      }
+
+      compareFrame.setAttribute("scrolling", "no");
+      compareFrame.style.overflow = "hidden";
+
+      function onBurst() {
+        requestCompareHeight();
+        resizeCompareFrameSameOrigin();
+        syncCompareContentWidthSameOrigin();
+
+        setTimeout(() => { requestCompareHeight(); resizeCompareFrameSameOrigin(); syncCompareContentWidthSameOrigin(); }, 120);
+        setTimeout(() => { requestCompareHeight(); resizeCompareFrameSameOrigin(); syncCompareContentWidthSameOrigin(); }, 350);
+        setTimeout(() => { requestCompareHeight(); resizeCompareFrameSameOrigin(); syncCompareContentWidthSameOrigin(); }, 900);
+      }
+
+      compareFrame.addEventListener("load", onBurst);
+
+      window.addEventListener("resize", () => {
+        onBurst();
+        setTimeout(onBurst, 250);
+      });
+    })();
+    // ---- end injected block ----
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,18 @@
+{
+  "expo": {
+    "name": "Moving Centers of Yerevan",
+    "slug": "moving-centers-of-yerevan",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.codex.movingcentersofyerevan"
+    }
+  }
+}

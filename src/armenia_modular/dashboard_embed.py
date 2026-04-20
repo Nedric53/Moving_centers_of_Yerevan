@@ -1,0 +1,756 @@
+from pathlib import Path
+from IPython.display import IFrame, HTML, display
+from .config import INTERACTIVE_DIR, THEORETICAL_DASHBOARD_HTML_NAME
+
+
+def write_dashboard_html(out_path=INTERACTIVE_DIR / THEORETICAL_DASHBOARD_HTML_NAME):
+    html = r"""<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Moving Centers Dashboard (business-friendly)</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.plot.ly/plotly-2.30.0.min.js"></script>
+
+  <style>
+    :root{
+      --pad: 12px;
+      --gap: 10px;
+      --line: rgba(0,0,0,0.12);
+      --muted: rgba(0,0,0,0.62);
+
+      --plotH: clamp(220px, 34vh, 320px);
+      --plotHSmall: clamp(200px, 30vh, 280px);
+
+      /* palette */
+      --c-light: #E0ECEE;
+      --c-cyan:  #57D4E5;
+      --c-orange:#F0805B;
+      --c-red:   #EC4848;
+    }
+
+    html, body { height: 100%; }
+    body {
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      margin: var(--pad);
+      background: #fff;
+      color: #111;
+    }
+
+    h2 { margin: 0 0 8px 0; font-size: 18px; }
+
+    .grid3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(240px, 1fr));
+      gap: var(--gap);
+      align-items: start;
+      margin-bottom: var(--gap);
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 10px;
+      background: #fff;
+    }
+
+    .plotTitle { font-weight: 750; margin: 0 0 4px 0; font-size: 13px; }
+    .small { color: var(--muted); font-size: 11px; line-height: 1.25; margin: 0 0 6px 0; }
+    .pill { display:inline-block; padding: 1px 7px; border: 1px solid var(--line); border-radius: 999px; font-size: 11px; margin-left: 6px; }
+
+    .plot { height: var(--plotH); }
+    .plotSmall { height: var(--plotHSmall); }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: 12px;
+      align-items: start;
+    }
+
+    .sliderRow {
+      display: grid;
+      grid-template-columns: 160px 1fr;
+      gap: 10px;
+      align-items: center;
+      margin: 10px 0;
+    }
+    .sliderRow .lbl { font-size: 12px; font-weight: 650; }
+
+    .sliderPack{
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+    }
+    .sliderPack input[type="range"]{
+      flex: 1;
+      min-width: 0;
+    }
+    .sliderPack .val{
+      min-width: 120px;
+      text-align: right;
+      font-size: 12px;
+      color: #222;
+    }
+
+    /* THINNER sliders, and only the "filled" part is cyan (handled via JS gradient) */
+    input[type="range"]{
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 999px;
+      outline: none;
+      background: var(--c-light); /* default (JS will overwrite with gradient) */
+    }
+    input[type="range"]::-webkit-slider-runnable-track{
+      height: 6px;
+      border-radius: 999px;
+      background: transparent; /* let input background show through */
+    }
+    input[type="range"]::-webkit-slider-thumb{
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--c-cyan);
+      border: 3px solid #fff;
+      box-shadow: 0 0 0 2px rgba(0,0,0,0.12);
+      margin-top: -5px; /* centers on 6px track */
+      cursor: pointer;
+    }
+
+    input[type="range"]::-moz-range-track{
+      height: 6px;
+      border-radius: 999px;
+      background: var(--c-light);
+    }
+    input[type="range"]::-moz-range-progress{
+      height: 6px;
+      border-radius: 999px;
+      background: var(--c-cyan);
+    }
+    input[type="range"]::-moz-range-thumb{
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--c-cyan);
+      border: 3px solid #fff;
+      box-shadow: 0 0 0 2px rgba(0,0,0,0.12);
+      cursor: pointer;
+    }
+
+    .kvs { font-size: 12px; line-height: 1.25; }
+    .kvs b { font-weight: 650; }
+    hr { border: 0; border-top: 1px solid rgba(0,0,0,0.08); margin: 8px 0; }
+
+    @media (max-width: 1050px) {
+      .grid3 { grid-template-columns: 1fr; }
+      .controls { grid-template-columns: 1fr; }
+      :root{
+        --plotH: clamp(240px, 38vh, 360px);
+        --plotHSmall: clamp(220px, 34vh, 320px);
+      }
+      .sliderRow { grid-template-columns: 1fr; }
+      .sliderPack .val{ min-width: 110px; text-align: left; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="grid3">
+    <div class="card">
+      <div class="small">
+        Thick segment is the <b>commercial area</b>. The X marks the <b>historical center</b>. The dot is the <b>commercial center</b>.
+      </div>
+      <div id="plot_layout" class="plot plotSmall"></div>
+    </div>
+
+    <div class="card">
+      <div class="plotTitle">How the commercial area shifts when the historical center moves</div>
+      <div class="small">
+        We scan the historical center from west to east. Dashed line shows the current setting.
+        Markers show the current area edges for that setting.
+      </div>
+      <div id="plot_fig1" class="plot"></div>
+    </div>
+
+    <div class="card">
+      <div class="plotTitle">How the commercial area shifts with transport conditions</div>
+      <div class="small">
+        We scan the transport factor from lower to higher. Dashed vertical line marks the historical center. Dots show the current setting.
+      </div>
+      <div id="plot_fig2" class="plot"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="controls">
+      <div>
+        <div class="plotTitle">Commercial drivers</div>
+        <div class="small">Factors controls.</div>
+
+        <div class="sliderRow">
+          <div class="lbl">Market size</div>
+          <div class="sliderPack">
+            <input id="market" type="range" min="0.20" max="1.90" step="0.05" value="1.40"/>
+            <div class="val" id="market_val"></div>
+          </div>
+        </div>
+
+        <div class="sliderRow">
+          <div class="lbl">Importance of amenities</div>
+          <div class="sliderPack">
+            <input id="amenities" type="range" min="0.01" max="1.00" step="0.01" value="0.10"/>
+            <div class="val" id="amenities_val"></div>
+          </div>
+        </div>
+
+        <div class="sliderRow">
+          <div class="lbl">Historical center location</div>
+          <div class="sliderPack">
+            <input id="history" type="range" min="0.00" max="1.00" step="0.01" value="0.25"/>
+            <div class="val" id="history_val"></div>
+          </div>
+        </div>
+
+        <div class="sliderRow">
+          <div class="lbl">Transport factor</div>
+          <div class="sliderPack">
+            <input id="transport" type="range" min="0.00" max="1.50" step="0.01" value="0.25"/>
+            <div class="val" id="transport_val"></div>
+          </div>
+        </div>
+
+        <div class="small" style="margin-top:6px;">
+          Tip: When transport improves (faster and more comfortable), distance matters less and the commercial area can spread differently.
+        </div>
+      </div>
+
+      <div>
+        <div class="plotTitle">What this means right now</div>
+        <div class="kvs">
+          <div style="margin-top:4px;"><b>Commercial area</b></div>
+          <div>Starts: <span id="q_out"></span></div>
+          <div>Ends: <span id="p_out"></span></div>
+
+          <div style="margin-top:6px;"><b>Historical center</b>: <span id="history_out"></span></div>
+          <div><b>Commercial center</b>: <span id="mu_out"></span></div>
+
+          <hr/>
+
+          <div><b>Situation</b></div>
+          <div id="case_out" class="small" style="margin:0;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const EPS = 1e-9;
+
+  // Palette
+  const C = {
+    light:  "#E0ECEE",
+    cyan:   "#57D4E5",
+    orange: "#F0805B",
+    red:    "#EC4848",
+    ink:    "rgba(0,0,0,0.78)",
+    grid:   "rgba(0,0,0,0.10)"
+  };
+  const FILL_LIGHT = "rgba(224,236,238,0.85)";
+
+  function posLabel(x){
+    if (!isFinite(x)) return "unknown";
+    if (x <= -0.75) return "far west";
+    if (x <= -0.35) return "west";
+    if (x <= -0.12) return "slightly west of center";
+    if (x <  0.12)  return "center";
+    if (x <  0.35)  return "slightly east of center";
+    if (x <  0.75)  return "east";
+    return "far east";
+  }
+
+  function historyLabel(h){
+    if (!isFinite(h)) return "unknown";
+    if (h <= 0.10) return "far west";
+    if (h <= 0.30) return "west";
+    if (h <= 0.55) return "near center";
+    if (h <= 0.80) return "east";
+    return "far east";
+  }
+
+  function strengthLabel(x, lo, hi, words){
+    if (!isFinite(x)) return "unknown";
+    const t = (x - lo) / (hi - lo);
+    const k = Math.max(0, Math.min(words.length - 1, Math.round(t * (words.length - 1))));
+    return words[k];
+  }
+
+  function clip(x, lo, hi) { return Math.max(lo, Math.min(hi, x)); }
+
+  function elH(id, fallback){
+    const el = document.getElementById(id);
+    const h = el ? el.clientHeight : 0;
+    return (h && h > 50) ? h : fallback;
+  }
+
+  // Fill slider track only up to the thumb (Chrome/Edge/Safari)
+  function setSliderFill(el){
+    if (!el) return;
+    const min = parseFloat(el.min);
+    const max = parseFloat(el.max);
+    const val = parseFloat(el.value);
+    if (!isFinite(min) || !isFinite(max) || !isFinite(val) || max <= min) return;
+    const pct = 100 * (val - min) / (max - min);
+    el.style.background = `linear-gradient(to right, ${C.cyan} 0%, ${C.cyan} ${pct}%, ${C.light} ${pct}%, ${C.light} 100%)`;
+  }
+
+  function applySliderFills(){
+    ["market","amenities","history","transport"].forEach((id) => setSliderFill(document.getElementById(id)));
+  }
+
+  // market = N, amenities = e, history = g, transport = t
+  function solveArea(market, transport, amenities, history) {
+    if (!(market > 0 && market < 2)) return { ok:false, reason:"Market size must be within the supported range." };
+    if (!(amenities > 0)) return { ok:false, reason:"Importance of amenities must be positive." };
+    if (!(transport >= 0)) return { ok:false, reason:"Transport factor must be zero or positive." };
+
+    const M = 2 - market;
+    const theta = transport / amenities;
+
+    function inCity(q, p) {
+      return (q < p) && (q >= -1 - 1e-6) && (p <= 1 + 1e-6);
+    }
+
+    let muB = NaN, pB = NaN, qB = NaN;
+    if (theta > EPS) {
+      muB = -M * market / (4 * theta);
+      pB = muB + M / 2;
+      qB = muB - M / 2;
+    }
+
+    let muC = NaN, pC = NaN, qC = NaN;
+    if (theta > EPS) {
+      muC =  M * market / (4 * theta);
+      pC = muC + M / 2;
+      qC = muC - M / 2;
+    }
+
+    let muA = NaN, pA = NaN, qA = NaN;
+    const denom = (market - 2 * theta);
+    if (Math.abs(denom) > EPS) {
+      muA = market * history / denom;
+      pA = muA + M / 2;
+      qA = muA - M / 2;
+    }
+
+    function scoreCase(kind, q, p, mu) {
+      if (!isFinite(q) || !isFinite(p) || !isFinite(mu)) return null;
+      let score = 0.0;
+
+      if (!inCity(q, p)) {
+        score += 10.0 * (Math.max(0.0, (-1 - q)) + Math.max(0.0, (p - 1)));
+      }
+      if (kind === "A") {
+        score += Math.max(0.0, q - history) + Math.max(0.0, history - p);
+      } else if (kind === "B") {
+        score += Math.max(0.0, p - history);
+      } else if (kind === "C") {
+        score += Math.max(0.0, history - q);
+      }
+      return score;
+    }
+
+    const candidates = [];
+    const sA = scoreCase("A", qA, pA, muA);
+    if (sA !== null) candidates.push([sA, "Historical center sits inside the commercial area.", qA, pA, muA]);
+    const sB = scoreCase("B", qB, pB, muB);
+    if (sB !== null) candidates.push([sB, "Historical center is to the east of the commercial area.", qB, pB, muB]);
+    const sC = scoreCase("C", qC, pC, muC);
+    if (sC !== null) candidates.push([sC, "Historical center is to the west of the commercial area.", qC, pC, muC]);
+
+    if (candidates.length === 0) return { ok:false, reason:"No valid configuration found for these settings." };
+
+    candidates.sort((a,b) => a[0] - b[0]);
+    const best = candidates[0];
+
+    return {
+      ok: true,
+      market, M, transport, amenities, history, theta,
+      caseText: best[1],
+      q: best[2],
+      p: best[3],
+      mu: best[4]
+    };
+  }
+
+  const state = { market: 1.40, amenities: 0.10, history: 0.25, transport: 0.25 };
+
+  function readSlider(id) {
+    return parseFloat(document.getElementById(id).value);
+  }
+
+  const sliderWords = {
+    market: ["very small", "small", "mid-size", "large", "very large"],
+    amenities: ["low", "some", "moderate", "high", "very high"],
+    history: ["far west", "west", "near center", "east", "far east"],
+    transport: ["slow", "basic", "comfortable", "fast", "very fast"]
+  };
+
+  function syncLabelsFromState() {
+    const mv = strengthLabel(state.market, 0.20, 1.90, sliderWords.market);
+    const av = strengthLabel(state.amenities, 0.01, 1.00, sliderWords.amenities);
+    const hv = historyLabel(state.history);
+    const tv = strengthLabel(state.transport, 0.00, 1.50, sliderWords.transport);
+
+    const set = (id, text, raw) => {
+      const el = document.getElementById(id);
+      el.textContent = text;
+      el.title = "raw: " + raw.toFixed(4);
+    };
+
+    set("market_val", mv, state.market);
+    set("amenities_val", av, state.amenities);
+    set("history_val", hv, state.history);
+    set("transport_val", tv, state.transport);
+  }
+
+  function updateText(sol) {
+    if (!sol.ok) {
+      document.getElementById("q_out").textContent = "unknown";
+      document.getElementById("p_out").textContent = "unknown";
+      document.getElementById("history_out").textContent = "unknown";
+      document.getElementById("mu_out").textContent = "unknown";
+      document.getElementById("case_out").textContent = sol.reason;
+      return;
+    }
+
+    document.getElementById("q_out").textContent = posLabel(sol.q);
+    document.getElementById("p_out").textContent = posLabel(sol.p);
+    document.getElementById("history_out").textContent = historyLabel(sol.history);
+    document.getElementById("mu_out").textContent = posLabel(sol.mu);
+    document.getElementById("case_out").textContent = sol.caseText;
+
+    document.getElementById("q_out").title = "raw: " + sol.q.toFixed(4);
+    document.getElementById("p_out").title = "raw: " + sol.p.toFixed(4);
+    document.getElementById("history_out").title = "raw: " + sol.history.toFixed(4);
+    document.getElementById("mu_out").title = "raw: " + sol.mu.toFixed(4);
+  }
+
+  function cityAxisTicks(){
+    return {
+      tickmode: "array",
+      tickvals: [-1, -0.5, 0, 0.5, 1],
+      ticktext: ["far west", "west", "center", "east", "far east"]
+    };
+  }
+
+  function historyAxisTicks01(){
+    return {
+      tickmode: "array",
+      tickvals: [0, 0.25, 0.5, 0.75, 1.0],
+      ticktext: ["far west", "west", "near center", "east", "far east"]
+    };
+  }
+
+  function transportAxisTicks(){
+    return {
+      tickmode: "array",
+      tickvals: [0.0, 0.375, 0.75, 1.125, 1.5],
+      ticktext: ["slow", "basic", "comfortable", "fast", "very fast"]
+    };
+  }
+
+  function baseAxisStyling(){
+    return {
+      showgrid: true,
+      gridcolor: C.grid,
+      zeroline: false,
+      tickfont: { size: 11, color: C.ink },
+      titlefont: { size: 13, color: C.ink }
+    };
+  }
+
+  function drawLayout(sol) {
+    let q = NaN, p = NaN, mu = NaN, history = NaN;
+    if (sol.ok) { q = sol.q; p = sol.p; mu = sol.mu; history = sol.history; }
+
+    const qd = clip(q, -1, 1);
+    const pd = clip(p, -1, 1);
+
+    const histYShift = -54;
+    const edgeYShift = -18;
+
+    const closeP = (sol.ok && isFinite(p) && isFinite(history)) ? Math.abs(p - history) : 999;
+    const endXShift = (closeP < 0.12) ? (p >= history ? 26 : -26) : 10;
+
+    const closeQ = (sol.ok && isFinite(q) && isFinite(history)) ? Math.abs(q - history) : 999;
+    const startXShift = (closeQ < 0.12) ? (q >= history ? 26 : -26) : -10;
+
+    const data = [
+      { x: [-1, 1], y: [0, 0], mode: "lines",
+        line: { width: 8, color: C.cyan }, name: "city line" },
+
+      { x: sol.ok ? [qd, pd] : [], y: sol.ok ? [0, 0] : [], mode: "lines",
+        line: { width: 22, color: C.light }, opacity: 1.0, name: "commercial area" },
+
+      { x: sol.ok ? [history] : [], y: sol.ok ? [0] : [], mode: "markers",
+        marker: { size: 14, symbol: "x", color: C.orange, line: { width: 3, color: C.orange } },
+        name: "historical center",
+        cliponaxis: false },
+
+      { x: sol.ok ? [mu] : [], y: sol.ok ? [0] : [], mode: "markers",
+        marker: { size: 14, symbol: "circle", color: C.red, line: { width: 2, color: C.red } },
+        name: "commercial center",
+        cliponaxis: false },
+
+      { x: sol.ok ? [q, p] : [], y: sol.ok ? [0, 0] : [], mode: "markers",
+        marker: { size: 18, symbol: "line-ns-open", color: C.cyan, line: { width: 3, color: C.cyan } },
+        name: "area edges",
+        cliponaxis: false }
+    ];
+
+    const annotations = sol.ok ? [
+      { x: mu, y: 0, text: "commercial center", showarrow: false, yshift: 18, xshift: 0,
+        font: { size: 14, color: C.ink } },
+
+      { x: history, y: 0, text: "historical center", showarrow: false, yshift: histYShift, xshift: 0,
+        font: { size: 14, color: C.ink } },
+
+      { x: q, y: 0, text: "start", showarrow: false, yshift: edgeYShift, xshift: startXShift,
+        font: { size: 14, color: C.ink } },
+
+      { x: p, y: 0, text: "end", showarrow: false, yshift: edgeYShift, xshift: endXShift,
+        font: { size: 14, color: C.ink } }
+    ] : [];
+
+    const layout = {
+      font: { size: 11, color: C.ink },
+      margin: { l: 26, r: 10, t: 4, b: 44 },
+      xaxis: { range: [-1.05, 1.05], title: "city direction (west to east)", ...cityAxisTicks(), ...baseAxisStyling() },
+      yaxis: { range: [-0.8, 0.8], visible: false },
+      showlegend: false,
+      annotations,
+      height: elH("plot_layout", 260)
+    };
+
+    Plotly.react("plot_layout", data, layout, {displayModeBar: false, responsive: false});
+  }
+
+  function drawFig1() {
+    const market = state.market, amenities = state.amenities, transport = state.transport;
+    const historyMax = 1.0;
+    const n = 320;
+
+    const histories = [];
+    const qs = [];
+    const ps = [];
+
+    for (let i=0; i<n; i++) {
+      const history = historyMax * (i/(n-1));
+      const sol = solveArea(market, transport, amenities, history);
+      histories.push(history);
+      qs.push(sol.ok ? sol.q : NaN);
+      ps.push(sol.ok ? sol.p : NaN);
+    }
+
+    const historyCur = state.history;
+    const solCur = solveArea(market, transport, amenities, historyCur);
+    const qCur = solCur.ok ? solCur.q : NaN;
+    const pCur = solCur.ok ? solCur.p : NaN;
+
+    const yLo = -1.05, yHi = 1.05;
+
+    const data = [
+      { x: histories, y: histories, mode: "lines",
+        line: { color: "rgba(0,0,0,0.18)", width: 2 },
+        name: "reference" },
+
+      { x: histories, y: ps, mode: "lines",
+        line: { color: C.red, width: 3 },
+        name: "east edge" },
+
+      { x: histories, y: qs, mode: "lines",
+        line: { color: C.cyan, width: 3 },
+        name: "west edge" },
+
+      { x: histories, y: qs, mode: "lines", line: { width: 0 }, showlegend: false, hoverinfo: "skip" },
+      { x: histories, y: ps, mode: "lines",
+        line: { width: 0 },
+        fill: "tonexty",
+        fillcolor: FILL_LIGHT,
+        name: "commercial area" },
+
+      { x: [historyCur, historyCur], y: [yLo, yHi], mode: "lines",
+        line: { dash: "dash", width: 2, color: C.orange }, name: "current historical center" },
+
+      { x: solCur.ok ? [historyCur, historyCur] : [], y: solCur.ok ? [qCur, pCur] : [],
+        mode: "markers",
+        marker: { symbol: "x", size: 11, color: C.orange, line: { width: 2, color: C.orange } },
+        name: "current area edges" }
+    ];
+
+    const layout = {
+      font: { size: 11, color: C.ink },
+      margin: { l: 108, r: 10, t: 26, b: 38 },
+      xaxis: {
+        range: [0, historyMax],
+        title: "historical center (west to east)",
+        ...historyAxisTicks01(),
+        ...baseAxisStyling()
+      },
+      yaxis: {
+        range: [yLo, yHi],
+        title: { text: "commercial area position", standoff: 14 },
+        ...cityAxisTicks(),
+        ...baseAxisStyling(),
+        automargin: true,
+        tickfont: { size: 10, color: C.ink }
+      },
+      legend: {
+        orientation: "h",
+        yanchor: "bottom",
+        y: 1.01,
+        xanchor: "left",
+        x: 0,
+        font: { size: 10 }
+      },
+      height: elH("plot_fig1", 300)
+    };
+
+    Plotly.react("plot_fig1", data, layout, {displayModeBar: false, responsive: false});
+  }
+
+  function drawFig2() {
+    const market = state.market, amenities = state.amenities, history = state.history;
+    const transportMin = 0.0;
+    const transportMax = 1.5;
+
+    const n = 280;
+    const transports = [];
+    const qs = [];
+    const ps = [];
+
+    for (let i=0; i<n; i++) {
+      const transport = transportMin + (transportMax - transportMin) * (i/(n-1));
+      const sol = solveArea(market, transport, amenities, history);
+      transports.push(transport);
+      qs.push(sol.ok ? sol.q : NaN);
+      ps.push(sol.ok ? sol.p : NaN);
+    }
+
+    const solNow = solveArea(market, state.transport, amenities, history);
+    const qNow = solNow.ok ? solNow.q : NaN;
+    const pNow = solNow.ok ? solNow.p : NaN;
+
+    const data = [
+      { x: qs, y: transports, mode: "lines",
+        line: { color: C.cyan, width: 3 },
+        name: "west edge" },
+
+      { x: ps, y: transports, mode: "lines",
+        line: { color: C.red, width: 3 },
+        name: "east edge" },
+
+      { x: qs, y: transports, mode: "lines", line: { width: 0 }, showlegend: false, hoverinfo: "skip" },
+      { x: ps, y: transports, mode: "lines",
+        line: { width: 0 },
+        fill: "tonextx",
+        fillcolor: FILL_LIGHT,
+        name: "commercial area" },
+
+      { x: [history, history], y: [transportMin, transportMax], mode: "lines",
+        line: { dash: "dash", width: 2, color: C.orange }, name: "historical center (fixed)" },
+
+      { x: [qNow, pNow], y: [state.transport, state.transport],
+        mode: "markers",
+        marker: { size: 9, color: C.red, line: { width: 1, color: C.red } },
+        name: "current setting" }
+    ];
+
+    const layout = {
+      font: { size: 11, color: C.ink },
+      margin: { l: 92, r: 10, t: 26, b: 38 },
+      xaxis: { range: [-1.05, 1.05], title: "city direction (west to east)", ...cityAxisTicks(), ...baseAxisStyling() },
+      yaxis: {
+        range: [transportMin, transportMax],
+        title: { text: "transport quality (speed and comfort)", standoff: 10 },
+        ...transportAxisTicks(),
+        ...baseAxisStyling(),
+        automargin: true,
+        tickfont: { size: 10, color: C.ink }
+      },
+      legend: {
+        orientation: "h",
+        yanchor: "bottom",
+        y: 1.01,
+        xanchor: "left",
+        x: 0,
+        font: { size: 10 }
+      },
+      height: elH("plot_fig2", 300)
+    };
+
+    Plotly.react("plot_fig2", data, layout, {displayModeBar: false, responsive: false});
+  }
+
+  function updateAll() {
+    const sol = solveArea(state.market, state.transport, state.amenities, state.history);
+    updateText(sol);
+    drawLayout(sol);
+    drawFig1();
+    drawFig2();
+  }
+
+  function wireUp() {
+    syncLabelsFromState();
+    applySliderFills();
+    updateAll();
+
+    ["market","amenities","history","transport"].forEach((id) => {
+      const el = document.getElementById(id);
+      el.addEventListener("input", () => {
+        state[id] = readSlider(id);
+        syncLabelsFromState();
+        setSliderFill(el);
+        updateAll();
+      });
+    });
+
+    let rT = 0;
+    window.addEventListener("resize", () => {
+      clearTimeout(rT);
+      rT = setTimeout(() => updateAll(), 120);
+    });
+  }
+
+  wireUp();
+</script>
+
+</body>
+</html>
+"""
+    out_path = Path(out_path)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(html, encoding="utf-8")
+    return out_path
+
+
+write_interactive_html = write_dashboard_html
+
+if __name__ == "__main__":
+    path = write_dashboard_html()
+    try:
+        display(IFrame(src=str(path), width=1400, height=860))
+    except Exception:
+        display(HTML(path.read_text(encoding="utf-8")))
+    print(f"Wrote: {path.resolve()}")

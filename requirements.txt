@@ -1,0 +1,12 @@
+numpy
+pandas
+geopandas
+rasterio
+rasterstats
+osmnx
+statsmodels
+shapely
+pyproj
+folium
+tqdm
+requests

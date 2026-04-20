@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# Jupyter
+.ipynb_checkpoints/
+**/.ipynb_checkpoints/
+
+# Local environments
+.venv/
+venv/
+env/
+
+# OS / editor
+.DS_Store
+.vscode/
+cache/
+
+# Mobile app local artifacts
+mobile_app/node_modules/
+mobile_app/.expo/
+mobile_app/.idea/
