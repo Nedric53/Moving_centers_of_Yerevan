@@ -1054,7 +1054,8 @@ def patch_interactive_ui_left_right_vertical_sliders(html_str: str) -> str:
     :root{
       --sliderBg: #E6E6E6;
       --sliderFill: #9EDDE5;
-      --sliderThumb: #57D4E5;
+      --sliderThumb: #56D3E5;
+      --sliderAccent: #56D3E5;
     }
 
     html, body { height: 100%; }
@@ -1148,13 +1149,13 @@ def patch_interactive_ui_left_right_vertical_sliders(html_str: str) -> str:
     .tickDot.isActive{
       background: var(--sliderThumb);
       transform: translate(-50%, -50%) scale(1.18);
-      box-shadow: 0 0 0 3px rgba(87,212,229,0.18);
+      box-shadow: 0 0 0 2px rgba(86,211,229,0.18);
     }
 
     /* Vertical slider */
     .vSlider{
       writing-mode: bt-lr;
-      width: 26px;
+      width: 18px;
       height: 100%;
       padding: 0;
       margin: 0;
@@ -1169,49 +1170,43 @@ def patch_interactive_ui_left_right_vertical_sliders(html_str: str) -> str:
 
     /* WebKit track with filled portion */
     .vSlider.pretty::-webkit-slider-runnable-track{
-      width: 14px;
+      width: 4px;
       border-radius: 999px;
       border: 0;
-      background: linear-gradient(
-        to top,
-        var(--sliderFill) 0%,
-        var(--sliderFill) var(--fillPct),
-        var(--sliderBg) var(--fillPct),
-        var(--sliderBg) 100%
-      );
+      background: var(--sliderAccent);
     }
 
     .vSlider.pretty::-webkit-slider-thumb{
       -webkit-appearance: none;
-      width: 18px;
-      height: 18px;
+      width: 14px;
+      height: 14px;
       border-radius: 999px;
-      background: var(--sliderThumb);
-      border: 2px solid #fff;
+      background: var(--sliderAccent);
+      border: 0;
       box-shadow: none;
-      margin-top: -2px;
+      margin-top: -5px;
     }
 
     /* Firefox */
     .vSlider.pretty::-moz-range-track{
-      width: 14px;
+      width: 4px;
       border-radius: 999px;
       border: 0;
-      background: var(--sliderBg);
+      background: var(--sliderAccent);
     }
 
     .vSlider.pretty::-moz-range-progress{
-      background: var(--sliderFill);
+      background: var(--sliderAccent);
       border-radius: 999px;
-      height: 14px;
+      height: 4px;
     }
 
     .vSlider.pretty::-moz-range-thumb{
-      width: 18px;
-      height: 18px;
+      width: 14px;
+      height: 14px;
       border-radius: 999px;
-      background: var(--sliderThumb);
-      border: 2px solid #fff;
+      background: var(--sliderAccent);
+      border: 0;
       box-shadow: none;
     }
 
@@ -1403,12 +1398,12 @@ def patch_interactive_ui_left_right_vertical_sliders(html_str: str) -> str:
         height: 5px;
       }
       .vSlider{
-        width: 18px;
+        width: 16px;
       }
       .vSlider.pretty::-webkit-slider-runnable-track,
       .vSlider.pretty::-moz-range-track,
       .vSlider.pretty::-moz-range-progress{
-        width: 10px;
+        width: 4px;
       }
       .vSlider.pretty::-webkit-slider-thumb,
       .vSlider.pretty::-moz-range-thumb{
@@ -1496,7 +1491,7 @@ def patch_interactive_ui_left_right_vertical_sliders(html_str: str) -> str:
         width: 8px;
       }
       .vSlider{
-        width: 16px;
+        width: 14px;
       }
       .legend{
         width: min(142px, calc(100% - 10px));
